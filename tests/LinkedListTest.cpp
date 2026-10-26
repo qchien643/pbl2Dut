@@ -46,19 +46,19 @@ void expectValues(const LinkedList<int>& list, const int* expected, std::size_t 
     assert(list.size() == count);
     assert(list.empty() == (count == 0));
     std::size_t index = 0;
-    list.forEach([&](const int& value) {
+    for (const int& value : list) {
         assert(index < count);
         assert(value == expected[index]);
         ++index;
-    });
+    }
     assert(index == count);
 }
 
 void testInsertFindAndErase() {
     LinkedList<int> list;
     expectValues(list, nullptr, 0);
-    assert(list.findIf([](int) { return true; }) == nullptr);
-    assert(!list.eraseIf([](int) { return true; }));
+    assert(list.find(1) == nullptr);
+    assert(!list.erase(nullptr));
 
     int* original = &list.pushBack(2);
     list.pushFront(1);
@@ -66,35 +66,37 @@ void testInsertFindAndErase() {
     list.pushBack(4);
     const int initial[] = {1, 2, 3, 4};
     expectValues(list, initial, 4);
-    assert(list.findIf([](int value) { return value == 2; }) == original);
-    assert(list.findIf([](int value) { return value == 99; }) == nullptr);
+    assert(list.find(2) == original);
+    assert(list.find(99) == nullptr);
 
-    assert(list.eraseIf([](int value) { return value == 1; }));
+    assert(list.erase(list.find(1)));
     const int afterHead[] = {2, 3, 4};
     expectValues(list, afterHead, 3);
-    assert(list.eraseIf([](int value) { return value == 3; }));
+    assert(list.erase(list.find(3)));
     const int afterMiddle[] = {2, 4};
     expectValues(list, afterMiddle, 2);
-    assert(list.eraseIf([](int value) { return value == 4; }));
-    assert(list.findIf([](int value) { return value == 2; }) == original);
-    assert(list.eraseIf([](int value) { return value == 2; }));
+    assert(list.erase(list.find(4)));
+    assert(list.find(2) == original);
+    assert(list.erase(list.find(2)));
     expectValues(list, nullptr, 0);
 
     list.pushFront(5);
     list.pushBack(6);
-    list.forEach([](int& value) { value += 1; });
+    for (int& value : list) {
+        ++value;
+    }
     const int changed[] = {6, 7};
     expectValues(list, changed, 2);
     const LinkedList<int>& readOnly = list;
-    assert(*readOnly.findIf([](int value) { return value == 7; }) == 7);
-    assert(readOnly.findIf([](int value) { return value == 99; }) == nullptr);
+    assert(*readOnly.find(7) == 7);
+    assert(readOnly.find(99) == nullptr);
     list.clear();
     list.clear();
     expectValues(list, nullptr, 0);
 
     list.pushBack(8);
     list.pushBack(8);
-    assert(list.eraseIf([](int value) { return value == 8; }));
+    assert(list.erase(list.find(8)));
     const int duplicate[] = {8};
     expectValues(list, duplicate, 1);
     list.pushBack(9);
@@ -107,14 +109,22 @@ void testEntityTemplates() {
     LinkedList<FilmSample> films;
     films.pushBack({1, "Film one"});
     films.pushFront({2, "Film two"});
-    const FilmSample* film = films.findIf([](const FilmSample& item) { return item.id == 1; });
+    const FilmSample* film = nullptr;
+    for (const FilmSample& item : films) {
+        if (item.id == 1) {
+            film = &item;
+            break;
+        }
+    }
     assert(film != nullptr && film->title == "Film one");
 
     LinkedList<TicketSample> tickets;
     tickets.pushBack({1, 80000});
     tickets.pushBack({2, 90000});
     int revenue = 0;
-    tickets.forEach([&](const TicketSample& ticket) { revenue += ticket.price; });
+    for (const TicketSample& ticket : tickets) {
+        revenue += ticket.price;
+    }
     assert(revenue == 170000);
 }
 
@@ -141,11 +151,11 @@ void testLifetimeAndExceptions() {
             Tracked::failCopy = false;
             assert(threw);
             assert(list.size() == 1 && Tracked::alive == 2);
-            assert(list.findIf([](const Tracked&) { return true; }) == original);
+            assert(&*list.begin() == original);
         }
         list.pushFront(value);
         assert(Tracked::alive == 3);
-        assert(list.eraseIf([](const Tracked&) { return true; }));
+        assert(list.erase(&*list.begin()));
         assert(Tracked::alive == 2);
     }
     assert(Tracked::alive == 0);
@@ -166,27 +176,53 @@ void testRepeatedReuse() {
         list.pushBack(value);
     }
     for (int value = 0; value < 10000; ++value) {
-        assert(list.eraseIf([&](int item) { return item == value; }));
+        assert(list.erase(list.find(value)));
     }
     assert(list.empty());
     list.pushFront(1);
-    assert(list.eraseIf([](int) { return true; }));
+    assert(list.erase(list.find(1)));
     list.pushBack(2);
     list.pushFront(1);
     const int expected[] = {1, 2};
     expectValues(list, expected, 2);
 }
 
+void testReadOnlyIterationAndErase() {
+    LinkedList<int> list;
+    assert(!(list.begin() != list.end()));
+    const int* first = &list.pushBack(5);
+    const int* middle = &list.pushBack(5);
+    const int* last = &list.pushBack(7);
+    const int outside = 5;
+    assert(!list.erase(&outside) && !list.erase(nullptr));
+    assert(list.erase(middle));
+    const int expected[] = {5, 7};
+    expectValues(list, expected, 2);
+    assert(&*list.begin() == first);
+    assert(list.erase(last));
+    assert(list.erase(first));
+    assert(!(list.begin() != list.end()));
+    list.pushBack(9);
+    LinkedList<int> other;
+    list.swap(other);
+    assert(!(list.begin() != list.end()));
+    assert(*other.begin() == 9);
+    other.clear();
+    assert(!(other.begin() != other.end()));
+}
+
 int main() {
+    static_assert(std::is_same_v<decltype(*std::declval<LinkedList<int>&>().begin()), int&>);
+    static_assert(std::is_same_v<decltype(*std::declval<const LinkedList<int>&>().begin()), const int&>);
     static_assert(!std::is_copy_constructible_v<LinkedList<int>>);
     static_assert(!std::is_copy_assignable_v<LinkedList<int>>);
     static_assert(!std::is_move_constructible_v<LinkedList<int>>);
     static_assert(!std::is_move_assignable_v<LinkedList<int>>);
-    static_assert(std::is_same_v<decltype(std::declval<const LinkedList<int>&>().findIf(
-        static_cast<bool (*)(int)>(nullptr))), const int*>);
+    static_assert(std::is_same_v<decltype(std::declval<const LinkedList<int>&>().find(0)), const int*>);
     testInsertFindAndErase();
     testEntityTemplates();
     testLifetimeAndExceptions();
     testRepeatedReuse();
+    testReadOnlyIterationAndErase();
     std::cout << "LinkedList checks passed\n";
 }

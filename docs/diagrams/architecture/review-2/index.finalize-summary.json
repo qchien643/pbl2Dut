@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/candidate.json",
+    "sha256": "75f2f785ce7ef9da0c450186a6f93a08f9019889dc63ec1bc22cf2b73212835d",
+    "bytes": 4384
+  },
+  "artifact": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/index.html",
+    "sha256": "1affb0b39901f7ace5c9dcd4ac9114454f845c4c12c1457307d45b4f706d9703",
+    "bytes": 838932
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "architecture",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/review-2/index.finalize.json",
+    "summaryReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/review-2/index.finalize-summary.json",
+    "browserCheckReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/review-2/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3375,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

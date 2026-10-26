@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "PBL2 — năm thực thể và khóa trong dữ liệu TXT",
+    "locale": "vi",
+    "output": "docs/diagrams/erd/index.html",
+    "quality_profile": "showcase",
+    "repository": {"url": "https://github.com/qchien643/pbl2Dut.git", "revision": "103602a1e84c4b81641c6b5d1ea0ae56e1195f91", "link_mode": "local-only"}
+  },
+  "layout": {"mode": "grid", "gapX": 100, "gapY": 100, "entityW": 260},
+  "entities": [
+    {"id": "film", "label": "Film", "tag": "Nội dung", "row": 0, "col": 0,
+      "attributes": [
+        {"name": "film_id", "type": "int64", "key": "pk"},
+        {"name": "title", "type": "string"},
+        {"name": "duration_minutes", "type": "int64"}
+      ],
+      "sources": [{"path": "src/entities/Film.h", "line": 8, "end_line": 21}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}]},
+    {"id": "room", "label": "Auditorium", "tag": "Không gian", "row": 0, "col": 2,
+      "attributes": [
+        {"name": "auditorium_id", "type": "int64", "key": "pk"},
+        {"name": "name", "type": "string"},
+        {"name": "row_count", "type": "int64"},
+        {"name": "seats_per_row", "type": "int64"}
+      ],
+      "sources": [{"path": "src/entities/Auditorium.h", "line": 8, "end_line": 24}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 179, "end_line": 188}]},
+    {"id": "seat", "label": "Seat", "tag": "Không gian", "row": 1, "col": 2,
+      "attributes": [
+        {"name": "seat_id", "type": "int64", "key": "pk"},
+        {"name": "auditorium_id", "type": "int64", "key": "fk", "references": "room.auditorium_id"},
+        {"name": "row_number", "type": "int64"},
+        {"name": "seat_number", "type": "int64"}
+      ],
+      "sources": [{"path": "src/entities/Seat.h", "line": 7, "end_line": 22}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 160, "end_line": 188}]},
+    {"id": "screening", "label": "Screening", "tag": "Chiếu và bán vé", "row": 0, "col": 1,
+      "attributes": [
+        {"name": "screening_id", "type": "int64", "key": "pk"},
+        {"name": "film_id", "type": "int64", "key": "fk", "references": "film.film_id"},
+        {"name": "auditorium_id", "type": "int64", "key": "fk", "references": "room.auditorium_id"},
+        {"name": "start_time", "type": "string"},
+        {"name": "ticket_price", "type": "int64"}
+      ],
+      "sources": [{"path": "src/entities/Screening.h", "line": 8, "end_line": 26}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/services/ScreeningValidation.cpp", "line": 7, "end_line": 39}]},
+    {"id": "ticket", "label": "Ticket", "tag": "Chiếu và bán vé", "row": 1, "col": 1,
+      "attributes": [
+        {"name": "ticket_id", "type": "int64", "key": "pk"},
+        {"name": "screening_id", "type": "int64", "key": "fk", "references": "screening.screening_id"},
+        {"name": "seat_id", "type": "int64", "key": "fk", "references": "seat.seat_id"},
+        {"name": "sold_at", "type": "string"},
+        {"name": "unit_price", "type": "int64"}
+      ],
+      "sources": [{"path": "src/entities/Ticket.h", "line": 8, "end_line": 26}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 200, "end_line": 214}]}
+  ],
+  "relationships": [
+    {"id": "screening-film", "from": "screening", "to": "film", "fromCardinality": "many", "fromOptional": true, "toCardinality": "one", "toOptional": false, "identifying": false},
+    {"id": "screening-room", "from": "screening", "to": "room", "fromCardinality": "many", "fromOptional": true, "toCardinality": "one", "toOptional": false, "identifying": false},
+    {"id": "seat-room", "from": "seat", "to": "room", "fromCardinality": "many", "fromOptional": false, "toCardinality": "one", "toOptional": false, "identifying": false},
+    {"id": "ticket-screening", "from": "ticket", "to": "screening", "fromCardinality": "many", "fromOptional": true, "toCardinality": "one", "toOptional": false, "identifying": false},
+    {"id": "ticket-seat", "from": "ticket", "to": "seat", "fromCardinality": "many", "fromOptional": true, "toCardinality": "one", "toOptional": false, "identifying": false}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Đây là mô hình dữ liệu, không phải SQL", "items": [
+      "Tên cột đúng header của năm file TXT; int64 và string là kiểu dữ liệu ứng dụng, không phải DDL.",
+      "PK/FK là ràng buộc được C++ kiểm tra. Mỗi bản ghi con tham chiếu đúng một bản ghi cha.",
+      "Một phim/phòng có thể chưa có suất; một suất/ghế có thể chưa có vé. Phòng hợp lệ phải có đủ ma trận ghế."
+    ]},
+    {"dot": "amber", "title": "Khóa ghép và toàn vẹn", "items": [
+      "Seat duy nhất theo (auditorium_id, row_number, seat_number).",
+      "Ticket duy nhất theo (screening_id, seat_id), không phải mỗi seat_id chỉ có một vé trong mọi suất.",
+      "Ghế và suất của vé phải thuộc cùng phòng. Thời điểm bán phải trước giờ chiếu."
+    ]},
+    {"dot": "emerald", "title": "Câu hỏi thường gặp", "items": [
+      "Seat không lưu isSold: trạng thái đã bán phụ thuộc Ticket của từng suất.",
+      "unit_price giữ giá tại lúc bán; thống kê theo sold_at, không theo start_time.",
+      "Đường nét đứt là quan hệ non-identifying: FK không nằm trong PK; không có nghĩa FK được để trống.",
+      "Nguồn là bản chụp cục bộ ngày 26/10/2026; điều khiển trình xem dùng tiếng Anh."
+    ]}
+  ]
+}

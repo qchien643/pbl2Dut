@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "c03d2f4f-9af3-4724-9ca4-300a0cbf300c",
+  "status": "current",
+  "command": "deliver",
+  "type": "erd",
+  "input": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/candidate.json",
+  "output": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/index.html",
+  "specification": {
+    "sha256": "e38a318d9e46edbbcd91d501b8a2c1cdde0ab1d359a668669ee062fb2869fb1d",
+    "bytes": 5815
+  },
+  "artifact": {
+    "sha256": "2a9b0cf81245cbce5b40e2e769bf2ba3946520a688aa91a8148ea4b3ffa3e7df",
+    "bytes": 852898
+  }
+}

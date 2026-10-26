@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d16b9746-8fbb-4fa1-8eec-91a0c359a11d",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/candidate.json",
+  "output": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/architecture/index.html",
+  "specification": {
+    "sha256": "75f2f785ce7ef9da0c450186a6f93a08f9019889dc63ec1bc22cf2b73212835d",
+    "bytes": 4384
+  },
+  "artifact": {
+    "sha256": "1affb0b39901f7ace5c9dcd4ac9114454f845c4c12c1457307d45b4f706d9703",
+    "bytes": 838932
+  }
+}

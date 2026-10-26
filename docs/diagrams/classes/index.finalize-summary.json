@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "class",
+  "quality": "showcase",
+  "specification": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/candidate.json",
+    "sha256": "589a5ea0b2f3ee9d47471f615f0706502b2d41b1c4c2f16455ada2ec86b7a1de",
+    "bytes": 5018
+  },
+  "artifact": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
+    "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
+    "bytes": 846902
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "class",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.finalize.json",
+    "summaryReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.finalize-summary.json",
+    "browserCheckReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2737,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

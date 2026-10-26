@@ -4,4 +4,8 @@
 /.playwright-mcp/
 /passForInstall.env
 /codex-session-*.md
+/docs/slides/
+/docs/ref/
+/data/**/.cms-backup-*/
+/data/**/.cms-save/
 *.user

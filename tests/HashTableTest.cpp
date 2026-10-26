@@ -91,14 +91,21 @@ void testBasicOperationsAndCollisions() {
             assert(value != nullptr && *value == key * 10);
         }
     }
-    table.forEach([](const int& key, int& value) { value = key + 1; });
-    const auto& readOnly = table;
+    for (int key = 0; key < 100; ++key) {
+        int* value = table.find(key);
+        if (value != nullptr) {
+            *value = key + 1;
+        }
+    }
+    const HashTable<int, int, ConstantHash>& readOnly = table;
     int visited = 0;
-    readOnly.forEach([&](const int& key, const int& value) {
-        assert(value == key + 1);
-        assert(readOnly.find(key) != nullptr);
-        ++visited;
-    });
+    for (int key = 0; key < 100; ++key) {
+        const int* value = readOnly.find(key);
+        if (value != nullptr) {
+            assert(*value == key + 1);
+            ++visited;
+        }
+    }
     assert(visited == 97);
     assert(readOnly.find(1000) == nullptr);
     table.rehash(97);
@@ -219,8 +226,9 @@ void testAliasedInsertAndRepositoryIndex() {
         const SeatSample* seat = *index.find(id);
         assert(grid.at(seat->row, seat->column) == id);
     }
+    const SeatSample* removed = *index.find(11);
     assert(index.erase(11));
-    assert(records.eraseIf([](const SeatSample& seat) { return seat.id == 11; }));
+    assert(records.erase(removed));
     grid.at(1, 2) = 0;
     assert(index.find(11) == nullptr && records.size() == 47);
     assert(*index.find(1) == first && first->id == 1);

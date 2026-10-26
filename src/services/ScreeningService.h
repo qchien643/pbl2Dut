@@ -10,7 +10,8 @@
 #include <cstdint>
 #include <string>
 
-class ScreeningService {
+class ScreeningService
+{
 public:
     ScreeningService(const FilmRepository& films, const AuditoriumRepository& rooms,
                      ScreeningRepository& screenings, const TicketRepository& tickets,
@@ -23,21 +24,9 @@ public:
     const Screening& find(EntityId id) const;
     std::string endTime(EntityId id) const;
 
-    // Empty date and zero IDs mean no filter; callbacks receive read-only records.
-    template <typename Function>
+    // Empty date and zero IDs mean no filter. Replace result with matching records.
     void list(const std::string& date, EntityId filmId, EntityId roomId,
-              bool futureOnly, Function visit) const {
-        validateFilters(date, filmId, roomId);
-        const std::string now = futureOnly ? entity_detail::dateTime(clock_()) : "";
-        screenings_.forEach([&](const Screening& item) {
-            if ((date.empty() || item.startTime().compare(0, 10, date) == 0)
-                && (filmId == 0 || item.filmId() == filmId)
-                && (roomId == 0 || item.auditoriumId() == roomId)
-                && (!futureOnly || item.startTime() > now)) {
-                visit(item);
-            }
-        });
-    }
+              bool futureOnly, LinkedList<Screening>& result) const;
 
 private:
     void validate(const Screening& candidate) const;

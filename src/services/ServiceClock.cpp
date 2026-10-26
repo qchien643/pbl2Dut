@@ -7,7 +7,10 @@
 
 std::string localMinuteNow() {
     const std::time_t now = std::time(nullptr);
-    const std::tm* local = now == std::time_t(-1) ? nullptr : std::localtime(&now);
+    if (now == std::time_t(-1)) {
+        throw std::runtime_error("Cannot read local clock");
+    }
+    const std::tm* local = std::localtime(&now);
     if (local == nullptr) {
         throw std::runtime_error("Cannot read local clock");
     }

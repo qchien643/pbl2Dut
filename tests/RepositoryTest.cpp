@@ -92,11 +92,11 @@ void testCrudAndIds() {
     std::size_t visited = 0;
     EntityId expectedId = 10;
     const FilmRepository& readOnly = films;
-    readOnly.forEach([&](const Film& film) {
+    for (const Film& film : readOnly) {
         assert(film.id() == expectedId++);
         assert(readOnly.findById(film.id()) == &film);
         ++visited;
-    });
+    }
     assert(visited == films.size());
     for (EntityId id = 10; id < 100; ++id) {
         assert(films.erase(id));
@@ -126,7 +126,9 @@ void testAllEntityRepositories() {
     assert(screenings.findById(1)->filmId() == 1);
     assert(tickets.findById(1)->seatId() == 1 && tickets.findById(999) == nullptr);
     std::int64_t revenue = 0;
-    tickets.forEach([&](const Ticket& ticket) { revenue += ticket.unitPrice(); });
+    for (const Ticket& ticket : tickets) {
+        revenue += ticket.unitPrice();
+    }
     assert(revenue == 160000);
     tickets.markSaved();
     assert(!tickets.isDirty());
@@ -168,10 +170,10 @@ void testInsertionRollback() {
         }
         assert(films.findById(1) == original && original->title() == "Existing");
         std::size_t visited = 0;
-        films.forEach([&](const Film& film) {
+        for (const Film& film : films) {
             assert(films.findById(film.id()) == &film);
             ++visited;
-        });
+        }
         assert(visited == films.size());
         if (reachedSuccess) {
             break;
@@ -240,6 +242,9 @@ template <typename T>
 struct HasTicketUpdate<T, std::void_t<decltype(std::declval<T&>().update(1, std::declval<const Ticket&>()))>> : std::true_type {};
 
 int main() {
+    static_assert(std::is_same_v<decltype(*std::declval<FilmRepository&>().begin()), const Film&>);
+    static_assert(std::is_same_v<decltype(*std::declval<const FilmRepository&>().begin()), const Film&>);
+    static_assert(std::is_same_v<decltype(*std::declval<TicketRepository&>().begin()), const Ticket&>);
     static_assert(!std::is_copy_constructible_v<FilmRepository>);
     static_assert(!std::is_copy_assignable_v<FilmRepository>);
     static_assert(!std::is_move_constructible_v<FilmRepository>);

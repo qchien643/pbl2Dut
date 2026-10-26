@@ -5,6 +5,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 enable_testing()
 add_library(cinema_services
+    src/entities/Film.cpp
+    src/entities/Auditorium.cpp
+    src/entities/Seat.cpp
+    src/entities/Screening.cpp
+    src/entities/Ticket.cpp
+    src/entities/EntityValidation.cpp
+    src/repositories/TicketRepository.cpp
+    src/persistence/TxtPersistence.cpp
     src/services/CatalogService.cpp
     src/services/ScreeningService.cpp
     src/services/TicketService.cpp
@@ -23,6 +31,8 @@ foreach(structure IN ITEMS LinkedList HashTable Matrix2D Entity Repository Servi
     target_compile_features(${structure}Test PRIVATE cxx_std_17)
     add_test(NAME ${structure} COMMAND ${structure}Test)
 endforeach()
+target_link_libraries(EntityTest PRIVATE cinema_services)
+target_link_libraries(RepositoryTest PRIVATE cinema_services)
 target_link_libraries(ServiceTest PRIVATE cinema_services)
 target_link_libraries(ApplicationDataTest PRIVATE cinema_services)
 
@@ -33,6 +43,7 @@ if(BUILD_GUI)
     target_link_libraries(cinema_ui PUBLIC cinema_services Qt6::Widgets)
     add_executable(cinema src/main.cpp)
     target_link_libraries(cinema PRIVATE cinema_ui)
+    target_compile_definitions(cinema PRIVATE PBL2_DEMO_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/demo")
     add_executable(MainWindowTest tests/MainWindowTest.cpp)
     target_link_libraries(MainWindowTest PRIVATE cinema_ui)
     add_test(NAME MainWindow COMMAND MainWindowTest)

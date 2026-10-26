@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "erd",
+  "quality": "showcase",
+  "specification": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/candidate.json",
+    "sha256": "e38a318d9e46edbbcd91d501b8a2c1cdde0ab1d359a668669ee062fb2869fb1d",
+    "bytes": 5815
+  },
+  "artifact": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/index.html",
+    "sha256": "2a9b0cf81245cbce5b40e2e769bf2ba3946520a688aa91a8148ea4b3ffa3e7df",
+    "bytes": 852898
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "erd",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "vi",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/index.finalize.json",
+    "summaryReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/index.finalize-summary.json",
+    "browserCheckReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/erd/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2959,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

@@ -7,13 +7,13 @@
 namespace fs = std::filesystem;
 
 namespace {
-constexpr const char* files[] = {
+const char* const files[] = {
     "films.txt", "auditoriums.txt", "seats.txt", "screenings.txt", "tickets.txt"
 };
 
 fs::file_status inspectPath(const fs::path& path) {
     std::error_code error;
-    const auto result = fs::symlink_status(path, error);
+    const fs::file_status result = fs::symlink_status(path, error);
     if (error && error != std::errc::no_such_file_or_directory) {
         throw fs::filesystem_error("Cannot inspect path", path, error);
     }
@@ -29,8 +29,8 @@ int fileCount(const fs::path& directory) {
     (void)readable;
     int count = 0;
     for (const char* name : files) {
-        const auto path = directory / name;
-        const auto entry = inspectPath(path);
+        const fs::path path = directory / name;
+        const fs::file_status entry = inspectPath(path);
         if (fs::exists(entry)) {
             if (!fs::is_regular_file(entry)) {
                 throw std::runtime_error(path.string() + ": Expected a regular file, not a symlink/directory");
@@ -41,20 +41,12 @@ int fileCount(const fs::path& directory) {
     return count;
 }
 
-template <typename RepositoryType, typename Function>
-void checkRecords(const fs::path& path, const RepositoryType& repository, Function check) {
-    std::size_t line = 1;
-    repository.forEach([&](const auto& value) {
-        txt_persistence::atLine(path, ++line, [&] { check(value); });
-    });
-}
-
 void cleanOwnedStage(const fs::path& stage) {
     if (!fs::is_directory(inspectPath(stage))) {
         throw std::runtime_error("Owned staging directory is missing or replaced");
     }
     for (const char* subdirectory : {"new", "old"}) {
-        const auto folder = stage / subdirectory;
+        const fs::path folder = stage / subdirectory;
         if (!fs::exists(inspectPath(folder))) {
             continue;
         }
@@ -62,8 +54,8 @@ void cleanOwnedStage(const fs::path& stage) {
             throw std::runtime_error("Staging subdirectory was replaced");
         }
         for (const char* name : files) {
-            const auto path = folder / name;
-            const auto entry = inspectPath(path);
+            const fs::path path = folder / name;
+            const fs::file_status entry = inspectPath(path);
             if (fs::exists(entry)) {
                 if (!fs::is_regular_file(entry)) {
                     throw std::runtime_error("Unexpected staging entry; refusing to remove it");
@@ -78,14 +70,26 @@ void cleanOwnedStage(const fs::path& stage) {
 }
 
 ApplicationData::ApplicationData(fs::path directory)
-    : directory_(fs::absolute(std::move(directory)).lexically_normal()) {}
+    : directory_(fs::absolute(directory).lexically_normal()) {}
 
-bool ApplicationData::isDirty() const noexcept {
+bool ApplicationData::isReady() const {
+    return ready_;
+}
+
+bool ApplicationData::needsManualRecovery() const {
+    return recoveryRequired_;
+}
+
+const fs::path& ApplicationData::directory() const {
+    return directory_;
+}
+
+bool ApplicationData::isDirty() const {
     return films.isDirty() || rooms.isDirty() || seats.isDirty()
         || screenings.isDirty() || tickets.isDirty();
 }
 
-void ApplicationData::markSaved() noexcept {
+void ApplicationData::markSaved() {
     films.markSaved();
     rooms.markSaved();
     seats.markSaved();
@@ -103,7 +107,7 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
         throw std::runtime_error("Unfinished save in .cms-save; inspect/restore the complete backup before loading");
     }
     if (count == 0) {
-        for (const auto& entry : fs::directory_iterator(directory_)) {
+        for (const fs::directory_entry& entry : fs::directory_iterator(directory_)) {
             if (entry.path().filename().string().find(".cms-backup-") == 0) {
                 throw std::runtime_error("Data files missing but backups exist; restore instead of starting empty");
             }
@@ -134,64 +138,86 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     screenings.replaceWith(staged.screenings);
     tickets.records_.replaceWith(staged.tickets.records_);
     markSaved();
-    ready_ = hadFiles_ = true;
+    ready_ = true;
+    hadFiles_ = true;
     return LoadResult::Loaded;
 }
 
 void ApplicationData::validate() const {
-    checkRecords(directory_ / files[0], films, [](const Film& film) {
-        Film(film.id(), film.title(), film.durationMinutes());
-        txt_persistence::validateUtf8(film.title());
-    });
     HashTable<std::string, bool> positions;
     HashTable<EntityId, std::size_t> seatCounts;
-    checkRecords(directory_ / files[2], seats, [&](const Seat& seat) {
-        Seat(seat.id(), seat.auditoriumId(), seat.rowNumber(), seat.seatNumber());
-        const auto* room = rooms.findById(seat.auditoriumId());
-        if (!room || seat.rowNumber() > room->rowCount() || seat.seatNumber() > room->seatsPerRow()) {
-            throw std::invalid_argument("Seat references a missing room or an out-of-range position");
-        }
-        const auto key = std::to_string(seat.auditoriumId()) + ":"
-            + std::to_string(seat.rowNumber()) + ":" + std::to_string(seat.seatNumber());
-        if (!positions.insert(key, true)) {
-            throw std::invalid_argument("Duplicate room-row-column");
-        }
-        auto* count = seatCounts.find(room->id());
-        if (count) {
-            ++*count;
-        } else {
-            seatCounts.insert(room->id(), 1);
-        }
-    });
-    checkRecords(directory_ / files[1], rooms, [&](const Auditorium& room) {
-        Auditorium(room.id(), room.name(), room.rowCount(), room.seatsPerRow());
-        txt_persistence::validateUtf8(room.name());
-        const auto* count = seatCounts.find(room.id());
-        if (!count || *count != static_cast<std::uint64_t>(room.capacity())) {
-            throw std::invalid_argument("Room does not have its complete rectangular seat layout");
-        }
-    });
-    checkRecords(directory_ / files[3], screenings, [&](const Screening& screening) {
-        Screening(screening.id(), screening.filmId(), screening.auditoriumId(),
-                  screening.startTime(), screening.ticketPrice());
-        service_validation::screening(screening, films, rooms, screenings);
-    });
     HashTable<std::string, bool> soldSeats;
-    checkRecords(directory_ / files[4], tickets, [&](const Ticket& ticket) {
-        Ticket(ticket.id(), ticket.screeningId(), ticket.seatId(), ticket.soldAt(), ticket.unitPrice());
-        const auto* screening = screenings.findById(ticket.screeningId());
-        const auto* seat = seats.findById(ticket.seatId());
-        if (!screening || !seat || seat->auditoriumId() != screening->auditoriumId()) {
-            throw std::invalid_argument("Ticket references a missing screening/seat or the wrong room");
+    fs::path path = directory_ / files[0];
+    std::size_t line = 1;
+    try {
+        for (const Film& film : films) {
+            ++line;
+            Film(film.id(), film.title(), film.durationMinutes());
+            txt_persistence::validateUtf8(film.title());
         }
-        if (ticket.soldAt() >= screening->startTime()) {
-            throw std::invalid_argument("Ticket must be sold before screening start");
+        path = directory_ / files[2];
+        line = 1;
+        for (const Seat& seat : seats) {
+            ++line;
+            Seat(seat.id(), seat.auditoriumId(), seat.rowNumber(), seat.seatNumber());
+            const Auditorium* room = rooms.findById(seat.auditoriumId());
+            if (room == nullptr || seat.rowNumber() > room->rowCount() || seat.seatNumber() > room->seatsPerRow()) {
+                throw std::invalid_argument("Seat references a missing room or an out-of-range position");
+            }
+            const std::string key = std::to_string(seat.auditoriumId()) + ":"
+                + std::to_string(seat.rowNumber()) + ":" + std::to_string(seat.seatNumber());
+            if (!positions.insert(key, true)) {
+                throw std::invalid_argument("Duplicate room-row-column");
+            }
+            std::size_t* count = seatCounts.find(room->id());
+            if (count != nullptr) {
+                ++*count;
+            } else {
+                seatCounts.insert(room->id(), 1);
+            }
         }
-        const auto key = std::to_string(ticket.screeningId()) + ":" + std::to_string(ticket.seatId());
-        if (!soldSeats.insert(key, true)) {
-            throw std::invalid_argument("Duplicate screening-seat ticket");
+        path = directory_ / files[1];
+        line = 1;
+        for (const Auditorium& room : rooms) {
+            ++line;
+            Auditorium(room.id(), room.name(), room.rowCount(), room.seatsPerRow());
+            txt_persistence::validateUtf8(room.name());
+            const std::size_t* count = seatCounts.find(room.id());
+            if (count == nullptr || *count != static_cast<std::uint64_t>(room.capacity())) {
+                throw std::invalid_argument("Room does not have its complete rectangular seat layout");
+            }
         }
-    });
+        path = directory_ / files[3];
+        line = 1;
+        for (const Screening& screening : screenings) {
+            ++line;
+            Screening(screening.id(), screening.filmId(), screening.auditoriumId(),
+                      screening.startTime(), screening.ticketPrice());
+            service_validation::screening(screening, films, rooms, screenings);
+        }
+        path = directory_ / files[4];
+        line = 1;
+        for (const Ticket& ticket : tickets) {
+            ++line;
+            Ticket(ticket.id(), ticket.screeningId(), ticket.seatId(), ticket.soldAt(), ticket.unitPrice());
+            const Screening* screening = screenings.findById(ticket.screeningId());
+            const Seat* seat = seats.findById(ticket.seatId());
+            if (screening == nullptr || seat == nullptr || seat->auditoriumId() != screening->auditoriumId()) {
+                throw std::invalid_argument("Ticket references a missing screening/seat or the wrong room");
+            }
+            if (ticket.soldAt() >= screening->startTime()) {
+                throw std::invalid_argument("Ticket must be sold before screening start");
+            }
+            const std::string key = std::to_string(ticket.screeningId()) + ":" + std::to_string(ticket.seatId());
+            if (!soldSeats.insert(key, true)) {
+                throw std::invalid_argument("Duplicate screening-seat ticket");
+            }
+        }
+    } catch (const std::bad_alloc&) {
+        throw;
+    } catch (const std::exception& error) {
+        throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+    }
 }
 
 void ApplicationData::fileStep(const char* phase, std::size_t index) const {
@@ -204,7 +230,7 @@ void ApplicationData::retryRecovery() {
     if (!recoveryRequired_) {
         return;
     }
-    const auto stage = directory_ / ".cms-save";
+    const fs::path stage = directory_ / ".cms-save";
     if (!ownsStage_ || !fs::is_directory(inspectPath(stage))
         || !fs::is_directory(inspectPath(stage / "old"))
         || !fs::is_directory(inspectPath(stage / "new"))) {
@@ -212,10 +238,10 @@ void ApplicationData::retryRecovery() {
     }
     for (std::size_t i = 0; i < 5; ++i) {
         fileStep("restore", i);
-        const auto original = directory_ / files[i];
+        const fs::path original = directory_ / files[i];
         if (hadFiles_) {
-            const auto backup = stage / "old" / files[i];
-            const auto temporary = stage / "new" / files[i];
+            const fs::path backup = stage / "old" / files[i];
+            const fs::path temporary = stage / "new" / files[i];
             if (!fs::is_regular_file(inspectPath(backup))) {
                 throw std::runtime_error(backup.string() + ": Recovery requires a complete backup");
             }
@@ -243,7 +269,7 @@ void ApplicationData::save() {
     if (count != (hadFiles_ ? 5 : 0)) {
         throw std::runtime_error("Data file set changed externally; refusing to overwrite it");
     }
-    const auto stage = directory_ / ".cms-save";
+    const fs::path stage = directory_ / ".cms-save";
     if (ownsStage_) {
         cleanOwnedStage(stage);
         ownsStage_ = false;
@@ -272,11 +298,16 @@ void ApplicationData::save() {
     try {
         fs::create_directory(stage / "new");
         fs::create_directory(stage / "old");
-        fileStep("write", 0); txt_persistence::save(temporary[0], films);
-        fileStep("write", 1); txt_persistence::save(temporary[1], rooms);
-        fileStep("write", 2); txt_persistence::save(temporary[2], seats);
-        fileStep("write", 3); txt_persistence::save(temporary[3], screenings);
-        fileStep("write", 4); txt_persistence::save(temporary[4], tickets);
+        fileStep("write", 0);
+        txt_persistence::save(temporary[0], films);
+        fileStep("write", 1);
+        txt_persistence::save(temporary[1], rooms);
+        fileStep("write", 2);
+        txt_persistence::save(temporary[2], seats);
+        fileStep("write", 3);
+        txt_persistence::save(temporary[3], screenings);
+        fileStep("write", 4);
+        txt_persistence::save(temporary[4], tickets);
         if (hadFiles_) {
             for (std::size_t i = 0; i < 5; ++i) {
                 fileStep("backup", i);
@@ -292,7 +323,7 @@ void ApplicationData::save() {
         // Keep backups; an unfinished .cms-save blocks loading after interruption.
         fs::rename(stage, archive);
     } catch (...) {
-        const auto originalError = std::current_exception();
+        const std::exception_ptr originalError = std::current_exception();
         bool restored = true;
         for (std::size_t i = 0; i < installed; ++i) {
             try {

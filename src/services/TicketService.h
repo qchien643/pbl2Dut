@@ -13,7 +13,8 @@
 #include <memory>
 #include <string>
 
-struct SaleDetails {
+struct SaleDetails
+{
     Film film;
     Auditorium room;
     Screening screening;
@@ -21,17 +22,20 @@ struct SaleDetails {
     std::string endTime;
 };
 
-struct TicketDetails {
+struct TicketDetails
+{
     Ticket ticket;
     SaleDetails sale;
 };
 
-struct DailyRevenue {
+struct DailyRevenue
+{
     std::size_t ticketCount = 0;
     std::int64_t amount = 0;
 };
 
-class TicketService {
+class TicketService
+{
 public:
     TicketService(const FilmRepository& films, const AuditoriumRepository& rooms,
                   const SeatRepository& seats, const ScreeningRepository& screenings,
@@ -43,15 +47,7 @@ public:
     std::unique_ptr<SeatMap> seatMap(EntityId screeningId) const;
     DailyRevenue revenue(const std::string& saleDate) const;
 
-    template <typename Function>
-    void listBySaleDate(const std::string& saleDate, Function visit) const {
-        validateSaleDate(saleDate);
-        tickets_.forEach([&](const Ticket& ticket) {
-            if (ticket.soldAt().compare(0, 10, saleDate) == 0) {
-                visit(find(ticket.id()));
-            }
-        });
-    }
+    void listBySaleDate(const std::string& saleDate, LinkedList<TicketDetails>& result) const;
 
 private:
     SaleDetails details(EntityId screeningId, EntityId seatId) const;

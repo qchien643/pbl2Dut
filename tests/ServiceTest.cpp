@@ -113,15 +113,18 @@ void testCatalog() { // FR-FILM-*, FR-ROOM-*, SAT-01, SAT-13.
     f.catalog.updateFilm(1, "Renamed", 90);
     assert(f.catalog.film(1).durationMinutes() == 90);
     const auto otherFilm = f.catalog.addFilm("Another", 80);
-    int count = 0;
-    f.catalog.films("name", [&](const Film& film) { assert(film.id() == 1); ++count; });
-    assert(count == 1);
-    count = 0;
-    f.catalog.films("", [&](const Film&) { ++count; });
-    assert(count == 2);
-    count = 0;
-    f.catalog.rooms([&](const Auditorium&) { ++count; });
-    assert(count == 2);
+    LinkedList<Film> films;
+    f.catalog.films("name", films);
+    assert(films.size() == 1 && (*films.begin()).id() == 1);
+    f.catalog.films("", films);
+    assert(films.size() == 2);
+    f.catalog.films("Not found", films);
+    assert(films.empty());
+    LinkedList<Auditorium> rooms;
+    f.catalog.rooms(rooms);
+    assert(rooms.size() == 2);
+    f.catalog.rooms(rooms);
+    assert(rooms.size() == 2);
     f.catalog.eraseFilm(otherFilm);
     f.schedule.add(1, 1, "2026-11-01 18:00", 80000);
     f.markSaved();
@@ -160,21 +163,75 @@ void testScheduling() { // FR-SHOW-*, SAT-02, SAT-03.
     assert(!f.screenings.isDirty() && f.schedule.find(after).startTime() == "2026-11-02 01:15");
     f.schedule.erase(otherRoom);
     assert(!f.screenings.findById(otherRoom));
-    int count = 0;
-    f.schedule.list("2026-11-02", 1, 1, true, [&](const Screening& item) {
-        assert(item.id() == after);
-        ++count;
-    });
-    assert(count == 1);
+    LinkedList<Screening> screenings;
+    f.schedule.list("2026-11-02", 1, 1, true, screenings);
+    assert(screenings.size() == 1 && (*screenings.begin()).id() == after);
     currentTime = "2026-11-02 01:15";
-    count = 0;
-    f.schedule.list("", 0, 0, true, [&](const Screening&) { ++count; });
-    assert(count == 0);
-    f.schedule.list("", 0, 0, false, [&](const Screening&) { ++count; });
-    assert(count == 3);
-    expectThrow([&] { f.schedule.list("2026-02-30", 0, 0, false, [](const Screening&) {}); });
-    expectThrow([&] { f.schedule.list("", -1, 0, false, [](const Screening&) {}); });
+    f.schedule.list("", 0, 0, true, screenings);
+    assert(screenings.empty());
+    f.schedule.list("", 0, 0, false, screenings);
+    assert(screenings.size() == 3);
+    expectThrow([&] { f.schedule.list("2026-02-30", 0, 0, false, screenings); });
+    expectThrow([&] { f.schedule.list("", -1, 0, false, screenings); });
+    assert(screenings.size() == 3);
     expectThrow<std::out_of_range>([&] { f.schedule.erase(999); });
+}
+
+void testLookupValidation() {
+    Fixture f;
+    const EntityId show = f.schedule.add(1, 1, "2026-11-01 18:00", 80000);
+    for (EntityId id : {EntityId(0), EntityId(-1)}) {
+        expectThrow([&] { f.catalog.film(id); });
+        expectThrow([&] { f.catalog.room(id); });
+        expectThrow([&] { f.schedule.find(id); });
+        expectThrow([&] { f.sales.find(id); });
+        expectThrow([&] { f.sales.preview(id, 1); });
+        expectThrow([&] { f.sales.preview(show, id); });
+        expectThrow([&] { f.sales.seatMap(id); });
+    }
+    expectThrow<std::out_of_range>([&] { f.catalog.film(999); });
+    expectThrow<std::out_of_range>([&] { f.catalog.room(999); });
+    expectThrow<std::out_of_range>([&] { f.schedule.find(999); });
+    expectThrow<std::out_of_range>([&] { f.sales.seatMap(999); });
+    assert(&f.catalog.film(1) == f.films.findById(1));
+    assert(&f.catalog.room(1) == f.rooms.findById(1));
+    assert(&f.schedule.find(show) == f.screenings.findById(show));
+
+    f.films.erase(1);
+    expectThrow<std::out_of_range>([&] { f.sales.preview(show, 1); });
+    expectThrow<std::out_of_range>([&] { f.schedule.endTime(show); });
+    f.rooms.erase(1);
+    expectThrow<std::out_of_range>([&] { f.sales.preview(show, 1); });
+    expectThrow<std::out_of_range>([&] { f.sales.seatMap(show); });
+    assert(f.tickets.empty());
+}
+
+void testQueryResultOwnership() {
+    Fixture f;
+    f.markSaved();
+    LinkedList<Film> films;
+    f.catalog.films("", films);
+    assert(&*films.begin() != f.films.findById(1));
+    f.catalog.updateFilm(1, "Renamed", 120);
+    assert((*films.begin()).title() == "Film");
+    films.clear();
+    assert(f.films.size() == 1);
+    films.pushBack(Film(99, "Keep on failure", 90));
+    f.markSaved();
+
+    allocationsBeforeFailure = 0;
+    bool failed = false;
+    try {
+        f.catalog.films("", films);
+    } catch (const std::bad_alloc&) {
+        failed = true;
+    }
+    allocationsBeforeFailure = -1;
+    assert(failed && films.size() == 1 && (*films.begin()).id() == 99);
+    assert(!f.films.isDirty());
+    f.catalog.films("", films);
+    assert(films.size() == 1 && (*films.begin()).title() == "Renamed");
+    assert(!f.films.isDirty());
 }
 
 void testCalendarAndOverflow() {
@@ -230,23 +287,25 @@ void testSales() { // SAT-04/05/06/07/10/11/13, FR-SALE-*, FR-QUERY-*, FR-REPORT
     auto report = f.sales.revenue("2026-10-19");
     assert(report.ticketCount == 2 && report.amount == 170000);
     int listed = 0;
-    f.sales.listBySaleDate("2026-10-19", [&](const TicketDetails& details) {
+    LinkedList<TicketDetails> tickets;
+    f.sales.listBySaleDate("2026-10-19", tickets);
+    for (const TicketDetails& details : tickets) {
         assert(details.ticket.id() == listed + 1);
         assert(details.sale.film.title() == "Film" && details.sale.room.name() == "Room");
         ++listed;
-    });
+    }
     assert(listed == 2);
     report = f.sales.revenue("2026-11-01");
     assert(report.ticketCount == 0 && report.amount == 0);
-    f.sales.listBySaleDate("2026-11-01", [&](const TicketDetails&) { ++listed; });
-    assert(listed == 2);
+    f.sales.listBySaleDate("2026-11-01", tickets);
+    assert(tickets.empty());
     const auto found = f.sales.find(ticket);
     assert(found.ticket.unitPrice() == 80000 && found.ticket.soldAt() == "2026-10-19 10:00");
     assert(found.sale.seat.rowNumber() == 1 && found.sale.seat.seatNumber() == 1);
     expectThrow([&] { f.sales.find(0); });
     expectThrow<std::out_of_range>([&] { f.sales.find(999); });
     expectThrow([&] { f.sales.revenue("2026-02-30"); });
-    expectThrow([&] { f.sales.listBySaleDate("2026-02-30", [](const TicketDetails&) {}); });
+    expectThrow([&] { f.sales.listBySaleDate("2026-02-30", tickets); });
     f.markSaved();
     expectThrow([&] { f.schedule.erase(first); });
     expectThrow([&] { f.schedule.update(first, 1, 1, "2026-11-02 18:00", 1); });
@@ -331,7 +390,9 @@ void testAllocationRollback() { // FR-ROOM-07/08, FR-SALE-09, NFR-03/11.
                         assert(f.schedule.find(spare).ticketPrice() == 90000);
                     }
                 }
-                f.seats.forEach([&](const Seat& seat) { assert(f.seats.findById(seat.id()) == &seat); });
+                for (const Seat& seat : f.seats) {
+                    assert(f.seats.findById(seat.id()) == &seat);
+                }
                 if (succeeded) {
                     break;
                 }
@@ -408,9 +469,9 @@ void testPerformanceBaseline() { // NFR-02.
         assert(std::chrono::steady_clock::now() - start < std::chrono::seconds(2));
     };
     check([&] {
-        int count = 0;
-        schedule.list("2099-01-01", 0, 0, false, [&](const Screening&) { ++count; });
-        assert(count == 10);
+        LinkedList<Screening> matches;
+        schedule.list("2099-01-01", 0, 0, false, matches);
+        assert(matches.size() == 10);
     });
     check([&] { assert(sales.find(10000).ticket.id() == 10000); });
     check([&] {
@@ -426,6 +487,8 @@ void testPerformanceBaseline() { // NFR-02.
 int main() {
     testCatalog();
     testScheduling();
+    testLookupValidation();
+    testQueryResultOwnership();
     testCalendarAndOverflow();
     testSales();
     testAllocationRollback();

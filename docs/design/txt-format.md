@@ -1,8 +1,9 @@
 # ĐỊNH DẠNG TXT VÀ VÒNG ĐỜI DỮ LIỆU
 
-**Phiên bản:** 1.0 - Hoàn thiện | **Ngày:** 19/10/2026 | **Căn cứ:** SRS 1.0.
+**Cập nhật:** 26/10/2026. Đọc cùng [thiết kế dữ liệu](data-design.md) và
+[hướng dẫn vấn đáp](../study-guide.md).
 
-Định dạng được triển khai tại `src/persistence/TxtPersistence.h`; quy trình nạp,
+Định dạng được triển khai tại `src/persistence/TxtPersistence.{h,cpp}`; quy trình nạp,
 kiểm tra và lưu toàn bộ được điều phối bởi `src/ApplicationData.cpp`.
 
 ## 1. Bộ file
@@ -52,13 +53,29 @@ lịch phòng gồm 15 phút nghỉ; cặp suất-ghế duy nhất; ghế đúng
 chiếu. Chấp nhận suất lịch sử. Giá vé lịch sử chỉ cần dương, không ép bằng giá suất
 hiện tại. Dùng lại quy tắc lịch của service, nhưng không áp dụng điều kiện tương lai.
 
-Lỗi bản ghi có tên file và dòng. Khi kiểm tra RAM trước lưu, dòng chỉ vị trí bản ghi
-trong bản xuất hiện tại, không nhất thiết là dòng cũ trên ổ đĩa.
+Lỗi bản ghi có tên file và dòng đang xét. Lỗi liên bản ghi có thể xuất hiện khi
+đối chiếu dữ liệu của dòng khác, nên số dòng không luôn chỉ ra nguyên nhân duy
+nhất. Khi kiểm tra RAM trước lưu, dòng chỉ vị trí bản ghi trong bản xuất hiện tại,
+không nhất thiết là dòng cũ trên ổ đĩa.
 
 Nếu thiếu một phần bộ file hoặc file không phải regular file (kể cả symlink), báo lỗi.
 Nếu chưa có cả năm file và không có dấu vết lưu/phục hồi, trả
 `LoadResult::NeedsEmptyConfirmation`; UI hỏi người dùng rồi mới gọi `load(true)`.
 Chỉ sau xác nhận mới `isReady() == true`; chưa ghi file ở bước này.
+
+### Các cờ trong ApplicationData
+
+| Thành viên/hàm | Nghĩa | Không được hiểu là |
+|---|---|---|
+| `ready_` | Đã nạp/kiểm tra hoặc chấp nhận phiên rỗng | Đã lưu thành công |
+| `hadFiles_` | Phiên có bộ file cũ cần sao lưu/phục hồi | Tự phát hiện mọi sửa đổi từ bên ngoài |
+| `ownsStage_` | Đối tượng đã tạo thư mục staging, có trách nhiệm xử lý nó | Có thể xóa mọi thư mục `.cms-save` gặp trên đĩa |
+| `recoveryRequired_` | Phục hồi lần trước thất bại, phải xử lý trước khi lưu tiếp | RAM mới đã mất |
+| `isDirty()` | OR cờ dirty của năm repository | So sánh nội dung RAM với file |
+
+Repository cung cấp `markSaved()` nhưng không ghi file. Chỉ lớp điều phối gọi
+sau nạp hợp lệ hoặc sau khi xuất đủ bộ thành công. `save()` không dùng dirty để
+quyết định chỉ ghi một số file.
 
 ## 3. Lưu toàn bộ và phục hồi
 
@@ -89,6 +106,8 @@ của lần lưu đầu có thư mục `old` rỗng vì trước đó chưa có 
 
 Chỉ hỗ trợ một phiên, không sửa file từ ngoài trong lúc chạy. Không có journal,
 fsync hoặc bảo đảm nguyên tử cả bộ khi crash/mất điện; thay đổi chưa lưu có thể mất.
+Kiểm tra file trước lưu chỉ phát hiện thiếu/thừa hoặc loại file không phù hợp,
+không so checksum để phát hiện nội dung đã bị người khác sửa.
 Không bảo đảm phục hồi nếu runtime không thể tiếp tục (ví dụ cạn bộ nhớ trong
 hàm `noexcept` của thư viện hệ thống); đây cũng là dừng bất thường.
 
@@ -101,3 +120,16 @@ bộ chính hoặc một `.cms-backup-N/old` đầy đủ; không tự suy luậ
 Nếu cả bộ chính mất nhưng vẫn có `.cms-backup-*`, không cho xác nhận phiên rỗng.
 Nếu lỗi không phục hồi được trong phiên, giữ cửa sổ/RAM để xử lý. Khung Qt hiện tại
 bắt exception khi đóng, giữ cửa sổ mở và thử `retryRecovery()` nếu cần ở lần lưu lại.
+
+## 5. Câu hỏi cần tự lần theo code
+
+- Vì sao codec `load()` thêm vào repository tạm, không thêm thẳng vào bộ chính?
+- Vì sao cần kiểm tra cả `flush()` lẫn `close()` sau vòng ghi?
+- Nếu file thứ ba thay thất bại, `installed` đang bằng mấy và phục hồi những file nào?
+- Nếu lỗi trước khi thay bất kỳ file nào, vì sao không cần phục hồi file chính?
+- Vì sao `retryRecovery()` giữ nguyên RAM và chưa được gọi `markSaved()`?
+- Vì sao nhiều lần rename không tạo ra một transaction nguyên tử cho cả năm file?
+
+Cách học: vẽ trạng thái `RAM / new / old / file chính` ở từng bước, rồi đối chiếu
+`testSaveFailures` và `testFailedRecoveryAndValidation` trong
+`tests/ApplicationDataTest.cpp`. Không thử lỗi phá hủy trên dữ liệu đang dùng.

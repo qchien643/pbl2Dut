@@ -7,6 +7,7 @@
 #include "entities/Screening.h"
 #include "entities/Seat.h"
 #include "entities/Ticket.h"
+#include "entities/EntityValidation.h"
 
 #include <cassert>
 #include <iostream>
@@ -98,9 +99,28 @@ void testDateTime() {
     }
 }
 
+void testValidationHelpers()
+{
+    assert(entity_detail::positive(1, "ID") == 1);
+    expectThrow([] { entity_detail::positive(0, "ID"); });
+    expectThrow([] { entity_detail::positive(-1, "ID"); });
+
+    const std::string original = "  Film name  ";
+    assert(entity_detail::name(original) == "Film name");
+    assert(original == "  Film name  ");
+    assert(entity_detail::name("A") == "A");
+    expectThrow([] { entity_detail::name("  |  "); });
+
+    assert(entity_detail::dateTime("2400-02-29 00:00") == "2400-02-29 00:00");
+    expectThrow([] { entity_detail::dateTime("2200-02-29 00:00"); });
+    expectThrow([] { entity_detail::dateTime("2026-01-01 0x:00"); });
+    expectThrow([] { entity_detail::dateTime("2026-01-01 00:0x"); });
+}
+
 int main() {
     testValidEntities();
     testInvalidValues();
     testDateTime();
+    testValidationHelpers();
     std::cout << "Entity checks passed\n";
 }

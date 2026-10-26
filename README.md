@@ -72,13 +72,13 @@ ctest --test-dir build --output-on-failure
 
 ## Chạy chương trình
 
-Không truyền tham số, chương trình mở hộp thoại chọn thư mục dữ liệu:
+Không truyền tham số, chương trình dùng trực tiếp bộ dữ liệu mẫu `data/demo`:
 
 ```bash
 ./build/cinema
 ```
 
-Để thử với dữ liệu mẫu mà không sửa bản gốc:
+Để thử mà không sửa bộ dữ liệu mẫu, truyền đường dẫn tới một bản sao:
 
 ```bash
 cp -r data/demo /tmp/pbl2-demo
@@ -104,7 +104,7 @@ phục hồi và không nên xóa khi chưa kiểm tra dữ liệu hiện tại.
 ```text
 src/
 ├── DataStructures/   LinkedList, HashTable, Matrix2D tự cài đặt
-├── entities/         Mỗi entity có một header riêng
+├── entities/         Mỗi entity có cặp .h/.cpp riêng
 ├── repositories/     Mỗi repository có một header riêng
 ├── persistence/      Đọc và ghi định dạng TXT
 ├── services/         Mỗi service có header và implementation riêng
@@ -119,6 +119,11 @@ docs/requirements/     Đặc tả yêu cầu hiện hành
 
 Quy tắc nghiệp vụ nằm trong service, không nằm trong widget. Repository dùng cấu
 trúc dữ liệu tự cài đặt làm nơi lưu chính; Qt chỉ phục vụ giao diện.
+
+Cách trình bày tham khảo `docs/ref/oop`: lớp thường tách `.h/.cpp`, template khai
+báo trước và định nghĩa bên dưới trong header; dùng kiểu tường minh và vòng lặp
+thay callback duyệt dữ liệu. Giữ `Repository<T>` dùng chung. Các ngoại lệ vì an
+toàn bộ nhớ và kết nối sự kiện Qt được giải thích trong tài liệu thiết kế lớp.
 
 ## Kiến trúc
 
@@ -143,9 +148,12 @@ ApplicationData ── TxtPersistence ── 5 file TXT
 
 ## Tài liệu
 
+- [Mục lục tài liệu OOP và database](docs/README.md)
+- [Lộ trình đọc code và vấn đáp 1:1](docs/study-guide.md)
 - [SRS 1.0](docs/requirements/srs.md)
 - [Thiết kế dữ liệu và ERD](docs/design/data-design.md)
 - [Thiết kế lớp và tổ chức RAM](docs/design/class-design.md)
+- [Sơ đồ tương tác Archify: kiến trúc, OOP và ERD](docs/diagrams/README.md)
 - [Định dạng TXT và phục hồi](docs/design/txt-format.md)
 - [Đối chiếu triển khai và kiểm thử](docs/design/verification.md)
 - [Wireframe giao diện](docs/design/ui-wireframe.html)

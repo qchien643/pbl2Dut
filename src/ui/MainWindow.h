@@ -29,6 +29,12 @@ protected:
     void closeEvent(QCloseEvent* event) override;
 
 private:
+    void setupSaleTab();
+    void setupFilmTab();
+    void setupRoomTab();
+    void setupScreeningTab();
+    void setupReportTab();
+
     void refreshFilms(EntityId selectId = 0);
     void editFilm(bool creating);
     void deleteFilm();

@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "PBL2 — kế thừa, composition và tham chiếu ở repository",
+    "locale": "vi",
+    "output": "docs/diagrams/classes/index.html",
+    "quality_profile": "showcase",
+    "repository": {"url": "https://github.com/qchien643/pbl2Dut.git", "revision": "103602a1e84c4b81641c6b5d1ea0ae56e1195f91", "link_mode": "local-only"}
+  },
+  "layout": {"mode": "grid", "gapX": 100, "gapY": 100, "typeW": 210, "typeMaxW": 300},
+  "types": [
+    {"id": "repository", "label": "Repository<T>", "kind": "class", "sublabel": "Lớp mẫu, không phải abstract", "row": 0, "col": 1,
+      "attributes": [
+        {"name": "records_", "type": "LinkedList<T>", "visibility": "private"},
+        {"name": "index_", "type": "HashTable<EntityId, T*>", "visibility": "private"},
+        {"name": "dirty_", "type": "bool", "visibility": "private"}
+      ],
+      "methods": [
+        {"name": "findById", "parameters": "id: EntityId", "returns": "const T*", "visibility": "public"},
+        {"name": "insert", "parameters": "value: const T&", "returns": "bool", "visibility": "public"},
+        {"name": "isDirty", "returns": "bool", "visibility": "public"}
+      ],
+      "sources": [{"path": "src/repositories/Repository.h", "line": 14, "end_line": 46}]},
+    {"id": "filmrepo", "label": "FilmRepository", "kind": "class", "sublabel": "Kế thừa Repository<Film>", "row": 0, "col": 0,
+      "sources": [{"path": "src/repositories/FilmRepository.h", "line": 1, "end_line": 6}]},
+    {"id": "ticketrepo", "label": "TicketRepository", "kind": "class", "sublabel": "Không công khai sửa, xóa vé", "row": 0, "col": 2,
+      "attributes": [{"name": "records_", "type": "Repository<Ticket>", "visibility": "private"}],
+      "methods": [
+        {"name": "insert", "parameters": "ticket: const Ticket&", "returns": "bool", "visibility": "public"},
+        {"name": "findById", "parameters": "id: EntityId", "returns": "const Ticket*", "visibility": "public"}
+      ],
+      "sources": [{"path": "src/repositories/TicketRepository.h", "line": 6, "end_line": 25}]},
+    {"id": "appdata", "label": "ApplicationData", "kind": "class", "sublabel": "Sở hữu các kho bằng giá trị", "row": 1, "col": 0,
+      "attributes": [
+        {"name": "films", "type": "FilmRepository", "visibility": "public"},
+        {"name": "tickets", "type": "TicketRepository", "visibility": "public"}
+      ],
+      "methods": [{"name": "save", "returns": "void", "visibility": "public"}],
+      "sources": [{"path": "src/ApplicationData.h", "line": 11, "end_line": 34}]},
+    {"id": "ticketservice", "label": "TicketService", "kind": "class", "sublabel": "Mượn kho bằng tham chiếu", "row": 1, "col": 2,
+      "attributes": [{"name": "tickets_", "type": "TicketRepository&", "visibility": "private"}],
+      "methods": [{"name": "find", "parameters": "ticketId: EntityId", "returns": "TicketDetails", "visibility": "public"}],
+      "sources": [{"path": "src/services/TicketService.h", "line": 37, "end_line": 63}]}
+  ],
+  "relationships": [
+    {"id": "film-inherits", "from": "filmrepo", "to": "repository", "kind": "inheritance", "label": "T = Film"},
+    {"id": "ticket-contains", "from": "ticketrepo", "to": "repository", "kind": "composition", "label": "T = Ticket"},
+    {"id": "app-films", "from": "appdata", "to": "filmrepo", "kind": "composition"},
+    {"id": "app-tickets", "from": "appdata", "to": "ticketrepo", "kind": "composition"},
+    {"id": "service-borrows", "from": "ticketservice", "to": "ticketrepo", "kind": "association", "label": "Tham chiếu"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Đọc đúng phạm vi", "items": [
+      "Đây là lát cắt OOP của tầng repository, không phải sơ đồ mọi lớp và mọi thành viên.",
+      "FilmRepository đại diện cho bốn lớp kế thừa: FilmRepository, AuditoriumRepository, SeatRepository, ScreeningRepository.",
+      "Repository<T> biểu diễn mẫu; Repository<Film> và Repository<Ticket> là hai kiểu cụ thể khác nhau."
+    ]},
+    {"dot": "emerald", "title": "Ba quan hệ khác nhau", "items": [
+      "Kế thừa: FilmRepository nhận giao diện thao tác của Repository<Film>.",
+      "Composition: TicketRepository chứa một Repository<Ticket>; chỉ chuyển tiếp các hàm được phép.",
+      "Association: TicketService giữ TicketRepository&, không sở hữu hay hủy kho."
+    ]},
+    {"dot": "amber", "title": "Bộ nhớ và các phần đã lược", "items": [
+      "LinkedList sở hữu entity; HashTable chỉ lưu con trỏ đến entity trong danh sách.",
+      "Repository cấm copy và move để tránh sai liên kết giữa danh sách với chỉ mục.",
+      "ApplicationData còn sở hữu ba kho khác; TicketService còn tham chiếu bốn kho khác. Các entity liên kết qua ID: xem ERD.",
+      "Nguồn là bản chụp cục bộ; điều khiển trình xem bằng tiếng Anh."
+    ]}
+  ]
+}

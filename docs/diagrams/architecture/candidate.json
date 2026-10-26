@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "PBL2 — từ thao tác Qt đến dữ liệu TXT",
+    "locale": "vi",
+    "output": "docs/diagrams/architecture/index.html",
+    "quality_profile": "showcase",
+    "repository": {"url": "https://github.com/qchien643/pbl2Dut.git", "revision": "103602a1e84c4b81641c6b5d1ea0ae56e1195f91", "link_mode": "local-only"}
+  },
+  "components": [
+    {"id": "window", "type": "frontend", "label": "MainWindow", "sublabel": "Giao diện Qt", "pos": [40, 40], "size": [180, 76],
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1236, "end_line": 1242}, {"path": "src/ui/MainWindow.cpp", "line": 1427, "end_line": 1449}, {"path": "src/main.cpp", "line": 32, "end_line": 42}]},
+    {"id": "services", "type": "backend", "label": "Ba service", "sublabel": "Kiểm tra nghiệp vụ", "pos": [440, 40], "size": [180, 76],
+      "sources": [{"path": "src/services/CatalogService.h", "line": 13, "end_line": 46}, {"path": "src/services/ScreeningService.h", "line": 13, "end_line": 41}, {"path": "src/services/TicketService.cpp", "line": 64, "end_line": 101}]},
+    {"id": "repos", "type": "database", "label": "Năm repository", "sublabel": "Entity trong RAM", "pos": [840, 40], "size": [180, 76],
+      "sources": [{"path": "src/repositories/Repository.h", "line": 14, "end_line": 46}, {"path": "src/repositories/Repository.h", "line": 95, "end_line": 126}, {"path": "src/repositories/TicketRepository.h", "line": 6, "end_line": 25}]},
+    {"id": "appdata", "type": "backend", "label": "ApplicationData", "sublabel": "Sở hữu kho, điều phối lưu", "pos": [40, 280], "size": [180, 76],
+      "sources": [{"path": "src/ApplicationData.h", "line": 11, "end_line": 34}, {"path": "src/ApplicationData.cpp", "line": 128, "end_line": 143}, {"path": "src/ApplicationData.cpp", "line": 260, "end_line": 324}]},
+    {"id": "codec", "type": "backend", "label": "txt_persistence", "sublabel": "Đọc và ghi bản ghi", "pos": [440, 280], "size": [180, 76],
+      "sources": [{"path": "src/persistence/TxtPersistence.h", "line": 34, "end_line": 94}, {"path": "src/persistence/TxtPersistence.h", "line": 96, "end_line": 131}]},
+    {"id": "files", "type": "database", "label": "Năm file TXT", "sublabel": "Dữ liệu trên ổ đĩa", "pos": [840, 280], "size": [180, 76],
+      "sources": [{"path": "src/ApplicationData.cpp", "line": 10, "end_line": 12}, {"path": "src/ApplicationData.cpp", "line": 277, "end_line": 324}]}
+  ],
+  "connections": [
+    {"id": "ui-business", "from": "window", "to": "services", "label": "Gọi nghiệp vụ"},
+    {"id": "business-memory", "from": "services", "to": "repos", "label": "Đọc / sửa hợp lệ"},
+    {"id": "ui-save", "from": "window", "to": "appdata", "label": "Xác nhận lưu, thoát"},
+    {"id": "app-codec", "from": "appdata", "to": "codec", "label": "Truyền kho, đường dẫn"},
+    {"id": "codec-files", "from": "codec", "to": "files", "label": "Đọc / ghi TXT"}
+  ],
+  "cards": [
+    {"dot": "cyan", "title": "Khởi tạo và quyền sở hữu", "items": [
+      "main tạo ApplicationData, CatalogService, ScreeningService, TicketService rồi MainWindow.",
+      "ApplicationData sở hữu năm repository; các service và cửa sổ chỉ giữ tham chiếu.",
+      "Sơ đồ nhóm ba service và năm kho; các mũi tên biểu diễn lời gọi, không phải mọi quan hệ sở hữu."
+    ]},
+    {"dot": "amber", "title": "Bán vé chưa đồng nghĩa lưu file", "items": [
+      "TicketService chỉ thêm vé sau khi xác nhận tiền, ghế còn trống và suất chưa bắt đầu.",
+      "Repository cập nhật RAM và đánh dấu dirty. MainWindow gọi save khi người dùng xác nhận lưu và thoát.",
+      "ApplicationData kiểm tra toàn vẹn, gọi codec ghi file tạm rồi thay bộ file; lỗi lưu giữ cửa sổ mở."
+    ]},
+    {"dot": "emerald", "title": "Giới hạn cần nhớ khi vấn đáp", "items": [
+      "Ứng dụng chạy offline, một tiến trình; không có SQL server hay API mạng.",
+      "Codec thực hiện I/O bản ghi; ApplicationData quản lý file tạm và bản sao lưu. Không tuyên bố ACID.",
+      "Nguồn là bản chụp cục bộ ngày 26/10/2026, chưa đẩy GitHub; nút điều khiển sơ đồ dùng tiếng Anh."
+    ]}
+  ]
+}

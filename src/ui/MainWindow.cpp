@@ -51,7 +51,7 @@ EntityId comboId(const QComboBox* combo) {
 }
 
 QTableWidgetItem* setNumber(QTableWidget* table, int row, int column, std::int64_t value) {
-    auto* item = new QTableWidgetItem;
+    QTableWidgetItem* item = new QTableWidgetItem;
     item->setData(Qt::DisplayRole, QVariant::fromValue<qlonglong>(value));
     table->setItem(row, column, item);
     return item;
@@ -82,7 +82,7 @@ void configureTable(QTableWidget* table, const QStringList& headers) {
 }
 
 QLineEdit* positiveInput(QWidget* parent, const char* objectName) {
-    auto* input = new QLineEdit(parent);
+    QLineEdit* input = new QLineEdit(parent);
     input->setObjectName(objectName);
     input->setMaxLength(19);
     input->setValidator(new QRegularExpressionValidator(QRegularExpression("[0-9]{0,19}"), input));
@@ -97,7 +97,7 @@ bool positiveValue(QLineEdit* input, std::int64_t& value) {
 }
 
 QLabel* dialogError(QVBoxLayout* layout, QWidget* parent, const char* objectName) {
-    auto* error = new QLabel(parent);
+    QLabel* error = new QLabel(parent);
     error->setObjectName(objectName);
     error->setTextFormat(Qt::PlainText);
     error->setWordWrap(true);
@@ -156,9 +156,9 @@ bool confirm(QWidget* parent, const QString& title, const QString& text, const Q
     QMessageBox box(QMessageBox::Question, title, text, QMessageBox::NoButton, parent);
     box.setObjectName("confirmation");
     box.setTextFormat(Qt::PlainText);
-    auto* yes = box.addButton(accept, QMessageBox::AcceptRole);
+    QPushButton* yes = box.addButton(accept, QMessageBox::AcceptRole);
     yes->setObjectName("confirmYes");
-    auto* cancel = box.addButton(QStringLiteral("Hủy"), QMessageBox::RejectRole);
+    QPushButton* cancel = box.addButton(QStringLiteral("Hủy"), QMessageBox::RejectRole);
     cancel->setObjectName("confirmCancel");
     box.setDefaultButton(cancel);
     box.setEscapeButton(cancel);
@@ -170,11 +170,15 @@ void populateFilms(QComboBox* combo, CatalogService& catalog, bool includeAll) {
     const QSignalBlocker blocker(combo);
     const EntityId selected = comboId(combo);
     combo->clear();
-    if (includeAll) combo->addItem(QStringLiteral("Tất cả phim"), QVariant::fromValue<qlonglong>(0));
-    catalog.films("", [&](const Film& film) {
+    if (includeAll) {
+        combo->addItem(QStringLiteral("Tất cả phim"), QVariant::fromValue<qlonglong>(0));
+    }
+    LinkedList<Film> films;
+    catalog.films("", films);
+    for (const Film& film : films) {
         combo->addItem(QStringLiteral("#%1 — %2").arg(film.id()).arg(fromUtf8(film.title())),
                        QVariant::fromValue<qlonglong>(film.id()));
-    });
+    }
     const int index = combo->findData(QVariant::fromValue<qlonglong>(selected));
     combo->setCurrentIndex(index >= 0 ? index : 0);
 }
@@ -183,11 +187,15 @@ void populateRooms(QComboBox* combo, CatalogService& catalog, bool includeAll) {
     const QSignalBlocker blocker(combo);
     const EntityId selected = comboId(combo);
     combo->clear();
-    if (includeAll) combo->addItem(QStringLiteral("Tất cả phòng"), QVariant::fromValue<qlonglong>(0));
-    catalog.rooms([&](const Auditorium& room) {
+    if (includeAll) {
+        combo->addItem(QStringLiteral("Tất cả phòng"), QVariant::fromValue<qlonglong>(0));
+    }
+    LinkedList<Auditorium> rooms;
+    catalog.rooms(rooms);
+    for (const Auditorium& room : rooms) {
         combo->addItem(QStringLiteral("#%1 — %2").arg(room.id()).arg(fromUtf8(room.name())),
                        QVariant::fromValue<qlonglong>(room.id()));
-    });
+    }
     const int index = combo->findData(QVariant::fromValue<qlonglong>(selected));
     combo->setCurrentIndex(index >= 0 ? index : 0);
 }
@@ -198,26 +206,26 @@ public:
         setObjectName("filmDialog");
         setWindowTitle(id == 0 ? QStringLiteral("Thêm phim") : QStringLiteral("Sửa phim"));
         setMinimumWidth(380);
-        auto* layout = new QVBoxLayout(this);
-        auto* form = new QFormLayout;
+        QVBoxLayout* layout = new QVBoxLayout(this);
+        QFormLayout* form = new QFormLayout;
         form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-        auto* title = new QLineEdit(this);
+        QLineEdit* title = new QLineEdit(this);
         title->setObjectName("filmTitle");
-        auto* duration = positiveInput(this, "filmDuration");
+        QLineEdit* duration = positiveInput(this, "filmDuration");
         form->addRow(QStringLiteral("&Tên phim *"), title);
         form->addRow(QStringLiteral("Thời &lượng (phút) *"), duration);
         layout->addLayout(form);
-        auto* note = new QLabel(QStringLiteral("* Bắt buộc. Dữ liệu được lưu vào TXT khi thoát."), this);
+        QLabel* note = new QLabel(QStringLiteral("* Bắt buộc. Dữ liệu được lưu vào TXT khi thoát."), this);
         note->setWordWrap(true);
         layout->addWidget(note);
-        auto* error = dialogError(layout, this, "filmError");
-        auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+        QLabel* error = dialogError(layout, this, "filmError");
+        QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
         buttons->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Xác nhận"));
         buttons->button(QDialogButtonBox::Ok)->setObjectName("filmSubmit");
         buttons->button(QDialogButtonBox::Cancel)->setText(QStringLiteral("Hủy"));
         layout->addWidget(buttons);
         if (id != 0) {
-            const auto& film = catalog.film(id);
+            const Film& film = catalog.film(id);
             title->setText(fromUtf8(film.title()));
             duration->setText(QString::number(film.durationMinutes()));
         }
@@ -233,7 +241,9 @@ public:
                 return;
             }
             try {
-                if (id == 0) filmId = catalog.addFilm(toUtf8(title->text()), minutes);
+                if (id == 0) {
+                    filmId = catalog.addFilm(toUtf8(title->text()), minutes);
+                }
                 else {
                     catalog.updateFilm(id, toUtf8(title->text()), minutes);
                     filmId = id;
@@ -254,28 +264,28 @@ public:
         setObjectName("roomDialog");
         setWindowTitle(id == 0 ? QStringLiteral("Thêm phòng") : QStringLiteral("Sửa phòng"));
         setMinimumWidth(380);
-        auto* layout = new QVBoxLayout(this);
-        auto* form = new QFormLayout;
+        QVBoxLayout* layout = new QVBoxLayout(this);
+        QFormLayout* form = new QFormLayout;
         form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-        auto* name = new QLineEdit(this);
+        QLineEdit* name = new QLineEdit(this);
         name->setObjectName("roomName");
-        auto* rows = positiveInput(this, "roomRows");
-        auto* columns = positiveInput(this, "roomColumns");
+        QLineEdit* rows = positiveInput(this, "roomRows");
+        QLineEdit* columns = positiveInput(this, "roomColumns");
         form->addRow(QStringLiteral("&Tên phòng *"), name);
         form->addRow(QStringLiteral("Số &hàng *"), rows);
         form->addRow(QStringLiteral("&Ghế mỗi hàng *"), columns);
         layout->addLayout(form);
-        auto* note = new QLabel(QStringLiteral("Ghế được tự sinh theo hình chữ nhật; không chỉnh từng ghế."), this);
+        QLabel* note = new QLabel(QStringLiteral("Ghế được tự sinh theo hình chữ nhật; không chỉnh từng ghế."), this);
         note->setWordWrap(true);
         layout->addWidget(note);
-        auto* error = dialogError(layout, this, "roomError");
-        auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+        QLabel* error = dialogError(layout, this, "roomError");
+        QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
         buttons->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Xác nhận"));
         buttons->button(QDialogButtonBox::Ok)->setObjectName("roomSubmit");
         buttons->button(QDialogButtonBox::Cancel)->setText(QStringLiteral("Hủy"));
         layout->addWidget(buttons);
         if (id != 0) {
-            const auto& room = catalog.room(id);
+            const Auditorium& room = catalog.room(id);
             name->setText(fromUtf8(room.name()));
             rows->setText(QString::number(room.rowCount()));
             columns->setText(QString::number(room.seatsPerRow()));
@@ -297,7 +307,9 @@ public:
                 return;
             }
             try {
-                if (id == 0) roomId = catalog.addRoom(toUtf8(name->text()), rowCount, columnCount);
+                if (id == 0) {
+                    roomId = catalog.addRoom(toUtf8(name->text()), rowCount, columnCount);
+                }
                 else {
                     catalog.updateRoom(id, toUtf8(name->text()), rowCount, columnCount);
                     roomId = id;
@@ -319,39 +331,39 @@ public:
         setObjectName("screeningDialog");
         setWindowTitle(id == 0 ? QStringLiteral("Thêm suất chiếu") : QStringLiteral("Sửa suất chiếu"));
         setMinimumWidth(430);
-        auto* layout = new QVBoxLayout(this);
-        auto* form = new QFormLayout;
+        QVBoxLayout* layout = new QVBoxLayout(this);
+        QFormLayout* form = new QFormLayout;
         form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
-        auto* film = new QComboBox(this);
+        QComboBox* film = new QComboBox(this);
         film->setObjectName("screeningFilm");
-        auto* room = new QComboBox(this);
+        QComboBox* room = new QComboBox(this);
         room->setObjectName("screeningRoom");
         populateFilms(film, catalog, false);
         populateRooms(room, catalog, false);
-        auto* start = new QDateTimeEdit(this);
+        QDateTimeEdit* start = new QDateTimeEdit(this);
         start->setObjectName("screeningStart");
         start->setDisplayFormat("yyyy-MM-dd HH:mm");
         start->setCalendarPopup(true);
         QDateTime initial = QDateTime::currentDateTime().addSecs(3600);
         initial.setTime(QTime(initial.time().hour(), initial.time().minute()));
         start->setDateTime(initial);
-        auto* price = positiveInput(this, "screeningPrice");
+        QLineEdit* price = positiveInput(this, "screeningPrice");
         form->addRow(QStringLiteral("&Phim *"), film);
         form->addRow(QStringLiteral("P&hòng *"), room);
         form->addRow(QStringLiteral("&Bắt đầu *"), start);
         form->addRow(QStringLiteral("&Giá vé (VND) *"), price);
         layout->addLayout(form);
-        auto* note = new QLabel(QStringLiteral("Phòng được giữ đến hết phim và thêm 15 phút nghỉ."), this);
+        QLabel* note = new QLabel(QStringLiteral("Phòng được giữ đến hết phim và thêm 15 phút nghỉ."), this);
         note->setWordWrap(true);
         layout->addWidget(note);
-        auto* error = dialogError(layout, this, "screeningError");
-        auto* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+        QLabel* error = dialogError(layout, this, "screeningError");
+        QDialogButtonBox* buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
         buttons->button(QDialogButtonBox::Ok)->setText(QStringLiteral("Xác nhận"));
         buttons->button(QDialogButtonBox::Ok)->setObjectName("screeningSubmit");
         buttons->button(QDialogButtonBox::Cancel)->setText(QStringLiteral("Hủy"));
         layout->addWidget(buttons);
         if (id != 0) {
-            const auto& screening = screenings.find(id);
+            const Screening& screening = screenings.find(id);
             film->setCurrentIndex(film->findData(QVariant::fromValue<qlonglong>(screening.filmId())));
             room->setCurrentIndex(room->findData(QVariant::fromValue<qlonglong>(screening.auditoriumId())));
             start->setDateTime(QDateTime::fromString(fromUtf8(screening.startTime()), "yyyy-MM-dd HH:mm"));
@@ -369,8 +381,10 @@ public:
                 return;
             }
             try {
-                const auto startText = toUtf8(start->dateTime().toString("yyyy-MM-dd HH:mm"));
-                if (id == 0) screeningId = screenings.add(comboId(film), comboId(room), startText, ticketPrice);
+                const std::string startText = toUtf8(start->dateTime().toString("yyyy-MM-dd HH:mm"));
+                if (id == 0) {
+                    screeningId = screenings.add(comboId(film), comboId(room), startText, ticketPrice);
+                }
                 else {
                     screenings.update(id, comboId(film), comboId(room), startText, ticketPrice);
                     screeningId = id;
@@ -393,7 +407,9 @@ bool loadApplicationData(ApplicationData& data, QWidget* parent) {
                          QStringLiteral("Thư mục chưa có bộ dữ liệu TXT:\n%1\n\n"
                                         "Bắt đầu phiên rỗng? File chỉ được tạo khi thoát và lưu thành công.")
                              .arg(fromUtf8(data.directory().u8string())),
-                         QStringLiteral("Bắt đầu phiên rỗng"))) return false;
+                         QStringLiteral("Bắt đầu phiên rỗng"))) {
+                return false;
+            }
             data.load(true);
         }
         return true;
@@ -410,27 +426,29 @@ bool loadApplicationData(ApplicationData& data, QWidget* parent) {
 MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
                        ScreeningService& screenings, TicketService& tickets)
     : data_(data), catalog_(catalog), screenings_(screenings), tickets_(tickets) {
-    if (!data.isReady()) throw std::logic_error("MainWindow requires loaded and validated data");
+    if (!data.isReady()) {
+        throw std::logic_error("MainWindow requires loaded and validated data");
+    }
     setObjectName("mainWindow");
     resize(1100, 720);
     setMinimumSize(700, 500);
-    auto* central = new QWidget(this);
-    auto* layout = new QVBoxLayout(central);
+    QWidget* central = new QWidget(this);
+    QVBoxLayout* layout = new QVBoxLayout(central);
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(12);
-    auto* header = new QHBoxLayout;
-    auto* heading = new QLabel(QStringLiteral("Quản lý rạp chiếu phim"), central);
-    auto headingFont = heading->font();
+    QHBoxLayout* header = new QHBoxLayout;
+    QLabel* heading = new QLabel(QStringLiteral("Quản lý rạp chiếu phim"), central);
+    QFont headingFont = heading->font();
     headingFont.setBold(true);
     headingFont.setPointSize(headingFont.pointSize() + 3);
     heading->setFont(headingFont);
     header->addWidget(heading);
     header->addStretch();
-    auto* exit = new QPushButton(QStringLiteral("&Lưu và thoát"), central);
+    QPushButton* exit = new QPushButton(QStringLiteral("&Lưu và thoát"), central);
     exit->setObjectName("exitButton");
     header->addWidget(exit);
     layout->addLayout(header);
-    auto* policy = new QLabel(QStringLiteral("Thay đổi được giữ trong phiên và chỉ ghi vào tệp khi chọn Lưu và thoát."), central);
+    QLabel* policy = new QLabel(QStringLiteral("Thay đổi được giữ trong phiên và chỉ ghi vào tệp khi chọn Lưu và thoát."), central);
     policy->setWordWrap(true);
     layout->addWidget(policy);
 
@@ -439,12 +457,36 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     tabs_->setDocumentMode(true);
     layout->addWidget(tabs_, 1);
 
-    auto* saleTab = new QWidget(tabs_);
+    setupSaleTab();
+    setupFilmTab();
+    setupRoomTab();
+    setupScreeningTab();
+    setupReportTab();
+
+    setCentralWidget(central);
+    saveState_ = new QLabel(this);
+    saveState_->setObjectName("saveState");
+    statusBar()->addWidget(saveState_, 1);
+    statusBar()->setToolTip(fromUtf8(data.directory().u8string()));
+
+    connect(exit, &QPushButton::clicked, this, &QWidget::close);
+    screeningDate_->setEnabled(false);
+    refreshReferenceCombos();
+    refreshFilms();
+    refreshRooms();
+    refreshScreenings();
+    refreshSaleScreenings();
+    refreshRevenue();
+    updateStatus();
+}
+
+void MainWindow::setupSaleTab() {
+    QWidget* saleTab = new QWidget(tabs_);
     saleTab->setObjectName("saleTab");
     tabs_->addTab(saleTab, QStringLiteral("&Bán vé"));
-    auto* saleLayout = new QVBoxLayout(saleTab);
+    QVBoxLayout* saleLayout = new QVBoxLayout(saleTab);
     saleLayout->addWidget(new QLabel(QStringLiteral("1. Chọn suất chiếu"), saleTab));
-    auto* saleFilters = new QHBoxLayout;
+    QHBoxLayout* saleFilters = new QHBoxLayout;
     saleUseDate_ = new QCheckBox(QStringLiteral("Ngày &chiếu"), saleTab);
     saleUseDate_->setObjectName("saleUseDate");
     saleUseDate_->setChecked(true);
@@ -461,7 +503,7 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     saleFilters->addWidget(saleFilmFilter_, 1);
     saleFilters->addWidget(saleRoomFilter_, 1);
     saleLayout->addLayout(saleFilters);
-    auto* saleSplit = new QGridLayout;
+    QGridLayout* saleSplit = new QGridLayout;
     saleScreeningTable_ = new QTableWidget(0, 6, saleTab);
     saleScreeningTable_->setObjectName("saleScreeningTable");
     configureTable(saleScreeningTable_, {QStringLiteral("Mã"), QStringLiteral("Phim"),
@@ -470,9 +512,9 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     saleScreeningTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     saleScreeningTable_->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     saleSplit->addWidget(saleScreeningTable_, 0, 0, 1, 2);
-    auto* seatsBox = new QGroupBox(QStringLiteral("2. Chọn ghế"), saleTab);
-    auto* seatsLayout = new QVBoxLayout(seatsBox);
-    auto* seatLegend = new QLabel(QStringLiteral("○ Trống   × Đã bán   ✓ Đang chọn"), seatsBox);
+    QGroupBox* seatsBox = new QGroupBox(QStringLiteral("2. Chọn ghế"), saleTab);
+    QVBoxLayout* seatsLayout = new QVBoxLayout(seatsBox);
+    QLabel* seatLegend = new QLabel(QStringLiteral("○ Trống   × Đã bán   ✓ Đang chọn"), seatsBox);
     seatLegend->setWordWrap(true);
     seatsLayout->addWidget(seatLegend);
     saleSeatTable_ = new QTableWidget(seatsBox);
@@ -483,8 +525,8 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     saleSeatTable_->setAccessibleName(QStringLiteral("Sơ đồ ghế của suất chiếu"));
     seatsLayout->addWidget(saleSeatTable_, 1);
     saleSplit->addWidget(seatsBox, 1, 0);
-    auto* detailsBox = new QGroupBox(QStringLiteral("3. Xác nhận bán vé"), saleTab);
-    auto* detailsLayout = new QVBoxLayout(detailsBox);
+    QGroupBox* detailsBox = new QGroupBox(QStringLiteral("3. Xác nhận bán vé"), saleTab);
+    QVBoxLayout* detailsLayout = new QVBoxLayout(detailsBox);
     saleDetails_ = new QLabel(QStringLiteral("Chọn một suất chiếu và một ghế trống."), detailsBox);
     saleDetails_->setObjectName("saleDetails");
     saleDetails_->setTextFormat(Qt::PlainText);
@@ -507,11 +549,28 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     saleSplit->setRowStretch(1, 1);
     saleLayout->addLayout(saleSplit, 1);
 
-    auto* filmTab = new QWidget(tabs_);
+    connect(saleUseDate_, &QCheckBox::toggled, this, [this](bool enabled) {
+        saleDate_->setEnabled(enabled);
+        refreshSaleScreenings();
+    });
+    connect(saleDate_, &QDateEdit::dateChanged, this, [this] {
+        if (saleUseDate_->isChecked()) {
+            refreshSaleScreenings();
+        }
+    });
+    connect(saleFilmFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
+    connect(saleRoomFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
+    connect(saleScreeningTable_, &QTableWidget::itemSelectionChanged, this, &MainWindow::refreshSaleSeats);
+    connect(saleSeatTable_, &QTableWidget::cellClicked, this, &MainWindow::selectSaleSeat);
+    connect(sellButton_, &QPushButton::clicked, this, &MainWindow::sellTicket);
+}
+
+void MainWindow::setupFilmTab() {
+    QWidget* filmTab = new QWidget(tabs_);
     filmTab->setObjectName("filmTab");
     tabs_->addTab(filmTab, QStringLiteral("&Phim"));
-    auto* filmsLayout = new QVBoxLayout(filmTab);
-    auto* filmSearchRow = new QHBoxLayout;
+    QVBoxLayout* filmsLayout = new QVBoxLayout(filmTab);
+    QHBoxLayout* filmSearchRow = new QHBoxLayout;
     filmSearchMode_ = new QComboBox(filmTab);
     filmSearchMode_->setObjectName("searchMode");
     filmSearchMode_->addItems({QStringLiteral("Tên phim"), QStringLiteral("Mã phim")});
@@ -519,14 +578,14 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     filmSearch_ = new QLineEdit(filmTab);
     filmSearch_->setObjectName("filmSearch");
     filmSearch_->setClearButtonEnabled(true);
-    auto* filmSearchLabel = new QLabel(QStringLiteral("&Tìm:"), filmTab);
+    QLabel* filmSearchLabel = new QLabel(QStringLiteral("&Tìm:"), filmTab);
     filmSearchLabel->setBuddy(filmSearch_);
     filmSearchRow->addWidget(filmSearchLabel);
     filmSearchRow->addWidget(filmSearchMode_);
     filmSearchRow->addWidget(filmSearch_, 1);
     filmsLayout->addLayout(filmSearchRow);
-    auto* filmActions = new QHBoxLayout;
-    auto* filmAdd = new QPushButton(QStringLiteral("&Thêm phim"), filmTab);
+    QHBoxLayout* filmActions = new QHBoxLayout;
+    QPushButton* filmAdd = new QPushButton(QStringLiteral("&Thêm phim"), filmTab);
     filmAdd->setObjectName("addFilm");
     filmEdit_ = new QPushButton(QStringLiteral("&Sửa phim"), filmTab);
     filmEdit_->setObjectName("editFilm");
@@ -551,16 +610,30 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     filmResults_->setTextFormat(Qt::PlainText);
     filmResults_->setWordWrap(true);
     filmsLayout->addWidget(filmResults_);
-    auto* filmRules = new QLabel(QStringLiteral("Phim đã có suất: chỉ sửa tên, không sửa thời lượng hoặc xóa."), filmTab);
+    QLabel* filmRules = new QLabel(QStringLiteral("Phim đã có suất: chỉ sửa tên, không sửa thời lượng hoặc xóa."), filmTab);
     filmRules->setWordWrap(true);
     filmsLayout->addWidget(filmRules);
 
-    auto* roomTab = new QWidget(tabs_);
+    connect(filmAdd, &QPushButton::clicked, this, [this] { editFilm(true); });
+    connect(filmEdit_, &QPushButton::clicked, this, [this] { editFilm(false); });
+    connect(filmRemove_, &QPushButton::clicked, this, &MainWindow::deleteFilm);
+    connect(filmSearch_, &QLineEdit::textChanged, this, [this] { refreshFilms(); });
+    connect(filmSearchMode_, &QComboBox::currentIndexChanged, this, [this] { refreshFilms(); });
+    connect(filmTable_, &QTableWidget::itemSelectionChanged, this, [this] {
+        const bool selected = selectedFilm() != 0;
+        filmEdit_->setEnabled(selected);
+        filmRemove_->setEnabled(selected);
+    });
+    connect(filmTable_, &QTableWidget::cellDoubleClicked, this, [this] { editFilm(false); });
+}
+
+void MainWindow::setupRoomTab() {
+    QWidget* roomTab = new QWidget(tabs_);
     roomTab->setObjectName("roomTab");
     tabs_->addTab(roomTab, QStringLiteral("Phòng && &ghế"));
-    auto* roomLayout = new QVBoxLayout(roomTab);
-    auto* roomActions = new QHBoxLayout;
-    auto* roomAdd = new QPushButton(QStringLiteral("&Thêm phòng"), roomTab);
+    QVBoxLayout* roomLayout = new QVBoxLayout(roomTab);
+    QHBoxLayout* roomActions = new QHBoxLayout;
+    QPushButton* roomAdd = new QPushButton(QStringLiteral("&Thêm phòng"), roomTab);
     roomAdd->setObjectName("addRoom");
     roomEdit_ = new QPushButton(QStringLiteral("&Sửa phòng"), roomTab);
     roomEdit_->setObjectName("editRoom");
@@ -583,8 +656,8 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     roomResults_->setObjectName("roomResults");
     roomResults_->setWordWrap(true);
     roomLayout->addWidget(roomResults_);
-    auto* roomSeatsBox = new QGroupBox(QStringLiteral("Sơ đồ ghế của phòng đang chọn"), roomTab);
-    auto* roomSeatsLayout = new QVBoxLayout(roomSeatsBox);
+    QGroupBox* roomSeatsBox = new QGroupBox(QStringLiteral("Sơ đồ ghế của phòng đang chọn"), roomTab);
+    QVBoxLayout* roomSeatsLayout = new QVBoxLayout(roomSeatsBox);
     roomSeatTable_ = new QTableWidget(roomSeatsBox);
     roomSeatTable_->setObjectName("roomSeatTable");
     roomSeatTable_->setAccessibleName(QStringLiteral("Sơ đồ ghế phòng"));
@@ -593,16 +666,29 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     roomSeatsLayout->addWidget(roomSeatTable_);
     roomLayout->addWidget(roomSeatsBox, 1);
 
-    auto* screeningTab = new QWidget(tabs_);
+    connect(roomAdd, &QPushButton::clicked, this, [this] { editRoom(true); });
+    connect(roomEdit_, &QPushButton::clicked, this, [this] { editRoom(false); });
+    connect(roomRemove_, &QPushButton::clicked, this, &MainWindow::deleteRoom);
+    connect(roomTable_, &QTableWidget::itemSelectionChanged, this, [this] {
+        const bool selected = selectedRoom() != 0;
+        roomEdit_->setEnabled(selected);
+        roomRemove_->setEnabled(selected);
+        refreshRoomSeats();
+    });
+    connect(roomTable_, &QTableWidget::cellDoubleClicked, this, [this] { editRoom(false); });
+}
+
+void MainWindow::setupScreeningTab() {
+    QWidget* screeningTab = new QWidget(tabs_);
     screeningTab->setObjectName("screeningTab");
     tabs_->addTab(screeningTab, QStringLiteral("&Suất chiếu"));
-    auto* screeningLayout = new QVBoxLayout(screeningTab);
-    auto* screeningFilters = new QHBoxLayout;
+    QVBoxLayout* screeningLayout = new QVBoxLayout(screeningTab);
+    QHBoxLayout* screeningFilters = new QHBoxLayout;
     screeningIdFilter_ = positiveInput(screeningTab, "screeningIdFilter");
     screeningIdFilter_->setPlaceholderText(QStringLiteral("Ví dụ: 12"));
     screeningIdFilter_->setClearButtonEnabled(true);
     screeningIdFilter_->setMaximumWidth(130);
-    auto* screeningIdLabel = new QLabel(QStringLiteral("&Mã suất"), screeningTab);
+    QLabel* screeningIdLabel = new QLabel(QStringLiteral("&Mã suất"), screeningTab);
     screeningIdLabel->setBuddy(screeningIdFilter_);
     screeningUseDate_ = new QCheckBox(QStringLiteral("Ngày &chiếu"), screeningTab);
     screeningUseDate_->setObjectName("screeningUseDate");
@@ -621,8 +707,8 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     screeningFilters->addWidget(screeningFilmFilter_, 1);
     screeningFilters->addWidget(screeningRoomFilter_, 1);
     screeningLayout->addLayout(screeningFilters);
-    auto* screeningActions = new QHBoxLayout;
-    auto* screeningAdd = new QPushButton(QStringLiteral("&Thêm suất"), screeningTab);
+    QHBoxLayout* screeningActions = new QHBoxLayout;
+    QPushButton* screeningAdd = new QPushButton(QStringLiteral("&Thêm suất"), screeningTab);
     screeningAdd->setObjectName("addScreening");
     screeningEdit_ = new QPushButton(QStringLiteral("&Sửa suất"), screeningTab);
     screeningEdit_->setObjectName("editScreening");
@@ -646,17 +732,41 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     screeningResults_->setObjectName("screeningResults");
     screeningResults_->setWordWrap(true);
     screeningLayout->addWidget(screeningResults_);
-    auto* screeningRules = new QLabel(QStringLiteral("Chọn một dòng để sửa hoặc xóa. Lịch cùng phòng phải cách nhau ít nhất 15 phút."), screeningTab);
+    QLabel* screeningRules = new QLabel(QStringLiteral("Chọn một dòng để sửa hoặc xóa. Lịch cùng phòng phải cách nhau ít nhất 15 phút."), screeningTab);
     screeningRules->setWordWrap(true);
     screeningLayout->addWidget(screeningRules);
 
-    auto* queryTab = new QWidget(tabs_);
+    connect(screeningAdd, &QPushButton::clicked, this, [this] { editScreening(true); });
+    connect(screeningEdit_, &QPushButton::clicked, this, [this] { editScreening(false); });
+    connect(screeningRemove_, &QPushButton::clicked, this, &MainWindow::deleteScreening);
+    connect(screeningIdFilter_, &QLineEdit::textChanged, this, [this] { refreshScreenings(); });
+    connect(screeningUseDate_, &QCheckBox::toggled, this, [this](bool enabled) {
+        screeningDate_->setEnabled(enabled);
+        refreshScreenings();
+    });
+    connect(screeningDate_, &QDateEdit::dateChanged, this, [this] {
+        if (screeningUseDate_->isChecked()) {
+            refreshScreenings();
+        }
+    });
+    connect(screeningFilmFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshScreenings(); });
+    connect(screeningRoomFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshScreenings(); });
+    connect(screeningTable_, &QTableWidget::itemSelectionChanged, this, [this] {
+        const bool selected = selectedScreening() != 0;
+        screeningEdit_->setEnabled(selected);
+        screeningRemove_->setEnabled(selected);
+    });
+    connect(screeningTable_, &QTableWidget::cellDoubleClicked, this, [this] { editScreening(false); });
+}
+
+void MainWindow::setupReportTab() {
+    QWidget* queryTab = new QWidget(tabs_);
     queryTab->setObjectName("queryTab");
     tabs_->addTab(queryTab, QStringLiteral("&Vé và doanh thu"));
-    auto* queryLayout = new QGridLayout(queryTab);
-    auto* reportBox = new QGroupBox(QStringLiteral("Tổng quan theo ngày bán"), queryTab);
-    auto* reportLayout = new QHBoxLayout(reportBox);
-    auto* reportForm = new QFormLayout;
+    QGridLayout* queryLayout = new QGridLayout(queryTab);
+    QGroupBox* reportBox = new QGroupBox(QStringLiteral("Tổng quan theo ngày bán"), queryTab);
+    QHBoxLayout* reportLayout = new QHBoxLayout(reportBox);
+    QFormLayout* reportForm = new QFormLayout;
     reportDate_ = new QDateEdit(QDate::currentDate(), reportBox);
     reportDate_->setObjectName("reportDate");
     reportDate_->setDisplayFormat("yyyy-MM-dd");
@@ -670,20 +780,20 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     reportForm->addRow(QStringLiteral("Doanh thu"), reportRevenue_);
     reportLayout->addLayout(reportForm);
     reportLayout->addSpacing(24);
-    auto* reportNote = new QLabel(QStringLiteral("Tính theo thời điểm bán và giá đã ghi trên vé, không theo ngày chiếu."), reportBox);
+    QLabel* reportNote = new QLabel(QStringLiteral("Tính theo thời điểm bán và giá đã ghi trên vé, không theo ngày chiếu."), reportBox);
     reportNote->setWordWrap(true);
     reportLayout->addWidget(reportNote, 1);
     queryLayout->addWidget(reportBox, 0, 0, 1, 2);
-    auto* dailyTicketsBox = new QGroupBox(QStringLiteral("Danh sách vé"), queryTab);
-    auto* dailyTicketsLayout = new QVBoxLayout(dailyTicketsBox);
-    auto* ticketSearch = new QHBoxLayout;
-    auto* ticketSearchLabel = new QLabel(QStringLiteral("&Đi đến mã vé"), dailyTicketsBox);
+    QGroupBox* dailyTicketsBox = new QGroupBox(QStringLiteral("Danh sách vé"), queryTab);
+    QVBoxLayout* dailyTicketsLayout = new QVBoxLayout(dailyTicketsBox);
+    QHBoxLayout* ticketSearch = new QHBoxLayout;
+    QLabel* ticketSearchLabel = new QLabel(QStringLiteral("&Đi đến mã vé"), dailyTicketsBox);
     ticketId_ = positiveInput(dailyTicketsBox, "ticketId");
     ticketId_->setClearButtonEnabled(true);
     ticketId_->setPlaceholderText(QStringLiteral("Ví dụ: 42"));
     ticketId_->setMaximumWidth(180);
     ticketSearchLabel->setBuddy(ticketId_);
-    auto* ticketLookup = new QPushButton(QStringLiteral("&Tìm vé"), dailyTicketsBox);
+    QPushButton* ticketLookup = new QPushButton(QStringLiteral("&Tìm vé"), dailyTicketsBox);
     ticketLookup->setObjectName("lookupTicket");
     ticketLookup->setToolTip(QStringLiteral("Mở ngày bán và chọn đúng vé trong danh sách"));
     ticketSearch->addWidget(ticketSearchLabel);
@@ -705,8 +815,8 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     dailyTicketStatus_->setWordWrap(true);
     dailyTicketsLayout->addWidget(dailyTicketStatus_);
     queryLayout->addWidget(dailyTicketsBox, 1, 0);
-    auto* ticketBox = new QGroupBox(QStringLiteral("Chi tiết vé đang chọn"), queryTab);
-    auto* ticketLayout = new QVBoxLayout(ticketBox);
+    QGroupBox* ticketBox = new QGroupBox(QStringLiteral("Chi tiết vé đang chọn"), queryTab);
+    QVBoxLayout* ticketLayout = new QVBoxLayout(ticketBox);
     ticketResult_ = new QLabel(QStringLiteral("Chọn một vé trong danh sách hoặc nhập mã vé để xem chi tiết."), ticketBox);
     ticketResult_->setObjectName("ticketResult");
     ticketResult_->setTextFormat(Qt::PlainText);
@@ -719,65 +829,6 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     queryLayout->setColumnStretch(1, 2);
     queryLayout->setRowStretch(1, 1);
 
-    setCentralWidget(central);
-    saveState_ = new QLabel(this);
-    saveState_->setObjectName("saveState");
-    statusBar()->addWidget(saveState_, 1);
-    statusBar()->setToolTip(fromUtf8(data.directory().u8string()));
-
-    connect(exit, &QPushButton::clicked, this, &QWidget::close);
-    connect(filmAdd, &QPushButton::clicked, this, [this] { editFilm(true); });
-    connect(filmEdit_, &QPushButton::clicked, this, [this] { editFilm(false); });
-    connect(filmRemove_, &QPushButton::clicked, this, &MainWindow::deleteFilm);
-    connect(filmSearch_, &QLineEdit::textChanged, this, [this] { refreshFilms(); });
-    connect(filmSearchMode_, &QComboBox::currentIndexChanged, this, [this] { refreshFilms(); });
-    connect(filmTable_, &QTableWidget::itemSelectionChanged, this, [this] {
-        const bool selected = selectedFilm() != 0;
-        filmEdit_->setEnabled(selected);
-        filmRemove_->setEnabled(selected);
-    });
-    connect(filmTable_, &QTableWidget::cellDoubleClicked, this, [this] { editFilm(false); });
-    connect(roomAdd, &QPushButton::clicked, this, [this] { editRoom(true); });
-    connect(roomEdit_, &QPushButton::clicked, this, [this] { editRoom(false); });
-    connect(roomRemove_, &QPushButton::clicked, this, &MainWindow::deleteRoom);
-    connect(roomTable_, &QTableWidget::itemSelectionChanged, this, [this] {
-        const bool selected = selectedRoom() != 0;
-        roomEdit_->setEnabled(selected);
-        roomRemove_->setEnabled(selected);
-        refreshRoomSeats();
-    });
-    connect(roomTable_, &QTableWidget::cellDoubleClicked, this, [this] { editRoom(false); });
-    connect(screeningAdd, &QPushButton::clicked, this, [this] { editScreening(true); });
-    connect(screeningEdit_, &QPushButton::clicked, this, [this] { editScreening(false); });
-    connect(screeningRemove_, &QPushButton::clicked, this, &MainWindow::deleteScreening);
-    connect(screeningIdFilter_, &QLineEdit::textChanged, this, [this] { refreshScreenings(); });
-    connect(screeningUseDate_, &QCheckBox::toggled, this, [this](bool enabled) {
-        screeningDate_->setEnabled(enabled);
-        refreshScreenings();
-    });
-    connect(screeningDate_, &QDateEdit::dateChanged, this, [this] {
-        if (screeningUseDate_->isChecked()) refreshScreenings();
-    });
-    connect(screeningFilmFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshScreenings(); });
-    connect(screeningRoomFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshScreenings(); });
-    connect(screeningTable_, &QTableWidget::itemSelectionChanged, this, [this] {
-        const bool selected = selectedScreening() != 0;
-        screeningEdit_->setEnabled(selected);
-        screeningRemove_->setEnabled(selected);
-    });
-    connect(screeningTable_, &QTableWidget::cellDoubleClicked, this, [this] { editScreening(false); });
-    connect(saleUseDate_, &QCheckBox::toggled, this, [this](bool enabled) {
-        saleDate_->setEnabled(enabled);
-        refreshSaleScreenings();
-    });
-    connect(saleDate_, &QDateEdit::dateChanged, this, [this] {
-        if (saleUseDate_->isChecked()) refreshSaleScreenings();
-    });
-    connect(saleFilmFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
-    connect(saleRoomFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
-    connect(saleScreeningTable_, &QTableWidget::itemSelectionChanged, this, &MainWindow::refreshSaleSeats);
-    connect(saleSeatTable_, &QTableWidget::cellClicked, this, &MainWindow::selectSaleSeat);
-    connect(sellButton_, &QPushButton::clicked, this, &MainWindow::sellTicket);
     connect(ticketLookup, &QPushButton::clicked, this, &MainWindow::lookupTicket);
     connect(ticketId_, &QLineEdit::returnPressed, this, &MainWindow::lookupTicket);
     connect(reportDate_, &QDateEdit::dateChanged, this, [this] {
@@ -786,43 +837,47 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
         refreshRevenue();
     });
     connect(dailyTicketTable_, &QTableWidget::itemSelectionChanged, this, [this] {
-        const auto* item = dailyTicketTable_->item(dailyTicketTable_->currentRow(), 0);
-        if (item == nullptr || dailyTicketTable_->selectedItems().isEmpty()) return;
-        const auto id = item->data(Qt::DisplayRole).toLongLong();
+        const QTableWidgetItem* item = dailyTicketTable_->item(dailyTicketTable_->currentRow(), 0);
+        if (item == nullptr || dailyTicketTable_->selectedItems().isEmpty()) {
+            return;
+        }
+        const EntityId id = item->data(Qt::DisplayRole).toLongLong();
         ticketId_->setText(QString::number(id));
         showTicketDetails(id);
         dailyTicketStatus_->setText(QStringLiteral("Đang xem vé #%1.").arg(id));
     });
-
-    screeningDate_->setEnabled(false);
-    refreshReferenceCombos();
-    refreshFilms();
-    refreshRooms();
-    refreshScreenings();
-    refreshSaleScreenings();
-    refreshRevenue();
-    updateStatus();
 }
 
 EntityId MainWindow::selectedFilm() const {
-    const auto* item = filmTable_->item(filmTable_->currentRow(), 0);
-    return item && !filmTable_->selectedItems().isEmpty() ? item->data(Qt::DisplayRole).toLongLong() : 0;
+    const QTableWidgetItem* item = filmTable_->item(filmTable_->currentRow(), 0);
+    if (item == nullptr || filmTable_->selectedItems().isEmpty()) {
+        return 0;
+    }
+    return item->data(Qt::DisplayRole).toLongLong();
 }
 
 EntityId MainWindow::selectedRoom() const {
-    const auto* item = roomTable_->item(roomTable_->currentRow(), 0);
-    return item && !roomTable_->selectedItems().isEmpty() ? item->data(Qt::DisplayRole).toLongLong() : 0;
+    const QTableWidgetItem* item = roomTable_->item(roomTable_->currentRow(), 0);
+    if (item == nullptr || roomTable_->selectedItems().isEmpty()) {
+        return 0;
+    }
+    return item->data(Qt::DisplayRole).toLongLong();
 }
 
 EntityId MainWindow::selectedScreening() const {
-    const auto* item = screeningTable_->item(screeningTable_->currentRow(), 0);
-    return item && !screeningTable_->selectedItems().isEmpty() ? item->data(Qt::DisplayRole).toLongLong() : 0;
+    const QTableWidgetItem* item = screeningTable_->item(screeningTable_->currentRow(), 0);
+    if (item == nullptr || screeningTable_->selectedItems().isEmpty()) {
+        return 0;
+    }
+    return item->data(Qt::DisplayRole).toLongLong();
 }
 
 EntityId MainWindow::selectedSaleScreening() const {
-    const auto* item = saleScreeningTable_->item(saleScreeningTable_->currentRow(), 0);
-    return item && !saleScreeningTable_->selectedItems().isEmpty()
-        ? item->data(Qt::DisplayRole).toLongLong() : 0;
+    const QTableWidgetItem* item = saleScreeningTable_->item(saleScreeningTable_->currentRow(), 0);
+    if (item == nullptr || saleScreeningTable_->selectedItems().isEmpty()) {
+        return 0;
+    }
+    return item->data(Qt::DisplayRole).toLongLong();
 }
 
 void MainWindow::refreshReferenceCombos() {
@@ -838,28 +893,29 @@ void MainWindow::refreshFilms(EntityId selectId) {
     filmTable_->setRowCount(0);
     filmEdit_->setEnabled(false);
     filmRemove_->setEnabled(false);
-    auto append = [this](const Film& film) {
-        const int row = filmTable_->rowCount();
-        filmTable_->insertRow(row);
-        setNumber(filmTable_, row, 0, film.id());
-        auto* title = new QTableWidgetItem(fromUtf8(film.title()));
-        title->setToolTip(title->text());
-        filmTable_->setItem(row, 1, title);
-        setNumber(filmTable_, row, 2, film.durationMinutes());
-    };
     try {
-        const auto query = filmSearch_->text().trimmed();
+        LinkedList<Film> films;
+        const QString query = filmSearch_->text().trimmed();
         if (query.isEmpty() || filmSearchMode_->currentIndex() == 0) {
-            catalog_.films(toUtf8(query), append);
+            catalog_.films(toUtf8(query), films);
         } else {
             bool valid = false;
-            const auto id = query.toLongLong(&valid);
+            const EntityId id = query.toLongLong(&valid);
             if (!valid || id <= 0) {
                 filmTable_->setSortingEnabled(true);
                 filmResults_->setText(QStringLiteral("Mã phim phải là số nguyên dương trong miền int64."));
                 return;
             }
-            try { append(catalog_.film(id)); } catch (const std::out_of_range&) {}
+            try { films.pushBack(catalog_.film(id)); } catch (const std::out_of_range&) {}
+        }
+        for (const Film& film : films) {
+            const int row = filmTable_->rowCount();
+            filmTable_->insertRow(row);
+            setNumber(filmTable_, row, 0, film.id());
+            QTableWidgetItem* title = new QTableWidgetItem(fromUtf8(film.title()));
+            title->setToolTip(title->text());
+            filmTable_->setItem(row, 1, title);
+            setNumber(filmTable_, row, 2, film.durationMinutes());
         }
         filmTable_->setSortingEnabled(true);
         for (int row = 0; row < filmTable_->rowCount(); ++row) {
@@ -879,8 +935,10 @@ void MainWindow::refreshFilms(EntityId selectId) {
 }
 
 void MainWindow::editFilm(bool creating) {
-    const auto id = creating ? 0 : selectedFilm();
-    if (!creating && id == 0) return;
+    const EntityId id = creating ? 0 : selectedFilm();
+    if (!creating && id == 0) {
+        return;
+    }
     try {
         FilmDialog dialog(catalog_, id, this);
         if (dialog.exec() == QDialog::Accepted) {
@@ -897,12 +955,16 @@ void MainWindow::editFilm(bool creating) {
 }
 
 void MainWindow::deleteFilm() {
-    const auto id = selectedFilm();
-    if (id == 0) return;
+    const EntityId id = selectedFilm();
+    if (id == 0) {
+        return;
+    }
     try {
-        const auto name = fromUtf8(catalog_.film(id).title());
+        const QString name = fromUtf8(catalog_.film(id).title());
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
-                     QStringLiteral("Xóa phim #%1 — %2?").arg(id).arg(name), QStringLiteral("Xóa phim"))) return;
+                     QStringLiteral("Xóa phim #%1 — %2?").arg(id).arg(name), QStringLiteral("Xóa phim"))) {
+            return;
+        }
         catalog_.eraseFilm(id);
         refreshFilms();
         refreshReferenceCombos();
@@ -921,7 +983,9 @@ void MainWindow::refreshRooms(EntityId selectId) {
     roomEdit_->setEnabled(false);
     roomRemove_->setEnabled(false);
     try {
-        catalog_.rooms([&](const Auditorium& room) {
+        LinkedList<Auditorium> rooms;
+        catalog_.rooms(rooms);
+        for (const Auditorium& room : rooms) {
             const int row = roomTable_->rowCount();
             roomTable_->insertRow(row);
             setNumber(roomTable_, row, 0, room.id());
@@ -929,7 +993,7 @@ void MainWindow::refreshRooms(EntityId selectId) {
             setNumber(roomTable_, row, 2, room.rowCount());
             setNumber(roomTable_, row, 3, room.seatsPerRow());
             setNumber(roomTable_, row, 4, room.capacity());
-        });
+        }
         roomTable_->setSortingEnabled(true);
         for (int row = 0; row < roomTable_->rowCount(); ++row) {
             if (roomTable_->item(row, 0)->data(Qt::DisplayRole).toLongLong() == selectId) {
@@ -952,19 +1016,23 @@ void MainWindow::refreshRoomSeats() {
     roomSeatTable_->clear();
     roomSeatTable_->setRowCount(0);
     roomSeatTable_->setColumnCount(0);
-    const auto id = selectedRoom();
-    if (id == 0) return;
+    const EntityId id = selectedRoom();
+    if (id == 0) {
+        return;
+    }
     try {
-        auto map = catalog_.seatMap(id);
+        std::unique_ptr<SeatMap> map = catalog_.seatMap(id);
         roomSeatTable_->setRowCount(static_cast<int>(map->rows()));
         roomSeatTable_->setColumnCount(static_cast<int>(map->columns()));
         QStringList columns;
-        for (std::size_t column = 0; column < map->columns(); ++column) columns << QString::number(column + 1);
+        for (std::size_t column = 0; column < map->columns(); ++column) {
+            columns << QString::number(column + 1);
+        }
         QStringList rows;
         for (std::size_t row = 0; row < map->rows(); ++row) {
             rows << QStringLiteral("H%1").arg(row + 1);
             for (std::size_t column = 0; column < map->columns(); ++column) {
-                auto* item = new QTableWidgetItem(seatName(row, column));
+                QTableWidgetItem* item = new QTableWidgetItem(seatName(row, column));
                 item->setTextAlignment(Qt::AlignCenter);
                 item->setToolTip(QStringLiteral("Mã ghế: %1").arg(map->at(row, column).seatId));
                 roomSeatTable_->setItem(static_cast<int>(row), static_cast<int>(column), item);
@@ -980,8 +1048,10 @@ void MainWindow::refreshRoomSeats() {
 }
 
 void MainWindow::editRoom(bool creating) {
-    const auto id = creating ? 0 : selectedRoom();
-    if (!creating && id == 0) return;
+    const EntityId id = creating ? 0 : selectedRoom();
+    if (!creating && id == 0) {
+        return;
+    }
     try {
         RoomDialog dialog(catalog_, id, this);
         if (dialog.exec() == QDialog::Accepted) {
@@ -997,13 +1067,17 @@ void MainWindow::editRoom(bool creating) {
 }
 
 void MainWindow::deleteRoom() {
-    const auto id = selectedRoom();
-    if (id == 0) return;
+    const EntityId id = selectedRoom();
+    if (id == 0) {
+        return;
+    }
     try {
-        const auto name = fromUtf8(catalog_.room(id).name());
+        const QString name = fromUtf8(catalog_.room(id).name());
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
                      QStringLiteral("Xóa phòng #%1 — %2 và toàn bộ ghế của phòng?").arg(id).arg(name),
-                     QStringLiteral("Xóa phòng"))) return;
+                     QStringLiteral("Xóa phòng"))) {
+            return;
+        }
         catalog_.eraseRoom(id);
         refreshRooms();
         refreshReferenceCombos();
@@ -1034,9 +1108,13 @@ void MainWindow::refreshScreenings(EntityId selectId) {
         }
         const std::string date = screeningUseDate_->isChecked()
             ? toUtf8(screeningDate_->date().toString("yyyy-MM-dd")) : std::string{};
-        screenings_.list(date, comboId(screeningFilmFilter_), comboId(screeningRoomFilter_), false,
-                         [&](const Screening& screening) {
-            if (requestedId != 0 && screening.id() != requestedId) return;
+        LinkedList<Screening> screenings;
+        screenings_.list(date, comboId(screeningFilmFilter_), comboId(screeningRoomFilter_),
+                         false, screenings);
+        for (const Screening& screening : screenings) {
+            if (requestedId != 0 && screening.id() != requestedId) {
+                continue;
+            }
             const int row = screeningTable_->rowCount();
             screeningTable_->insertRow(row);
             setNumber(screeningTable_, row, 0, screening.id());
@@ -1045,7 +1123,7 @@ void MainWindow::refreshScreenings(EntityId selectId) {
             screeningTable_->setItem(row, 3, new QTableWidgetItem(fromUtf8(screening.startTime())));
             screeningTable_->setItem(row, 4, new QTableWidgetItem(fromUtf8(screenings_.endTime(screening.id()))));
             screeningTable_->setItem(row, 5, new MoneyItem(screening.ticketPrice()));
-        });
+        }
         screeningTable_->setSortingEnabled(true);
         for (int row = 0; row < screeningTable_->rowCount(); ++row) {
             if (screeningTable_->item(row, 0)->data(Qt::DisplayRole).toLongLong() == selectId) {
@@ -1064,8 +1142,10 @@ void MainWindow::refreshScreenings(EntityId selectId) {
 }
 
 void MainWindow::editScreening(bool creating) {
-    const auto id = creating ? 0 : selectedScreening();
-    if (!creating && id == 0) return;
+    const EntityId id = creating ? 0 : selectedScreening();
+    if (!creating && id == 0) {
+        return;
+    }
     try {
         ScreeningDialog dialog(catalog_, screenings_, id, this);
         if (dialog.exec() == QDialog::Accepted) {
@@ -1081,11 +1161,15 @@ void MainWindow::editScreening(bool creating) {
 }
 
 void MainWindow::deleteScreening() {
-    const auto id = selectedScreening();
-    if (id == 0) return;
+    const EntityId id = selectedScreening();
+    if (id == 0) {
+        return;
+    }
     try {
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
-                     QStringLiteral("Xóa suất chiếu #%1?").arg(id), QStringLiteral("Xóa suất"))) return;
+                     QStringLiteral("Xóa suất chiếu #%1?").arg(id), QStringLiteral("Xóa suất"))) {
+            return;
+        }
         screenings_.erase(id);
         refreshScreenings();
         refreshSaleScreenings();
@@ -1109,8 +1193,9 @@ void MainWindow::refreshSaleScreenings(EntityId selectId) {
     try {
         const std::string date = saleUseDate_->isChecked()
             ? toUtf8(saleDate_->date().toString("yyyy-MM-dd")) : std::string{};
-        screenings_.list(date, comboId(saleFilmFilter_), comboId(saleRoomFilter_), true,
-                         [&](const Screening& screening) {
+        LinkedList<Screening> screenings;
+        screenings_.list(date, comboId(saleFilmFilter_), comboId(saleRoomFilter_), true, screenings);
+        for (const Screening& screening : screenings) {
             const int row = saleScreeningTable_->rowCount();
             saleScreeningTable_->insertRow(row);
             setNumber(saleScreeningTable_, row, 0, screening.id());
@@ -1119,7 +1204,7 @@ void MainWindow::refreshSaleScreenings(EntityId selectId) {
             saleScreeningTable_->setItem(row, 3, new QTableWidgetItem(fromUtf8(screening.startTime())));
             saleScreeningTable_->setItem(row, 4, new QTableWidgetItem(fromUtf8(screenings_.endTime(screening.id()))));
             saleScreeningTable_->setItem(row, 5, new MoneyItem(screening.ticketPrice()));
-        });
+        }
         saleScreeningTable_->setSortingEnabled(true);
         for (int row = 0; row < saleScreeningTable_->rowCount(); ++row) {
             if (saleScreeningTable_->item(row, 0)->data(Qt::DisplayRole).toLongLong() == selectId) {
@@ -1142,35 +1227,39 @@ void MainWindow::refreshSaleSeats() {
     saleSeatTable_->clear();
     saleSeatTable_->setRowCount(0);
     saleSeatTable_->setColumnCount(0);
-    const auto screeningId = selectedSaleScreening();
+    const EntityId screeningId = selectedSaleScreening();
     if (screeningId == 0) {
         saleDetails_->setText(QStringLiteral("Chọn một suất chiếu và một ghế trống."));
         return;
     }
     try {
-        const auto& screening = screenings_.find(screeningId);
-        const auto& film = catalog_.film(screening.filmId());
-        const auto& room = catalog_.room(screening.auditoriumId());
+        const Screening& screening = screenings_.find(screeningId);
+        const Film& film = catalog_.film(screening.filmId());
+        const Auditorium& room = catalog_.room(screening.auditoriumId());
         saleDetails_->setText(QStringLiteral("Phim: %1\nPhòng: %2\nChiếu: %3 — %4\nGiá: %5\n\nChọn một ghế trống.")
             .arg(fromUtf8(film.title()), fromUtf8(room.name()), fromUtf8(screening.startTime()),
                  fromUtf8(screenings_.endTime(screeningId)), money(screening.ticketPrice())));
-        auto map = tickets_.seatMap(screeningId);
+        std::unique_ptr<SeatMap> map = tickets_.seatMap(screeningId);
         saleSeatTable_->setRowCount(static_cast<int>(map->rows()));
         saleSeatTable_->setColumnCount(static_cast<int>(map->columns()));
         QStringList columns;
-        for (std::size_t column = 0; column < map->columns(); ++column) columns << QString::number(column + 1);
+        for (std::size_t column = 0; column < map->columns(); ++column) {
+            columns << QString::number(column + 1);
+        }
         QStringList rows;
         for (std::size_t row = 0; row < map->rows(); ++row) {
             rows << QStringLiteral("H%1").arg(row + 1);
             for (std::size_t column = 0; column < map->columns(); ++column) {
-                const auto& seat = map->at(row, column);
-                const auto name = seatName(row, column);
-                auto* item = new QTableWidgetItem((seat.sold ? QStringLiteral("× ") : QStringLiteral("○ ")) + name);
+                const SeatStatus& seat = map->at(row, column);
+                const QString name = seatName(row, column);
+                QTableWidgetItem* item = new QTableWidgetItem((seat.sold ? QStringLiteral("× ") : QStringLiteral("○ ")) + name);
                 item->setTextAlignment(Qt::AlignCenter);
                 item->setData(Qt::UserRole, QVariant::fromValue<qlonglong>(seat.seatId));
                 item->setData(Qt::UserRole + 1, seat.sold);
                 item->setToolTip(seat.sold ? name + QStringLiteral(" — đã bán") : name + QStringLiteral(" — còn trống"));
-                if (seat.sold) item->setFlags(item->flags() & ~Qt::ItemIsSelectable & ~Qt::ItemIsEnabled);
+                if (seat.sold) {
+                    item->setFlags(item->flags() & ~Qt::ItemIsSelectable & ~Qt::ItemIsEnabled);
+                }
                 saleSeatTable_->setItem(static_cast<int>(row), static_cast<int>(column), item);
             }
         }
@@ -1185,19 +1274,21 @@ void MainWindow::refreshSaleSeats() {
 }
 
 void MainWindow::selectSaleSeat(int row, int column) {
-    auto* selected = saleSeatTable_->item(row, column);
-    if (selected == nullptr || selected->data(Qt::UserRole + 1).toBool()) return;
+    QTableWidgetItem* selected = saleSeatTable_->item(row, column);
+    if (selected == nullptr || selected->data(Qt::UserRole + 1).toBool()) {
+        return;
+    }
     try {
         for (int currentRow = 0; currentRow < saleSeatTable_->rowCount(); ++currentRow) {
             for (int currentColumn = 0; currentColumn < saleSeatTable_->columnCount(); ++currentColumn) {
-                auto* item = saleSeatTable_->item(currentRow, currentColumn);
+                QTableWidgetItem* item = saleSeatTable_->item(currentRow, currentColumn);
                 if (item && !item->data(Qt::UserRole + 1).toBool()) {
                     item->setText(QStringLiteral("○ ") + seatName(currentRow, currentColumn));
                 }
             }
         }
         selectedSaleSeat_ = selected->data(Qt::UserRole).toLongLong();
-        const auto preview = tickets_.preview(selectedSaleScreening(), selectedSaleSeat_);
+        const SaleDetails preview = tickets_.preview(selectedSaleScreening(), selectedSaleSeat_);
         selected->setText(QStringLiteral("✓ ") + seatName(row, column));
         saleDetails_->setText(QStringLiteral("Phim: %1\nPhòng: %2\nChiếu: %3 — %4\nGhế: %5\nGiá: %6")
             .arg(fromUtf8(preview.film.title()), fromUtf8(preview.room.name()),
@@ -1210,32 +1301,36 @@ void MainWindow::selectSaleSeat(int row, int column) {
     } catch (const std::exception& error) {
         selectedSaleSeat_ = 0;
         sellButton_->setEnabled(false);
-        const auto message = errorText(error);
+        const QString message = errorText(error);
         refreshSaleSeats();
         saleResults_->setText(message);
     }
 }
 
 void MainWindow::sellTicket() {
-    const auto screeningId = selectedSaleScreening();
-    if (screeningId == 0 || selectedSaleSeat_ == 0) return;
+    const EntityId screeningId = selectedSaleScreening();
+    if (screeningId == 0 || selectedSaleSeat_ == 0) {
+        return;
+    }
     try {
-        const auto preview = tickets_.preview(screeningId, selectedSaleSeat_);
-        const auto name = seatName(static_cast<std::size_t>(preview.seat.rowNumber() - 1),
+        const SaleDetails preview = tickets_.preview(screeningId, selectedSaleSeat_);
+        const QString name = seatName(static_cast<std::size_t>(preview.seat.rowNumber() - 1),
                                    static_cast<std::size_t>(preview.seat.seatNumber() - 1));
         if (!confirm(this, QStringLiteral("Xác nhận bán vé"),
                      QStringLiteral("Đã nhận %1 tiền mặt cho %2 — %3, ghế %4?")
                          .arg(money(preview.screening.ticketPrice()), fromUtf8(preview.film.title()),
                               fromUtf8(preview.room.name()), name),
-                     QStringLiteral("Đã nhận tiền"))) return;
-        const auto ticketId = tickets_.sell(screeningId, selectedSaleSeat_, true);
+                     QStringLiteral("Đã nhận tiền"))) {
+            return;
+        }
+        const EntityId ticketId = tickets_.sell(screeningId, selectedSaleSeat_, true);
         refreshSaleSeats();
         saleResults_->setText(QStringLiteral("Đã bán vé #%1. Chưa lưu vào tệp; có thể xem lại trong tab Vé và doanh thu.").arg(ticketId));
         ticketId_->setText(QString::number(ticketId));
         lookupTicket();
         updateStatus();
     } catch (const std::exception& error) {
-        const auto message = errorText(error);
+        const QString message = errorText(error);
         refreshSaleSeats();
         saleResults_->setText(message);
     }
@@ -1251,7 +1346,7 @@ void MainWindow::lookupTicket() {
         return;
     }
     try {
-        const auto details = tickets_.find(id);
+        const TicketDetails details = tickets_.find(id);
         const QSignalBlocker block(reportDate_);
         reportDate_->setDate(QDate::fromString(fromUtf8(details.ticket.soldAt().substr(0, 10)), "yyyy-MM-dd"));
         refreshRevenue(id);
@@ -1265,8 +1360,8 @@ void MainWindow::lookupTicket() {
 
 void MainWindow::showTicketDetails(EntityId ticketId) {
     try {
-        const auto details = tickets_.find(ticketId);
-        const auto seat = seatName(static_cast<std::size_t>(details.sale.seat.rowNumber() - 1),
+        const TicketDetails details = tickets_.find(ticketId);
+        const QString seat = seatName(static_cast<std::size_t>(details.sale.seat.rowNumber() - 1),
                                    static_cast<std::size_t>(details.sale.seat.seatNumber() - 1));
         ticketResult_->setText(QStringLiteral("Vé #%1\nPhim: %2\nSuất #%3: %4 — %5\nPhòng: %6\nGhế: %7\nBán lúc: %8\nGiá đã bán: %9")
             .arg(details.ticket.id()).arg(fromUtf8(details.sale.film.title()))
@@ -1283,11 +1378,13 @@ void MainWindow::refreshRevenue(EntityId selectTicketId) {
     dailyTicketTable_->setSortingEnabled(false);
     dailyTicketTable_->setRowCount(0);
     try {
-        const auto saleDate = toUtf8(reportDate_->date().toString("yyyy-MM-dd"));
-        const auto revenue = tickets_.revenue(saleDate);
+        const std::string saleDate = toUtf8(reportDate_->date().toString("yyyy-MM-dd"));
+        const DailyRevenue revenue = tickets_.revenue(saleDate);
         reportCount_->setText(QString::number(static_cast<qulonglong>(revenue.ticketCount)));
         reportRevenue_->setText(money(revenue.amount));
-        tickets_.listBySaleDate(saleDate, [&](const TicketDetails& details) {
+        LinkedList<TicketDetails> tickets;
+        tickets_.listBySaleDate(saleDate, tickets);
+        for (const TicketDetails& details : tickets) {
             const int row = dailyTicketTable_->rowCount();
             dailyTicketTable_->insertRow(row);
             setNumber(dailyTicketTable_, row, 0, details.ticket.id());
@@ -1298,7 +1395,7 @@ void MainWindow::refreshRevenue(EntityId selectTicketId) {
                 static_cast<std::size_t>(details.sale.seat.rowNumber() - 1),
                 static_cast<std::size_t>(details.sale.seat.seatNumber() - 1))));
             dailyTicketTable_->setItem(row, 5, new MoneyItem(details.ticket.unitPrice()));
-        });
+        }
         dailyTicketTable_->setSortingEnabled(true);
         for (int row = 0; row < dailyTicketTable_->rowCount(); ++row) {
             if (dailyTicketTable_->item(row, 0)->data(Qt::DisplayRole).toLongLong() == selectTicketId) {
@@ -1331,9 +1428,13 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     event->ignore();
     if (!confirm(this, QStringLiteral("Lưu và thoát"),
                  QStringLiteral("Ghi toàn bộ dữ liệu vào TXT rồi thoát? Nếu lưu lỗi, cửa sổ sẽ giữ nguyên."),
-                 QStringLiteral("Lưu và thoát"))) return;
+                 QStringLiteral("Lưu và thoát"))) {
+        return;
+    }
     try {
-        if (data_.needsManualRecovery()) data_.retryRecovery();
+        if (data_.needsManualRecovery()) {
+            data_.retryRecovery();
+        }
         data_.save();
         updateStatus();
         event->accept();

@@ -5,8 +5,8 @@
 | Thông tin | Nội dung |
 |---|---|
 | Mã tài liệu | SRS-CMS-001 |
-| Phiên bản | 1.0 - Hoàn thiện |
-| Ngày cập nhật | 19/10/2026 |
+| Phiên bản | 1.0 |
+| Ngày cập nhật tài liệu | 26/10/2026 |
 | Công nghệ | C++17, Qt 6 Widgets, CMake |
 | Triển khai | Offline, một máy, một phiên chạy |
 | Lưu trữ | TXT UTF-8; nạp khi mở, lưu khi thoát |
@@ -15,6 +15,10 @@
 
 Ứng dụng phục vụ một người vận hành rạp nhỏ, đồng thời minh họa OOP, thiết kế dữ
 liệu và cấu trúc dữ liệu tự cài đặt.
+
+Phần database của bài thể hiện qua mô hình quan hệ, khóa, toàn vẹn và truy vấn
+bằng code; không có DBMS thực thi SQL. Lập luận OOP và chuẩn hóa nằm trong tài
+liệu thiết kế, không phải một chức năng bổ sung của sản phẩm.
 
 Chức năng gồm:
 
@@ -154,9 +158,9 @@ hoặc sửa suất.
 
 | Phần | Trách nhiệm |
 |---|---|
-| `entities/` | Mỗi entity một header, chỉ giữ và kiểm tra giá trị của chính nó. |
+| `entities/` | Mỗi entity một cặp `.h/.cpp`, giữ và kiểm tra giá trị của chính nó. |
 | `DataStructures/` | DSA template tự viết, độc lập nghiệp vụ và Qt. |
-| `repositories/` | Mỗi repository một header, giữ bản ghi và chỉ mục trên RAM. |
+| `repositories/` | Mỗi repository một header riêng; template dùng chung, TicketRepository có `.cpp`; giữ bản ghi và chỉ mục trên RAM. |
 | `persistence/` | Đọc, ghi và kiểm tra định dạng TXT. |
 | `services/` | Quy tắc danh mục, lịch chiếu, bán vé và doanh thu. |
 | `ApplicationData` | Sở hữu repository, điều phối nạp và lưu toàn bộ. |
@@ -225,3 +229,4 @@ Chi tiết thiết kế và đối chiếu kiểm thử:
 - `docs/design/class-design.md`
 - `docs/design/txt-format.md`
 - `docs/design/verification.md`
+- Lộ trình học và giải thích code: `docs/study-guide.md`

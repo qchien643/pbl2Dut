@@ -1,7 +1,6 @@
 #include "services/ScreeningTime.h"
 
 #include "entities/EntityValidation.h"
-#include "services/RepositoryLookup.h"
 
 #include <iomanip>
 #include <limits>
@@ -35,9 +34,14 @@ std::int64_t screening_time::minutes(const std::string& value) {
 
 std::int64_t screening_time::endMinute(const Screening& screening,
                                        const FilmRepository& films, int buffer) {
-    const auto start = minutes(screening.startTime());
-    const auto duration = service_detail::require(films, screening.filmId()).durationMinutes();
-    static const auto maximum = minutes("9999-12-31 23:59");
+    const std::int64_t start = minutes(screening.startTime());
+    const Film* film = films.findById(screening.filmId());
+    if (film == nullptr)
+    {
+        throw std::out_of_range("Record not found");
+    }
+    const std::int64_t duration = film->durationMinutes();
+    static const std::int64_t maximum = minutes("9999-12-31 23:59");
     if (duration > maximum - start - buffer) {
         throw std::overflow_error("Screening end exceeds supported date range");
     }
@@ -45,7 +49,7 @@ std::int64_t screening_time::endMinute(const Screening& screening,
 }
 
 std::string screening_time::formatMinute(std::int64_t value) {
-    auto days = value / 1440;
+    std::int64_t days = value / 1440;
     int year = 1;
     while (days >= 365 + (monthDays(year, 2) == 29)) {
         days -= 365 + (monthDays(year, 2) == 29);

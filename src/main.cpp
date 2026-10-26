@@ -6,8 +6,6 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QDir>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <QStyle>
 
@@ -22,18 +20,15 @@ int main(int argc, char* argv[]) {
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("Quản lý rạp chiếu phim — dữ liệu TXT offline"));
     parser.addHelpOption();
-    parser.addPositionalArgument("data-directory", QStringLiteral("Thư mục dữ liệu đã tồn tại."), "[data-directory]");
+    parser.addPositionalArgument("data-directory", QStringLiteral("Thư mục dữ liệu; mặc định là data/demo."), "[data-directory]");
     parser.process(app);
-    const auto arguments = parser.positionalArguments();
+    const QStringList arguments = parser.positionalArguments();
     if (arguments.size() > 1) {
         parser.showHelp(1);
     }
     const QString directory = arguments.isEmpty()
-        ? QFileDialog::getExistingDirectory(nullptr, QStringLiteral("Chọn thư mục dữ liệu TXT"), QDir::currentPath())
+        ? QString::fromUtf8(PBL2_DEMO_DATA_DIR)
         : arguments.first();
-    if (directory.isEmpty()) {
-        return 0;
-    }
     try {
         ApplicationData data(std::filesystem::u8path(directory.toUtf8().toStdString()));
         if (!loadApplicationData(data)) {

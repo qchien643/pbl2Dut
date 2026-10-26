@@ -182,16 +182,20 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|3|1\n", "out-of-range"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n2|1|1|1\n", "Duplicate room"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n", "complete rectangular"},
+        {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n", "auditoriums.txt:2"},
+        {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n2|99|1|2\n", "seats.txt:3"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|99|1|2020-01-02 23:00|80000\n", "screenings.txt:2"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|99|2020-01-02 23:00|80000\n", "screenings.txt:2"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-02-30 23:00|80000\n", "Day"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-01-02 23:00|80000\n2|1|1|2020-01-03 01:14|80000\n", "overlaps"},
+        {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-01-02 23:00|80000\n2|1|99|2020-01-03 01:15|80000\n", "screenings.txt:3"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-02 23:00|80000\n", "before screening"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-03 00:00|80000\n", "before screening"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|99|1|2020-01-01 10:00|80000\n", "missing"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|99|2020-01-01 10:00|80000\n", "missing"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|5|2020-01-01 10:00|80000\n", "wrong room"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-01 10:00|80000\n2|1|1|2020-01-01 11:00|80000\n", "Duplicate screening-seat"},
+        {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-01 10:00|80000\n2|1|1|2020-01-01 11:00|80000\n", "tickets.txt:3"},
     };
     for (const auto& test : cases) {
         TemporaryDirectory directory;

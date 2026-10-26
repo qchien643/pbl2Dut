@@ -1,27 +1,21 @@
 #pragma once
 
-#include "entities/EntityValidation.h"
+#include "entities/EntityId.h"
 
 #include <cstdint>
 #include <string>
-#include <utility>
 
-class Ticket {
+class Ticket
+{
 public:
     Ticket(EntityId id, EntityId screeningId, EntityId seatId,
-           std::string soldAt, std::int64_t unitPrice)
-        : id_(entity_detail::positive(id, "Ticket ID")),
-          screeningId_(entity_detail::positive(screeningId, "Screening ID")),
-          seatId_(entity_detail::positive(seatId, "Seat ID")),
-          soldAt_(entity_detail::dateTime(std::move(soldAt))),
-          unitPrice_(entity_detail::positive(unitPrice, "Unit price")) {
-    }
+           std::string soldAt, std::int64_t unitPrice);
 
-    EntityId id() const noexcept { return id_; }
-    EntityId screeningId() const noexcept { return screeningId_; }
-    EntityId seatId() const noexcept { return seatId_; }
-    const std::string& soldAt() const noexcept { return soldAt_; }
-    std::int64_t unitPrice() const noexcept { return unitPrice_; }
+    EntityId id() const;
+    EntityId screeningId() const;
+    EntityId seatId() const;
+    const std::string& soldAt() const;
+    std::int64_t unitPrice() const;
 
 private:
     EntityId id_;

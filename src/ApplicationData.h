@@ -28,17 +28,17 @@ public:
     void validate() const;
     void save();
     void retryRecovery();
-    bool isReady() const noexcept { return ready_; }
-    bool isDirty() const noexcept;
-    bool needsManualRecovery() const noexcept { return recoveryRequired_; }
-    const std::filesystem::path& directory() const noexcept { return directory_; }
+    bool isReady() const;
+    bool isDirty() const;
+    bool needsManualRecovery() const;
+    const std::filesystem::path& directory() const;
 
 private:
     friend struct ApplicationDataTestAccess;
     // Fault injection for filesystem failure tests; unused by the application.
     void (*beforeFileStep_)(const char* phase, std::size_t index) = nullptr;
     void fileStep(const char* phase, std::size_t index) const;
-    void markSaved() noexcept;
+    void markSaved();
 
     std::filesystem::path directory_;
     bool ready_ = false;

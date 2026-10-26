@@ -2,6 +2,7 @@
 /cmake-build-*/
 /.cache/
 /.playwright-mcp/
+/.archify/
 /passForInstall.env
 /codex-session-*.md
 /docs/slides/

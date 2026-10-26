@@ -8,6 +8,7 @@ không cần chạy Qt, server hay cài Archify để xem.
 | [Kiến trúc ứng dụng](architecture/index.html) | Qt → service → RAM; nhánh lưu qua ApplicationData và TXT |
 | [Quan hệ lớp OOP](classes/index.html) | Kế thừa lớp mẫu, composition và tham chiếu; chỉ chọn một lát cắt repository |
 | [ERD năm thực thể](erd/index.html) | Đầy đủ cột TXT, PK/FK, lực lượng quan hệ và ràng buộc ghép |
+| [Luồng hoạt động](workflow/index.html) | Khởi động, nạp TXT, thao tác trên RAM, lưu an toàn và xử lý lỗi |
 
 Nội dung bằng tiếng Việt; các nút của trình xem và thuộc tính HTML `lang`
 dùng tiếng Anh do phiên bản này chưa có bản dịch `vi`. Chọn một nút để xem
@@ -39,6 +40,9 @@ không tạo liên kết đến một commit chưa được công bố.
 Mỗi thư mục sơ đồ chứa `candidate.json`, HTML và biên bản do Archify sinh.
 Các bước validate, deliver, check và browser-check đã qua; đây là kiểm tra
 tự động, chưa phải đánh giá thẩm mỹ bằng mắt.
+
+Sơ đồ workflow đối chiếu trực tiếp với commit mã nguồn `1248350` đã công bố
+trên GitHub; các sơ đồ cũ dùng bản chụp nguồn cục bộ được mô tả ở trên.
 
 ## Tạo lại
 

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8dbdb28f-267e-46d7-b354-c901d6845391",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/candidate.json",
+  "output": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.html",
+  "specification": {
+    "sha256": "82c49ec8b851c0c9351847650c780aa0572b8fee95450d4be5ec06750027df56",
+    "bytes": 12769
+  },
+  "artifact": {
+    "sha256": "54f49d8f274a33e4cec481333ed1e083d2f98b0b1f88a58ff4c6c3b8233e7ebb",
+    "bytes": 880616
+  }
+}

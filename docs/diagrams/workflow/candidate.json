@@ -1,0 +1,235 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "PBL2 — luồng hoạt động của ứng dụng quản lý rạp",
+    "output": "docs/diagrams/workflow/index.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/qchien643/pbl2Dut.git",
+      "revision": "1248350808c120077d7287bdf3ea6ce4acc0a5be",
+      "provider": "github",
+      "link_mode": "web"
+    },
+    "views": [
+      {
+        "id": "startup",
+        "label": "Khởi động",
+        "focus": ["launch", "load_txt", "validate_loaded", "show_ui"],
+        "note": "Đọc vào vùng tạm, kiểm tra toàn vẹn rồi mới đưa dữ liệu vào RAM chính."
+      },
+      {
+        "id": "runtime",
+        "label": "Thao tác nghiệp vụ",
+        "focus": ["choose_action", "query_ram", "validate_change", "mutate_repo", "query_result", "change_result"],
+        "note": "Tra cứu chỉ đọc RAM; thêm, sửa, xóa và bán vé phải qua service trước khi repository thay đổi."
+      },
+      {
+        "id": "shutdown",
+        "label": "Lưu và thoát",
+        "focus": ["confirm_close", "validate_save", "write_files", "exit_app", "save_error"],
+        "note": "TXT chỉ được ghi khi lưu; lỗi giữ ứng dụng mở và cố khôi phục trạng thái đĩa trước đó."
+      }
+    ]
+  },
+  "lanes": [
+    {"id": "ui", "label": "Người dùng và giao diện Qt"},
+    {"id": "startup", "label": "Khởi động: main và ApplicationData"},
+    {"id": "domain", "label": "Service và repository trong RAM"},
+    {"id": "shutdown", "label": "Lưu và thoát: MainWindow và ApplicationData"},
+    {"id": "errors", "label": "Nhánh lỗi và phục hồi", "variant": "exception"}
+  ],
+  "phases": [
+    {"id": "boot", "label": "Nạp dữ liệu", "fromCol": 0, "toCol": 2},
+    {"id": "work", "label": "Xử lý yêu cầu", "fromCol": 3, "toCol": 4, "variant": "emphasis"},
+    {"id": "finish", "label": "Kết quả", "fromCol": 5, "toCol": 5, "variant": "dashed"}
+  ],
+  "groups": [
+    {"id": "load_group", "label": "Nạp nguyên bộ dữ liệu", "lane": "startup", "fromCol": 0, "toCol": 2, "variant": "dashed"},
+    {"id": "business_group", "label": "Quy tắc nghiệp vụ", "lane": "domain", "fromCol": 3, "toCol": 5, "variant": "emphasis"},
+    {"id": "save_group", "label": "Lưu nhiều file có phục hồi", "lane": "shutdown", "fromCol": 3, "toCol": 5, "variant": "dashed"}
+  ],
+  "mainPath": ["launch", "load_txt", "validate_loaded", "show_ui", "choose_action", "validate_change", "mutate_repo", "change_result"],
+  "semanticChecks": {
+    "allowedRoots": ["launch", "confirm_close"],
+    "allowedTerminals": ["query_result", "change_result", "continue_session", "exit_app", "read_error", "startup_error", "pre_save_error", "save_error"],
+    "requiredPaths": [
+      {"from": "launch", "to": "show_ui"},
+      {"from": "choose_action", "to": "mutate_repo"},
+      {"from": "confirm_close", "to": "exit_app"}
+    ]
+  },
+  "nodes": [
+    {
+      "id": "launch", "lane": "startup", "col": 0, "type": "external",
+      "label": "Chạy cinema", "sublabel": "Mặc định data/demo",
+      "sources": [{"path": "src/main.cpp", "line": 15, "end_line": 33}]
+    },
+    {
+      "id": "load_txt", "lane": "startup", "col": 1, "type": "database",
+      "label": "Đọc 5 file TXT", "sublabel": "Nạp vào vùng tạm",
+      "sources": [
+        {"path": "src/ApplicationData.cpp", "line": 100, "end_line": 134},
+        {"path": "src/persistence/TxtPersistence.h", "line": 34, "end_line": 94}
+      ]
+    },
+    {
+      "id": "validate_loaded", "lane": "startup", "col": 2, "type": "security",
+      "label": "Kiểm tra toàn vẹn", "sublabel": "Hợp lệ mới nhận vào RAM",
+      "sources": [
+        {"path": "src/ApplicationData.cpp", "line": 128, "end_line": 143},
+        {"path": "src/ApplicationData.cpp", "line": 146, "end_line": 220}
+      ]
+    },
+    {
+      "id": "show_ui", "lane": "ui", "col": 3, "type": "frontend", "yOffset": -52,
+      "label": "Khởi tạo giao diện", "sublabel": "Dùng chung repository",
+      "sources": [{"path": "src/main.cpp", "line": 33, "end_line": 42}]
+    },
+    {
+      "id": "choose_action", "lane": "ui", "col": 3, "type": "frontend", "yOffset": 52,
+      "label": "Chọn thao tác", "sublabel": "Quản lý, bán và tra cứu",
+      "sources": [
+        {"path": "src/ui/MainWindow.cpp", "line": 1310, "end_line": 1358},
+        {"path": "src/ui/MainWindow.cpp", "line": 1376, "end_line": 1405}
+      ]
+    },
+    {
+      "id": "query_ram", "lane": "domain", "col": 4, "type": "database", "yOffset": -52,
+      "label": "Service tra cứu RAM", "sublabel": "Không sửa repository",
+      "sources": [
+        {"path": "src/services/CatalogService.cpp", "line": 32, "end_line": 80},
+        {"path": "src/services/ScreeningService.cpp", "line": 75, "end_line": 105},
+        {"path": "src/services/TicketService.cpp", "line": 169, "end_line": 203}
+      ]
+    },
+    {
+      "id": "validate_change", "lane": "domain", "col": 4, "type": "security", "yOffset": 52,
+      "label": "Service xác thực thay đổi", "sublabel": "ID, liên kết, lịch và ghế",
+      "sources": [
+        {"path": "src/services/CatalogService.cpp", "line": 83, "end_line": 103},
+        {"path": "src/services/ScreeningService.cpp", "line": 41, "end_line": 73},
+        {"path": "src/services/TicketService.cpp", "line": 64, "end_line": 101}
+      ]
+    },
+    {
+      "id": "mutate_repo", "lane": "domain", "col": 5, "type": "database",
+      "label": "Repository cập nhật", "sublabel": "Ghi RAM và bật dirty",
+      "sources": [{"path": "src/repositories/Repository.h", "line": 95, "end_line": 165}]
+    },
+    {
+      "id": "query_result", "lane": "ui", "col": 5, "type": "frontend", "yOffset": -52,
+      "label": "Kết quả tra cứu", "sublabel": "Dữ liệu lấy từ RAM",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1339, "end_line": 1405}]
+    },
+    {
+      "id": "change_result", "lane": "ui", "col": 5, "type": "frontend", "yOffset": 52,
+      "label": "Thay đổi thành công", "sublabel": "TXT chưa được ghi",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1310, "end_line": 1336}]
+    },
+    {
+      "id": "confirm_close", "lane": "shutdown", "col": 3, "type": "security",
+      "label": "Xác nhận lưu và thoát", "sublabel": "Có thể hủy để tiếp tục",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1427, "end_line": 1449}]
+    },
+    {
+      "id": "continue_session", "lane": "shutdown", "col": 4, "type": "frontend", "yOffset": -52,
+      "label": "Tiếp tục làm việc", "sublabel": "Không ghi TXT",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1427, "end_line": 1433}]
+    },
+    {
+      "id": "validate_save", "lane": "shutdown", "col": 4, "type": "security", "yOffset": 52,
+      "label": "Kiểm tra trước lưu", "sublabel": "Dữ liệu và bộ 5 file",
+      "sources": [{"path": "src/ApplicationData.cpp", "line": 260, "end_line": 281}]
+    },
+    {
+      "id": "write_files", "lane": "shutdown", "col": 5, "type": "database", "yOffset": -52,
+      "label": "Ghi 5 file TXT", "sublabel": "Tạm → backup → file gốc",
+      "sources": [
+        {"path": "src/ApplicationData.cpp", "line": 293, "end_line": 324},
+        {"path": "src/persistence/TxtPersistence.h", "line": 96, "end_line": 132}
+      ]
+    },
+    {
+      "id": "exit_app", "lane": "shutdown", "col": 5, "type": "backend", "yOffset": 52,
+      "label": "Thoát ứng dụng", "sublabel": "Sau khi lưu thành công",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 1434, "end_line": 1440}]
+    },
+    {
+      "id": "read_error", "lane": "errors", "col": 1, "type": "security",
+      "label": "Lỗi đọc dữ liệu", "sublabel": "Thiếu file hoặc parse lỗi",
+      "sources": [
+        {"path": "src/persistence/TxtPersistence.h", "line": 34, "end_line": 94},
+        {"path": "src/ui/MainWindow.cpp", "line": 416, "end_line": 423}
+      ]
+    },
+    {
+      "id": "startup_error", "lane": "errors", "col": 2, "type": "security",
+      "label": "Lỗi toàn vẹn", "sublabel": "Không mở chế độ sửa",
+      "sources": [{"path": "src/ui/MainWindow.cpp", "line": 403, "end_line": 423}]
+    },
+    {
+      "id": "pre_save_error", "lane": "errors", "col": 4, "type": "security",
+      "label": "Từ chối lưu", "sublabel": "Dữ liệu hoặc bộ file đổi",
+      "sources": [{"path": "src/ApplicationData.cpp", "line": 260, "end_line": 281}]
+    },
+    {
+      "id": "save_error", "lane": "errors", "col": 5, "type": "security",
+      "label": "Lỗi khi lưu", "sublabel": "Giữ RAM và cửa sổ mở",
+      "sources": [
+        {"path": "src/ApplicationData.cpp", "line": 325, "end_line": 348},
+        {"path": "src/ui/MainWindow.cpp", "line": 1441, "end_line": 1449}
+      ]
+    }
+  ],
+  "edges": [
+    {"id": "start-load", "from": "launch", "to": "load_txt", "label": "mở thư mục dữ liệu", "variant": "emphasis"},
+    {"id": "load-validate", "from": "load_txt", "to": "validate_loaded", "label": "5 kho tạm", "variant": "default"},
+    {"id": "load-failed", "from": "load_txt", "to": "read_error", "label": "đọc lỗi", "variant": "security", "role": "error"},
+    {"id": "validate-failed", "from": "validate_loaded", "to": "startup_error", "label": "sai toàn vẹn", "variant": "security", "role": "error"},
+    {"id": "validated-ui", "from": "validate_loaded", "to": "show_ui", "label": "RAM sẵn sàng", "variant": "emphasis"},
+    {"id": "ui-action", "from": "show_ui", "to": "choose_action", "variant": "default"},
+    {"id": "service-query", "from": "choose_action", "to": "query_ram", "label": "tra cứu", "variant": "default", "role": "branch"},
+    {"id": "query-feedback", "from": "query_ram", "to": "query_result", "label": "bản sao kết quả", "variant": "default"},
+    {"id": "service-change", "from": "choose_action", "to": "validate_change", "label": "có thay đổi", "variant": "emphasis"},
+    {"id": "change-repo", "from": "validate_change", "to": "mutate_repo", "label": "hợp lệ", "variant": "emphasis"},
+    {"id": "repo-feedback", "from": "mutate_repo", "to": "change_result", "label": "RAM đã đổi", "variant": "emphasis"},
+    {"id": "cancel-close", "from": "confirm_close", "to": "continue_session", "label": "hủy", "variant": "default", "role": "branch"},
+    {"id": "close-save", "from": "confirm_close", "to": "validate_save", "label": "đồng ý lưu", "variant": "emphasis"},
+    {"id": "save-stage", "from": "validate_save", "to": "write_files", "label": "hợp lệ", "variant": "emphasis"},
+    {"id": "validate-save-error", "from": "validate_save", "to": "pre_save_error", "label": "kiểm tra lỗi", "variant": "security", "role": "error"},
+    {"id": "write-exit", "from": "write_files", "to": "exit_app", "label": "save thành công", "variant": "emphasis"},
+    {"id": "write-save-error", "from": "write_files", "to": "save_error", "label": "ghi hoặc cài lỗi", "variant": "security", "role": "error"}
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Điểm cần nhớ khi vấn đáp",
+      "items": [
+        "Main tạo một ApplicationData, ba service và MainWindow; service chỉ mượn repository bằng tham chiếu.",
+        "Giao diện gọi service; service kiểm tra quy tắc; repository quản lý entity trong RAM.",
+        "Thay đổi thành công mới đặt dirty = true; thao tác tra cứu không làm bẩn dữ liệu.",
+        "Sau mỗi kết quả, người dùng có thể tiếp tục thao tác; sơ đồ không vẽ mũi tên lặp để tránh rối."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Hai lần kiểm tra khác nhau",
+      "items": [
+        "Service kiểm tra từng yêu cầu ngay lúc người dùng thao tác.",
+        "ApplicationData::validate kiểm tra toàn bộ liên kết khi nạp và trước khi lưu.",
+        "Vé chỉ được tạo sau xác nhận tiền, ghế còn trống và suất chưa bắt đầu.",
+        "Yêu cầu không hợp lệ ném exception; MainWindow hiển thị lỗi và repository giữ nguyên."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ranh giới RAM và TXT",
+      "items": [
+        "Bán vé hoặc sửa dữ liệu chỉ cập nhật RAM; giao diện nói rõ chưa lưu vào tệp.",
+        "Khi thoát, ApplicationData ghi đủ năm file tạm, tạo backup rồi mới thay file gốc.",
+        "Nếu lưu lỗi, cửa sổ vẫn mở; chương trình giữ RAM và cố khôi phục trạng thái đĩa trước đó."
+      ]
+    }
+  ]
+}

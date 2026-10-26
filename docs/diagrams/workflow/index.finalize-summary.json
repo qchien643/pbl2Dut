@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/candidate.json",
+    "sha256": "82c49ec8b851c0c9351847650c780aa0572b8fee95450d4be5ec06750027df56",
+    "bytes": 12769
+  },
+  "artifact": {
+    "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.html",
+    "sha256": "54f49d8f274a33e4cec481333ed1e083d2f98b0b1f88a58ff4c6c3b8233e7ebb",
+    "bytes": 880616
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.finalize.json",
+    "summaryReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.finalize-summary.json",
+    "browserCheckReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7691,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

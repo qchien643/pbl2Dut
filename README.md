@@ -150,10 +150,10 @@ ApplicationData ── TxtPersistence ── 5 file TXT
 
 - [Mục lục tài liệu OOP và database](docs/README.md)
 - [Lộ trình đọc code và vấn đáp 1:1](docs/study-guide.md)
-- [SRS 1.0](docs/requirements/srs.md)
+- [Đặc tả yêu cầu](docs/requirements/srs.md)
 - [Thiết kế dữ liệu và ERD](docs/design/data-design.md)
 - [Thiết kế lớp và tổ chức RAM](docs/design/class-design.md)
-- [Sơ đồ tương tác Archify: kiến trúc, OOP và ERD](docs/diagrams/README.md)
+- [Sơ đồ Archify: luồng hệ thống, class, kiến trúc và ERD](docs/diagrams/README.md)
 - [Định dạng TXT và phục hồi](docs/design/txt-format.md)
 - [Đối chiếu triển khai và kiểm thử](docs/design/verification.md)
 - [Wireframe giao diện](docs/design/ui-wireframe.html)

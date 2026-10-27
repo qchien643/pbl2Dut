@@ -1,37 +1,29 @@
-# Tài liệu đồ án OOP và thiết kế dữ liệu
+# Tài liệu đồ án PBL2
 
-Bản đối chiếu mã nguồn ngày 26/10/2026. Sản phẩm là ứng dụng C++17/Qt,
-lưu TXT; không phải ứng dụng đã tích hợp hệ quản trị cơ sở dữ liệu.
+Cập nhật ngày **27/10/2026**. Dự án là ứng dụng C++17/Qt chạy offline, lưu dữ
+liệu bằng năm file TXT. Phần database được thể hiện qua mô hình quan hệ, khóa và
+ràng buộc; dự án không dùng DBMS hay SQL.
 
-## Đọc theo mục tiêu
+## Mục lục
 
-| Cần làm gì? | Tài liệu |
+| Tài liệu | Nội dung chính |
 |---|---|
-| Cài, build và chạy trên máy khác | [README dự án](../README.md) |
-| Nắm bài toán và tiêu chí nghiệm thu | [SRS](requirements/srs.md) |
-| Giải thích ERD, khóa, phụ thuộc hàm, 3NF và toàn vẹn | [Thiết kế dữ liệu](design/data-design.md) |
-| Giải thích đóng gói, kế thừa, composition, template, bộ nhớ | [Thiết kế lớp](design/class-design.md) |
-| Xem sơ đồ tương tác kiến trúc, lớp và ERD | [Sơ đồ Archify](diagrams/README.md) |
-| Hiểu parser, lưu nhiều file và phục hồi | [Định dạng TXT](design/txt-format.md) |
-| Học code, luyện câu hỏi và thực hành sửa nhỏ | [Hướng dẫn vấn đáp](study-guide.md) |
-| Tìm bằng chứng kiểm thử và giới hạn kiểm chứng | [Đối chiếu kiểm thử](design/verification.md) |
+| [README dự án](../README.md) | Cài đặt, build, chạy và cấu trúc thư mục |
+| [SRS](requirements/srs.md) | Phạm vi và yêu cầu sản phẩm |
+| [Thiết kế dữ liệu](design/data-design.md) | ERD, khóa, ràng buộc và chuẩn hóa |
+| [Thiết kế lớp](design/class-design.md) | OOP, direct association, repository và service |
+| [Định dạng TXT](design/txt-format.md) | Nạp, lưu và phục hồi dữ liệu |
+| [Kiểm thử](design/verification.md) | Lệnh chạy test và phạm vi kiểm chứng |
+| [Sơ đồ Archify](diagrams/README.md) | Luồng hệ thống, class, kiến trúc và ERD |
+| [Hướng dẫn vấn đáp](study-guide.md) | Lộ trình đọc code và câu hỏi ôn tập |
 
-SRS ghi **cần làm gì**; thiết kế giải thích **đang làm bằng cách nào và vì sao**;
-hướng dẫn vấn đáp giúp **tự lần theo code**. Không coi kết quả test là chứng minh
-chương trình đúng trong mọi trường hợp.
+## Thứ tự nên đọc
 
-## Cách sử dụng khi ôn tập
+1. SRS để hiểu bài toán.
+2. Thiết kế dữ liệu và sơ đồ ERD.
+3. Thiết kế lớp và sơ đồ class.
+4. Lần theo ba service trong hướng dẫn vấn đáp.
+5. Đọc vòng đời TXT rồi chạy test.
 
-1. Đọc SRS và vẽ lại năm thực thể, khóa và quan hệ mà không nhìn tài liệu.
-2. Đọc thiết kế lớp, chỉ đúng khai báo thể hiện mỗi quan hệ trong `src`.
-3. Theo thứ tự file trong hướng dẫn vấn đáp; tự giải thích rồi mới xem đáp án.
-4. Lần theo một vé từ nút bấm đến RAM, TXT, mở lại và thống kê.
-5. Chạy các test tương ứng và thử sửa một yêu cầu nhỏ trên bản sao dự án.
-
-Tham khảo cách giảng trong [ObjectRelation.pdf](slides/ObjectRelation.pdf),
-[Template.pdf](slides/Template.pdf) và [code môn học](ref/oop).
-Các tài liệu này được giữ nguyên. Không suy luận quyền sở hữu chỉ từ tên quan hệ
-hoặc sao chép cách quản lý con trỏ mà chưa kiểm tra constructor/destructor.
-
-[Wireframe](design/ui-wireframe.html) chỉ là minh họa giao diện; mã Qt và hành vi
-kiểm thử mới là căn cứ mô tả sản phẩm hiện tại.
+Tài liệu trong `slides/` và `ref/oop/` là tài liệu tham khảo môn học, không phải
+đặc tả của sản phẩm hiện tại.

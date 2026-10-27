@@ -2,70 +2,348 @@
   "schema_version": 1,
   "diagram_type": "class",
   "meta": {
-    "title": "PBL2 — kế thừa, composition và tham chiếu ở repository",
-    "locale": "vi",
-    "output": "docs/diagrams/classes/index.html",
+    "title": "Class, Service và Repository của hệ thống",
     "quality_profile": "showcase",
-    "repository": {"url": "https://github.com/qchien643/pbl2Dut.git", "revision": "103602a1e84c4b81641c6b5d1ea0ae56e1195f91", "link_mode": "local-only"}
+    "output": "docs/diagrams/classes/index.html",
+    "repository": {
+      "url": "https://github.com/qchien643/pbl2Dut.git",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "3395a7e86c277c53523b7d272efdaadc73b7fad3"
+    },
+    "views": [
+      {
+        "id": "entity_relations",
+        "label": "Association giữa Entity",
+        "focus": ["film", "auditorium", "seat", "screening", "ticket"],
+        "note": "Các con trỏ const biểu diễn direct association; entity không sở hữu đối tượng đích."
+      },
+      {
+        "id": "repository_structure",
+        "label": "Cấu trúc Repository",
+        "focus": ["generic_repository", "film_repository", "auditorium_repository", "seat_repository", "screening_repository", "ticket_repository"],
+        "note": "Bốn repository kế thừa template chung; TicketRepository dùng composition để giấu update và erase."
+      },
+      {
+        "id": "service_dependencies",
+        "label": "Service dùng Repository",
+        "focus": ["catalog_service", "screening_service", "ticket_service", "film_repository", "auditorium_repository", "seat_repository", "screening_repository", "ticket_repository"],
+        "note": "Service chứa reference tới repository và chịu trách nhiệm kiểm tra quy tắc nghiệp vụ."
+      }
+    ]
   },
-  "layout": {"mode": "grid", "gapX": 100, "gapY": 100, "typeW": 210, "typeMaxW": 300},
+  "layout": {
+    "mode": "grid",
+    "gapX": 45,
+    "gapY": 100,
+    "typeW": 180,
+    "typeMaxW": 245
+  },
   "types": [
-    {"id": "repository", "label": "Repository<T>", "kind": "class", "sublabel": "Lớp mẫu, không phải abstract", "row": 0, "col": 1,
+    {
+      "id": "catalog_service",
+      "label": "CatalogService",
+      "kind": "class",
+      "sublabel": "Quản lý phim, phòng và ghế",
+      "row": 0,
+      "col": 0,
       "attributes": [
-        {"name": "records_", "type": "LinkedList<T>", "visibility": "private"},
-        {"name": "index_", "type": "HashTable<EntityId, T*>", "visibility": "private"},
-        {"name": "dirty_", "type": "bool", "visibility": "private"}
+        { "name": "films_", "type": "FilmRepository&", "visibility": "private" },
+        { "name": "rooms_", "type": "AuditoriumRepository&", "visibility": "private" },
+        { "name": "seats_", "type": "SeatRepository&", "visibility": "private" },
+        { "name": "screenings_", "type": "const ScreeningRepository&", "visibility": "private" },
+        { "name": "tickets_", "type": "TicketRepository&", "visibility": "private" }
       ],
       "methods": [
-        {"name": "findById", "parameters": "id: EntityId", "returns": "const T*", "visibility": "public"},
-        {"name": "insert", "parameters": "value: const T&", "returns": "bool", "visibility": "public"},
-        {"name": "isDirty", "returns": "bool", "visibility": "public"}
+        { "name": "add/update/eraseFilm", "visibility": "public" },
+        { "name": "add/update/eraseRoom", "visibility": "public" },
+        { "name": "seatMap", "returns": "unique_ptr<SeatMap>", "visibility": "public" }
       ],
-      "sources": [{"path": "src/repositories/Repository.h", "line": 14, "end_line": 46}]},
-    {"id": "filmrepo", "label": "FilmRepository", "kind": "class", "sublabel": "Kế thừa Repository<Film>", "row": 0, "col": 0,
-      "sources": [{"path": "src/repositories/FilmRepository.h", "line": 1, "end_line": 6}]},
-    {"id": "ticketrepo", "label": "TicketRepository", "kind": "class", "sublabel": "Không công khai sửa, xóa vé", "row": 0, "col": 2,
-      "attributes": [{"name": "records_", "type": "Repository<Ticket>", "visibility": "private"}],
-      "methods": [
-        {"name": "insert", "parameters": "ticket: const Ticket&", "returns": "bool", "visibility": "public"},
-        {"name": "findById", "parameters": "id: EntityId", "returns": "const Ticket*", "visibility": "public"}
-      ],
-      "sources": [{"path": "src/repositories/TicketRepository.h", "line": 6, "end_line": 25}]},
-    {"id": "appdata", "label": "ApplicationData", "kind": "class", "sublabel": "Sở hữu các kho bằng giá trị", "row": 1, "col": 0,
+      "sources": [
+        { "path": "src/services/CatalogService.h", "line": 14, "end_line": 50, "label": "khai báo service" },
+        { "path": "src/services/CatalogService.cpp", "line": 84, "end_line": 116, "label": "ràng buộc tham chiếu" },
+        { "path": "src/services/CatalogService.cpp", "line": 160, "end_line": 200, "label": "thay đổi phòng ghế" }
+      ]
+    },
+    {
+      "id": "screening_service",
+      "label": "ScreeningService",
+      "kind": "class",
+      "sublabel": "Quản lý lịch chiếu",
+      "row": 0,
+      "col": 2,
       "attributes": [
-        {"name": "films", "type": "FilmRepository", "visibility": "public"},
-        {"name": "tickets", "type": "TicketRepository", "visibility": "public"}
+        { "name": "films_", "type": "const FilmRepository&", "visibility": "private" },
+        { "name": "rooms_", "type": "const AuditoriumRepository&", "visibility": "private" },
+        { "name": "screenings_", "type": "ScreeningRepository&", "visibility": "private" },
+        { "name": "tickets_", "type": "const TicketRepository&", "visibility": "private" }
       ],
-      "methods": [{"name": "save", "returns": "void", "visibility": "public"}],
-      "sources": [{"path": "src/ApplicationData.h", "line": 11, "end_line": 34}]},
-    {"id": "ticketservice", "label": "TicketService", "kind": "class", "sublabel": "Mượn kho bằng tham chiếu", "row": 1, "col": 2,
-      "attributes": [{"name": "tickets_", "type": "TicketRepository&", "visibility": "private"}],
-      "methods": [{"name": "find", "parameters": "ticketId: EntityId", "returns": "TicketDetails", "visibility": "public"}],
-      "sources": [{"path": "src/services/TicketService.h", "line": 37, "end_line": 63}]}
+      "methods": [
+        { "name": "add/update/erase", "visibility": "public" },
+        { "name": "find", "returns": "const Screening&", "visibility": "public" },
+        { "name": "list", "returns": "void", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/services/ScreeningService.h", "line": 13, "end_line": 40, "label": "khai báo service" },
+        { "path": "src/services/ScreeningService.cpp", "line": 41, "end_line": 83, "label": "validate và thêm" },
+        { "path": "src/services/ScreeningService.cpp", "line": 119, "end_line": 142, "label": "sửa và xóa" }
+      ]
+    },
+    {
+      "id": "ticket_service",
+      "label": "TicketService",
+      "kind": "class",
+      "sublabel": "Bán, tra cứu vé và doanh thu",
+      "row": 0,
+      "col": 4,
+      "attributes": [
+        { "name": "seats_", "type": "const SeatRepository&", "visibility": "private" },
+        { "name": "screenings_", "type": "const ScreeningRepository&", "visibility": "private" },
+        { "name": "tickets_", "type": "TicketRepository&", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "preview", "returns": "SaleDetails", "visibility": "public" },
+        { "name": "sell", "returns": "EntityId", "visibility": "public" },
+        { "name": "find", "returns": "TicketDetails", "visibility": "public" },
+        { "name": "revenue/listBySaleDate", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/services/TicketService.h", "line": 37, "end_line": 60, "label": "khai báo service" },
+        { "path": "src/services/TicketService.cpp", "line": 20, "end_line": 97, "label": "xem trước và bán" },
+        { "path": "src/services/TicketService.cpp", "line": 99, "end_line": 190, "label": "tra cứu báo cáo" }
+      ]
+    },
+    {
+      "id": "film_repository",
+      "label": "FilmRepository",
+      "kind": "class",
+      "sublabel": "Repository<Film>",
+      "row": 2,
+      "col": 0,
+      "sources": [
+        { "path": "src/repositories/FilmRepository.h", "line": 1, "end_line": 6, "label": "kế thừa repository" }
+      ]
+    },
+    {
+      "id": "auditorium_repository",
+      "label": "AuditoriumRepository",
+      "kind": "class",
+      "sublabel": "Repository<Auditorium>",
+      "row": 2,
+      "col": 1,
+      "sources": [
+        { "path": "src/repositories/AuditoriumRepository.h", "line": 1, "end_line": 6, "label": "kế thừa repository" }
+      ]
+    },
+    {
+      "id": "screening_repository",
+      "label": "ScreeningRepository",
+      "kind": "class",
+      "sublabel": "Repository<Screening>",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        { "path": "src/repositories/ScreeningRepository.h", "line": 1, "end_line": 6, "label": "kế thừa repository" }
+      ]
+    },
+    {
+      "id": "seat_repository",
+      "label": "SeatRepository",
+      "kind": "class",
+      "sublabel": "Repository<Seat>",
+      "row": 2,
+      "col": 3,
+      "sources": [
+        { "path": "src/repositories/SeatRepository.h", "line": 1, "end_line": 6, "label": "kế thừa repository" }
+      ]
+    },
+    {
+      "id": "generic_repository",
+      "label": "Repository<T>",
+      "kind": "class",
+      "sublabel": "Kho dữ liệu dùng chung",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        { "name": "records_", "type": "LinkedList<T>", "visibility": "private" },
+        { "name": "index_", "type": "HashTable<EntityId, T*>", "visibility": "private" },
+        { "name": "dirty_", "type": "bool", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "findById", "returns": "const T*", "visibility": "public" },
+        { "name": "insert/update/erase", "returns": "bool", "visibility": "public" },
+        { "name": "replaceWith", "returns": "void", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/repositories/Repository.h", "line": 16, "end_line": 51, "label": "template repository" },
+        { "path": "src/repositories/Repository.h", "line": 94, "end_line": 176, "label": "CRUD và index" }
+      ]
+    },
+    {
+      "id": "ticket_repository",
+      "label": "TicketRepository",
+      "kind": "class",
+      "sublabel": "Giới hạn API của vé đã bán",
+      "row": 2,
+      "col": 4,
+      "attributes": [
+        { "name": "records_", "type": "Repository<Ticket>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "findById/insert", "visibility": "public" },
+        { "name": "begin/end", "visibility": "public" },
+        { "name": "relinkSeats", "returns": "void", "visibility": "private" }
+      ],
+      "sources": [
+        { "path": "src/repositories/TicketRepository.h", "line": 7, "end_line": 28, "label": "API giới hạn" },
+        { "path": "src/repositories/TicketRepository.cpp", "line": 23, "end_line": 55, "label": "chuyển tiếp và relink" }
+      ]
+    },
+    {
+      "id": "film",
+      "label": "Film",
+      "kind": "class",
+      "sublabel": "Phim",
+      "row": 3,
+      "col": 0,
+      "attributes": [
+        { "name": "id_", "type": "EntityId", "visibility": "private" },
+        { "name": "title_", "type": "string", "visibility": "private" },
+        { "name": "durationMinutes_", "type": "int64", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "id/title/durationMinutes", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/entities/Film.h", "line": 8, "end_line": 21, "label": "entity Film" }
+      ]
+    },
+    {
+      "id": "auditorium",
+      "label": "Auditorium",
+      "kind": "class",
+      "sublabel": "Phòng chiếu",
+      "row": 3,
+      "col": 1,
+      "attributes": [
+        { "name": "id_", "type": "EntityId", "visibility": "private" },
+        { "name": "name_", "type": "string", "visibility": "private" },
+        { "name": "rowCount_", "type": "int64", "visibility": "private" },
+        { "name": "seatsPerRow_", "type": "int64", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "capacity", "returns": "int64", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/entities/Auditorium.h", "line": 8, "end_line": 24, "label": "entity Auditorium" }
+      ]
+    },
+    {
+      "id": "screening",
+      "label": "Screening",
+      "kind": "class",
+      "sublabel": "Suất chiếu",
+      "row": 3,
+      "col": 2,
+      "attributes": [
+        { "name": "id_", "type": "EntityId", "visibility": "private" },
+        { "name": "film_", "type": "const Film*", "visibility": "private" },
+        { "name": "auditorium_", "type": "const Auditorium*", "visibility": "private" },
+        { "name": "startTime_", "type": "string", "visibility": "private" },
+        { "name": "ticketPrice_", "type": "int64", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "film/auditorium", "returns": "const reference", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/entities/Screening.h", "line": 11, "end_line": 31, "label": "direct associations" },
+        { "path": "src/entities/Screening.cpp", "line": 6, "end_line": 38, "label": "gán và trả reference" }
+      ]
+    },
+    {
+      "id": "seat",
+      "label": "Seat",
+      "kind": "class",
+      "sublabel": "Ghế trong phòng",
+      "row": 3,
+      "col": 3,
+      "attributes": [
+        { "name": "id_", "type": "EntityId", "visibility": "private" },
+        { "name": "auditorium_", "type": "const Auditorium*", "visibility": "private" },
+        { "name": "rowNumber_", "type": "int64", "visibility": "private" },
+        { "name": "seatNumber_", "type": "int64", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "auditorium", "returns": "const Auditorium&", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "src/entities/Seat.h", "line": 9, "end_line": 26, "label": "direct association" },
+        { "path": "src/entities/Seat.cpp", "line": 5, "end_line": 26, "label": "gán và trả reference" }
+      ]
+    },
+    {
+      "id": "ticket",
+      "label": "Ticket",
+      "kind": "class",
+      "sublabel": "Vé đã bán",
+      "row": 3,
+      "col": 4,
+      "attributes": [
+        { "name": "id_", "type": "EntityId", "visibility": "private" },
+        { "name": "screening_", "type": "const Screening*", "visibility": "private" },
+        { "name": "seat_", "type": "const Seat*", "visibility": "private" },
+        { "name": "soldAt_", "type": "string", "visibility": "private" },
+        { "name": "unitPrice_", "type": "int64", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "screening/seat", "returns": "const reference", "visibility": "public" },
+        { "name": "setSeat", "returns": "void", "visibility": "private" }
+      ],
+      "sources": [
+        { "path": "src/entities/Ticket.h", "line": 11, "end_line": 34, "label": "direct associations" },
+        { "path": "src/entities/Ticket.cpp", "line": 8, "end_line": 50, "label": "kiểm tra và relink" }
+      ]
+    }
   ],
   "relationships": [
-    {"id": "film-inherits", "from": "filmrepo", "to": "repository", "kind": "inheritance", "label": "T = Film"},
-    {"id": "ticket-contains", "from": "ticketrepo", "to": "repository", "kind": "composition", "label": "T = Ticket"},
-    {"id": "app-films", "from": "appdata", "to": "filmrepo", "kind": "composition"},
-    {"id": "app-tickets", "from": "appdata", "to": "ticketrepo", "kind": "composition"},
-    {"id": "service-borrows", "from": "ticketservice", "to": "ticketrepo", "kind": "association", "label": "Tham chiếu"}
+    { "id": "film_repo_base", "from": "film_repository", "to": "generic_repository", "kind": "inheritance" },
+    { "id": "room_repo_base", "from": "auditorium_repository", "to": "generic_repository", "kind": "inheritance" },
+    { "id": "seat_repo_base", "from": "seat_repository", "to": "generic_repository", "kind": "inheritance" },
+    { "id": "screening_repo_base", "from": "screening_repository", "to": "generic_repository", "kind": "inheritance" },
+    { "id": "ticket_repo_records", "from": "ticket_repository", "to": "generic_repository", "kind": "composition" },
+    { "id": "seat_room", "from": "seat", "to": "auditorium", "kind": "association" },
+    { "id": "screening_film", "from": "screening", "to": "film", "kind": "association" },
+    { "id": "screening_room", "from": "screening", "to": "auditorium", "kind": "association" },
+    { "id": "ticket_screening", "from": "ticket", "to": "screening", "kind": "association" },
+    { "id": "ticket_seat", "from": "ticket", "to": "seat", "kind": "association" },
+    { "id": "catalog_repository_layer", "from": "catalog_service", "to": "generic_repository", "kind": "dependency", "label": "dùng các repository danh mục" },
+    { "id": "screening_repository_layer", "from": "screening_service", "to": "generic_repository", "kind": "dependency", "label": "dùng repository lịch" },
+    { "id": "ticket_repository_layer", "from": "ticket_service", "to": "generic_repository", "kind": "dependency", "label": "dùng repository vé" }
   ],
   "cards": [
-    {"dot": "cyan", "title": "Đọc đúng phạm vi", "items": [
-      "Đây là lát cắt OOP của tầng repository, không phải sơ đồ mọi lớp và mọi thành viên.",
-      "FilmRepository đại diện cho bốn lớp kế thừa: FilmRepository, AuditoriumRepository, SeatRepository, ScreeningRepository.",
-      "Repository<T> biểu diễn mẫu; Repository<Film> và Repository<Ticket> là hai kiểu cụ thể khác nhau."
-    ]},
-    {"dot": "emerald", "title": "Ba quan hệ khác nhau", "items": [
-      "Kế thừa: FilmRepository nhận giao diện thao tác của Repository<Film>.",
-      "Composition: TicketRepository chứa một Repository<Ticket>; chỉ chuyển tiếp các hàm được phép.",
-      "Association: TicketService giữ TicketRepository&, không sở hữu hay hủy kho."
-    ]},
-    {"dot": "amber", "title": "Bộ nhớ và các phần đã lược", "items": [
-      "LinkedList sở hữu entity; HashTable chỉ lưu con trỏ đến entity trong danh sách.",
-      "Repository cấm copy và move để tránh sai liên kết giữa danh sách với chỉ mục.",
-      "ApplicationData còn sở hữu ba kho khác; TicketService còn tham chiếu bốn kho khác. Các entity liên kết qua ID: xem ERD.",
-      "Nguồn là bản chụp cục bộ; điều khiển trình xem bằng tiếng Anh."
-    ]}
+    {
+      "dot": "cyan",
+      "title": "Direct association",
+      "items": [
+        "Seat giữ const Auditorium*; Screening giữ const Film* và const Auditorium*.",
+        "Ticket giữ const Screening* và const Seat*; ID được lấy lại từ đối tượng liên kết."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Repository",
+      "items": [
+        "Repository<T> sở hữu entity trong LinkedList và dùng HashTable để tìm theo ID.",
+        "TicketRepository dùng composition để không công khai update/erase vé đã bán."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Service",
+      "items": [
+        "Service không sở hữu repository; nó giữ reference được truyền từ main.",
+        "Mỗi service gom quy tắc nghiệp vụ của một nhóm chức năng và chỉ sửa repository cần thiết."
+      ]
+    }
   ]
 }

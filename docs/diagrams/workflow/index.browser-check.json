@@ -6,11 +6,11 @@
   "status": "pass",
   "visualReview": "not-requested",
   "provenance": "current",
-  "deliveryReceiptId": "8dbdb28f-267e-46d7-b354-c901d6845391",
+  "deliveryReceiptId": "22755b0d-efe6-4612-8d2a-11e698b0645d",
   "artifact": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.html",
-    "sha256": "54f49d8f274a33e4cec481333ed1e083d2f98b0b1f88a58ff4c6c3b8233e7ebb",
-    "bytes": 880616
+    "sha256": "6340caea54bbcfa5c3f1f636c758b47642110e211b2b5ec23a3f18c9afee004b",
+    "bytes": 869389
   },
   "state": {
     "detail": "read",
@@ -32,7 +32,7 @@
         "innerWidth": 1440,
         "innerHeight": 900,
         "scrollWidth": 1440,
-        "scrollHeight": 1487,
+        "scrollHeight": 1610,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -47,90 +47,93 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 1345,
+          "svgPx": 1468,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 254,
+            "frameId": "lane-0",
+            "heightPx": 150,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
+              "launch",
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 150,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-3",
-            "heightPx": 254,
-            "nodeCount": 5,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
+              "selected_service"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-0",
-            "heightPx": 247,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 43,
-            "spaceBelowNodesPx": 5
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 132,
-            "nodeCount": 3,
-            "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
-            ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
-          },
-          {
             "frameId": "lane-4",
-            "heightPx": 132,
-            "nodeCount": 4,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -153,7 +156,7 @@
         "innerWidth": 1600,
         "innerHeight": 1000,
         "scrollWidth": 1600,
-        "scrollHeight": 1713,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -163,95 +166,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1505,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 284,
-            "nodeCount": 3,
-            "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 284,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
             "frameId": "lane-0",
-            "heightPx": 276,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 48,
-            "spaceBelowNodesPx": 6
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 148,
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
               "launch",
-              "load_txt",
-              "validate_loaded"
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
+            "nodeIds": [
+              "selected_service"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 148,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -274,7 +280,7 @@
         "innerWidth": 1920,
         "innerHeight": 1080,
         "scrollWidth": 1920,
-        "scrollHeight": 1795,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -284,95 +290,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1856,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -395,7 +404,7 @@
         "innerWidth": 2048,
         "innerHeight": 1320,
         "scrollWidth": 2048,
-        "scrollHeight": 1813,
+        "scrollHeight": 1784,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -405,95 +414,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1920,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -569,7 +581,7 @@
         "innerWidth": 1440,
         "innerHeight": 900,
         "scrollWidth": 1440,
-        "scrollHeight": 1487,
+        "scrollHeight": 1610,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -584,90 +596,93 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 1345,
+          "svgPx": 1468,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 254,
+            "frameId": "lane-0",
+            "heightPx": 150,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
+              "launch",
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 150,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-3",
-            "heightPx": 254,
-            "nodeCount": 5,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
+              "selected_service"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-0",
-            "heightPx": 247,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 43,
-            "spaceBelowNodesPx": 5
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 132,
-            "nodeCount": 3,
-            "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
-            ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
-          },
-          {
             "frameId": "lane-4",
-            "heightPx": 132,
-            "nodeCount": 4,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -690,7 +705,7 @@
         "innerWidth": 1600,
         "innerHeight": 1000,
         "scrollWidth": 1600,
-        "scrollHeight": 1713,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -700,95 +715,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1505,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 284,
-            "nodeCount": 3,
-            "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 284,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
             "frameId": "lane-0",
-            "heightPx": 276,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 48,
-            "spaceBelowNodesPx": 6
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 148,
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
               "launch",
-              "load_txt",
-              "validate_loaded"
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
+            "nodeIds": [
+              "selected_service"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 148,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -811,7 +829,7 @@
         "innerWidth": 1920,
         "innerHeight": 1080,
         "scrollWidth": 1920,
-        "scrollHeight": 1795,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -821,95 +839,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1856,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -932,7 +953,7 @@
         "innerWidth": 2048,
         "innerHeight": 1320,
         "scrollWidth": 2048,
-        "scrollHeight": 1813,
+        "scrollHeight": 1784,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -942,95 +963,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1920,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -1058,7 +1082,7 @@
         "innerWidth": 1440,
         "innerHeight": 900,
         "scrollWidth": 1440,
-        "scrollHeight": 1487,
+        "scrollHeight": 1610,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -1073,90 +1097,93 @@
           "bodyPaddingPx": 12,
           "headerPx": 52,
           "diagramChromePx": 78,
-          "svgPx": 1345,
+          "svgPx": 1468,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 254,
+            "frameId": "lane-0",
+            "heightPx": 150,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
+              "launch",
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 150,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-3",
-            "heightPx": 254,
-            "nodeCount": 5,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
+              "selected_service"
             ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 50,
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-0",
-            "heightPx": 247,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 198,
-            "spaceAboveNodesPx": 43,
-            "spaceBelowNodesPx": 5
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 132,
-            "nodeCount": 3,
-            "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
-            ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
-          },
-          {
             "frameId": "lane-4",
-            "heightPx": 132,
-            "nodeCount": 4,
+            "heightPx": 150,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 66,
-            "spaceAboveNodesPx": 52,
-            "spaceBelowNodesPx": 14
+            "nodeSpanPx": 96,
+            "spaceAboveNodesPx": 48,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 150,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 74,
+            "spaceAboveNodesPx": 59,
+            "spaceBelowNodesPx": 17
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -1179,7 +1206,7 @@
         "innerWidth": 1600,
         "innerHeight": 1000,
         "scrollWidth": 1600,
-        "scrollHeight": 1713,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -1189,95 +1216,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1536,
-        "diagramWidth": 1506,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1505,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 284,
-            "nodeCount": 3,
-            "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 284,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 55,
-            "spaceBelowNodesPx": 7
-          },
-          {
             "frameId": "lane-0",
-            "heightPx": 276,
-            "nodeCount": 4,
-            "nodeIds": [
-              "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
-            ],
-            "nodeSpanPx": 222,
-            "spaceAboveNodesPx": 48,
-            "spaceBelowNodesPx": 6
-          },
-          {
-            "frameId": "lane-1",
-            "heightPx": 148,
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
               "launch",
-              "load_txt",
-              "validate_loaded"
+              "choose_action",
+              "exit_decision"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
+            "nodeIds": [
+              "selected_service"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 148,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
             ],
-            "nodeSpanPx": 74,
-            "spaceAboveNodesPx": 58,
-            "spaceBelowNodesPx": 16
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -1300,7 +1330,7 @@
         "innerWidth": 1920,
         "innerHeight": 1080,
         "scrollWidth": 1920,
-        "scrollHeight": 1795,
+        "scrollHeight": 1766,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -1310,95 +1340,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1856,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 60,
           "diagramChromePx": 84,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,
@@ -1421,7 +1454,7 @@
         "innerWidth": 2048,
         "innerHeight": 1320,
         "scrollWidth": 2048,
-        "scrollHeight": 1813,
+        "scrollHeight": 1784,
         "overflowX": false,
         "overflowY": true,
         "verticalScrollAccepted": true,
@@ -1431,95 +1464,98 @@
         "readerFit": "width-first",
         "ok": true,
         "readerWidth": 1920,
-        "diagramWidth": 1588.5,
+        "diagramWidth": 1428,
         "pageComposition": {
           "bodyPaddingPx": 64,
           "headerPx": 68,
           "diagramChromePx": 94,
-          "svgPx": 1587,
+          "svgPx": 1557,
           "cardsPx": 0,
-          "viewBoxHeight": 1058
+          "viewBoxHeight": 1038
         },
-        "viewBoxWidth": 1059,
+        "viewBoxWidth": 952,
         "workflowLanes": [
           {
-            "frameId": "lane-2",
-            "heightPx": 300,
+            "frameId": "lane-0",
+            "heightPx": 159,
             "nodeCount": 3,
             "nodeIds": [
-              "query_ram",
-              "validate_change",
-              "mutate_repo"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-3",
-            "heightPx": 300,
-            "nodeCount": 5,
-            "nodeIds": [
-              "confirm_close",
-              "continue_session",
-              "validate_save",
-              "exit_app",
-              "write_files"
-            ],
-            "nodeSpanPx": 234,
-            "spaceAboveNodesPx": 59,
-            "spaceBelowNodesPx": 8
-          },
-          {
-            "frameId": "lane-0",
-            "heightPx": 291,
-            "nodeCount": 4,
-            "nodeIds": [
+              "launch",
               "choose_action",
-              "show_ui",
-              "change_result",
-              "query_result"
+              "exit_decision"
             ],
-            "nodeSpanPx": 234,
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-1",
+            "heightPx": 159,
+            "nodeCount": 3,
+            "nodeIds": [
+              "qt_boot",
+              "main_window",
+              "show_result"
+            ],
+            "nodeSpanPx": 78,
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
+          },
+          {
+            "frameId": "lane-2",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "load_session",
+              "save_session"
+            ],
+            "nodeSpanPx": 102,
             "spaceAboveNodesPx": 51,
             "spaceBelowNodesPx": 6
           },
           {
-            "frameId": "lane-1",
-            "heightPx": 156,
-            "nodeCount": 3,
+            "frameId": "lane-3",
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "launch",
-              "load_txt",
-              "validate_loaded"
+              "selected_service"
             ],
-            "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
           },
           {
             "frameId": "lane-4",
-            "heightPx": 156,
-            "nodeCount": 4,
+            "heightPx": 159,
+            "nodeCount": 1,
             "nodeIds": [
-              "read_error",
-              "startup_error",
-              "pre_save_error",
-              "save_error"
+              "repositories"
+            ],
+            "nodeSpanPx": 102,
+            "spaceAboveNodesPx": 51,
+            "spaceBelowNodesPx": 6
+          },
+          {
+            "frameId": "lane-5",
+            "heightPx": 159,
+            "nodeCount": 2,
+            "nodeIds": [
+              "txt_input",
+              "txt_output"
             ],
             "nodeSpanPx": 78,
-            "spaceAboveNodesPx": 62,
-            "spaceBelowNodesPx": 17
+            "spaceAboveNodesPx": 63,
+            "spaceBelowNodesPx": 18
           }
         ],
-        "minimumProjectedNodeTextPx": 6.9,
-        "minimumProjectedNonEdgeTextPx": 6.9,
+        "minimumProjectedNodeTextPx": 6.3,
+        "minimumProjectedNonEdgeTextPx": 6.3,
         "minimumProjectedEdgeTextPx": 8,
-        "minimumProjectedNodeText": "Quản lý, bán và tra cứu",
+        "minimumProjectedNodeText": "resolve ID thành association trực tiếp",
         "minimumProjectedNodeTextDetail": "context",
         "minimumProjectedNodeTextOwner": {
           "kind": "node",
-          "id": "choose_action"
+          "id": "load_session"
         },
         "minimumRequiredNodeTextPx": 6,
         "readabilityOk": true,

@@ -5,16 +5,16 @@
   "status": "pass",
   "type": "class",
   "quality": "showcase",
-  "startedAt": "2026-10-26T10:05:35.817Z",
+  "startedAt": "2026-10-27T14:21:01.066Z",
   "specification": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/candidate.json",
-    "sha256": "589a5ea0b2f3ee9d47471f615f0706502b2d41b1c4c2f16455ada2ec86b7a1de",
-    "bytes": 5018
+    "sha256": "e2db6072eb208171d35ff058adb87762a9d8238920b8eb4b2e19035d9875f1c9",
+    "bytes": 14953
   },
   "artifact": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
-    "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
-    "bytes": 846902
+    "sha256": "ac18066e2951067eebbed0c414d28c2fb645e405db9e04d20c1d34efba7f5b73",
+    "bytes": 894201
   },
   "stages": {
     "validate": {
@@ -32,7 +32,7 @@
         "--quality",
         "showcase",
         "--repo-root",
-        "/run/media/luulomhe/DATA/Code/Project/pbl2/.cache/archify-source-KE20RS",
+        "/run/media/luulomhe/DATA/Code/Project/pbl2",
         "--json"
       ],
       "receipt": {
@@ -40,8 +40,8 @@
         "ok": true,
         "command": "validate",
         "specification": {
-          "sha256": "589a5ea0b2f3ee9d47471f615f0706502b2d41b1c4c2f16455ada2ec86b7a1de",
-          "bytes": 5018
+          "sha256": "e2db6072eb208171d35ff058adb87762a9d8238920b8eb4b2e19035d9875f1c9",
+          "bytes": 14953
         },
         "validation": {
           "checksPassed": 9,
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 345,
+      "durationMs": 410,
       "command": [
         "/home/luulomhe/.nvm/versions/node/v24.20.0/bin/node",
         "/home/luulomhe/.codex/skills/archify/bin/archify.mjs",
@@ -67,24 +67,24 @@
         "--quality",
         "showcase",
         "--repo-root",
-        "/run/media/luulomhe/DATA/Code/Project/pbl2/.cache/archify-source-KE20RS",
+        "/run/media/luulomhe/DATA/Code/Project/pbl2",
         "--json"
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "06c95a13-91cc-423e-9c33-cebe7dcb3c15",
+        "receiptId": "66116f64-6927-4582-b799-d0714e16df91",
         "ok": true,
         "command": "deliver",
         "type": "class",
         "input": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/candidate.json",
         "output": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
         "specification": {
-          "sha256": "589a5ea0b2f3ee9d47471f615f0706502b2d41b1c4c2f16455ada2ec86b7a1de",
-          "bytes": 5018
+          "sha256": "e2db6072eb208171d35ff058adb87762a9d8238920b8eb4b2e19035d9875f1c9",
+          "bytes": 14953
         },
         "artifact": {
-          "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
-          "bytes": 846902
+          "sha256": "ac18066e2951067eebbed0c414d28c2fb645e405db9e04d20c1d34efba7f5b73",
+          "bytes": 894201
         },
         "validation": {
           "checksPassed": 9,
@@ -97,36 +97,9 @@
         "evidence": {
           "verified": true,
           "repository": "https://github.com/qchien643/pbl2Dut",
-          "revision": "103602a1e84c4b81641c6b5d1ea0ae56e1195f91",
-          "references": 5,
-          "linkMode": "local-only"
+          "revision": "3395a7e86c277c53523b7d272efdaadc73b7fad3",
+          "references": 25
         },
-        "diagnostics": [
-          {
-            "code": "i18n/locale-fallback",
-            "severity": "warning",
-            "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
-            "subject": {
-              "diagramType": "class",
-              "path": "/meta/locale"
-            },
-            "evidence": {
-              "locale": "vi",
-              "bundledLocales": [
-                "en",
-                "zh-CN",
-                "zh-TW",
-                "es",
-                "ko",
-                "ar"
-              ]
-            },
-            "supportedFixes": [
-              "Supply meta.translations for this locale.",
-              "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
-            ]
-          }
-        ],
         "update": {
           "status": "unavailable",
           "installedVersion": null,
@@ -138,13 +111,12 @@
           "noticeText": null,
           "reason": "disabled"
         }
-      },
-      "stderr": "archify: meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English."
+      }
     },
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 142,
+      "durationMs": 154,
       "command": [
         "/home/luulomhe/.nvm/versions/node/v24.20.0/bin/node",
         "/home/luulomhe/.codex/skills/archify/bin/archify.mjs",
@@ -156,8 +128,8 @@
         "ok": true,
         "file": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
         "artifact": {
-          "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
-          "bytes": 846902
+          "sha256": "ac18066e2951067eebbed0c414d28c2fb645e405db9e04d20c1d34efba7f5b73",
+          "bytes": 894201
         },
         "checks": [
           {
@@ -224,18 +196,18 @@
             "containerBorderRuns": 0,
             "labelRouteClearanceIssues": 0,
             "labelCanvasOverflowIssues": 0,
-            "minLabelRouteClearance": 525,
+            "minLabelRouteClearance": 110.1,
             "desktopReadabilityIssues": 0,
             "viewportHeightIssues": 0,
-            "minProjectedNodeTextPx": 8.644814090019569,
-            "maxBends": 0,
-            "routesOverSuggestedBends": 0,
-            "maxStretch": 1,
+            "minProjectedNodeTextPx": 6.038961038961038,
+            "maxBends": 3,
+            "routesOverSuggestedBends": 2,
+            "maxStretch": 1.09,
             "routesOverSuggestedStretch": 0,
-            "minSegmentPx": 100,
-            "minInteriorSegmentPx": null,
-            "shortSegmentCount": 0,
-            "shortEndpointSegmentCount": 0,
+            "minSegmentPx": 14,
+            "minInteriorSegmentPx": 101,
+            "shortSegmentCount": 1,
+            "shortEndpointSegmentCount": 1,
             "shortInteriorSegmentCount": 0,
             "microSegmentCount": 0
           },
@@ -247,45 +219,91 @@
           },
           "routeReview": {
             "crossings": [],
-            "detours": []
+            "detours": [
+              {
+                "relationship": {
+                  "id": "seat_room",
+                  "from": "seat",
+                  "to": "auditorium",
+                  "label": "",
+                  "collectionIndex": 5,
+                  "artifactIndex": 5
+                },
+                "bends": 3,
+                "stretch": 1.09,
+                "directCorridorBlockers": [
+                  {
+                    "id": "screening",
+                    "label": "Screening",
+                    "box": [
+                      614,
+                      932,
+                      245,
+                      194
+                    ]
+                  }
+                ]
+              },
+              {
+                "relationship": {
+                  "id": "ticket_screening",
+                  "from": "ticket",
+                  "to": "screening",
+                  "label": "",
+                  "collectionIndex": 8,
+                  "artifactIndex": 8
+                },
+                "bends": 3,
+                "stretch": 1.089,
+                "directCorridorBlockers": [
+                  {
+                    "id": "seat",
+                    "label": "Seat",
+                    "box": [
+                      904,
+                      942,
+                      245,
+                      174
+                    ]
+                  }
+                ]
+              }
+            ]
           },
           "leadingSpace": {
             "measured": false,
             "reviewSuggested": false
           },
           "desktopReadability": {
-            "budgetBasis": "recognized-declared-wide",
+            "budgetBasis": "legacy-930",
             "readerContract": "declared-wide-v1",
             "availableDiagramWidth": 930,
             "actualBudgetPx": 930,
-            "actualReaderWidth": 960,
-            "desiredReaderWidth": 960,
-            "viewportCap": 1376,
-            "limit": "source-size",
+            "limit": "legacy",
             "requestedTargetPx": 7.5,
-            "requestedTargetMet": true,
+            "requestedTargetMet": false,
             "hardFloorPx": 6,
             "hardFloorMet": true,
             "minimumOwner": {
               "kind": "edge",
-              "id": "film-inherits",
-              "from": "filmrepo",
-              "to": "repository"
+              "id": "catalog_repository_layer",
+              "from": "catalog_service",
+              "to": "generic_repository"
             },
             "minimumSourceTextPx": 9.5,
-            "minimumProjectedTextPx": 8.644814090019569,
-            "semanticTextCount": 51
+            "minimumProjectedTextPx": 6.038961038961038,
+            "semanticTextCount": 187
           },
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "06c95a13-91cc-423e-9c33-cebe7dcb3c15"
+        "deliveryReceiptId": "66116f64-6927-4582-b799-d0714e16df91"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1529,
+      "durationMs": 2497,
       "command": [
         "/home/luulomhe/.nvm/versions/node/v24.20.0/bin/node",
         "/home/luulomhe/.codex/skills/archify/bin/archify.mjs",
@@ -303,11 +321,11 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "06c95a13-91cc-423e-9c33-cebe7dcb3c15",
+        "deliveryReceiptId": "66116f64-6927-4582-b799-d0714e16df91",
         "artifact": {
           "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
-          "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
-          "bytes": 846902
+          "sha256": "ac18066e2951067eebbed0c414d28c2fb645e405db9e04d20c1d34efba7f5b73",
+          "bytes": 894201
         },
         "state": {
           "detail": "read",
@@ -329,36 +347,36 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 900,
+              "scrollHeight": 957,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 666,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -381,36 +399,36 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1000,
+              "scrollHeight": 1023,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 746,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -442,27 +460,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1533,
+              "readerWidth": 1084,
+              "diagramWidth": 1054,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 185,
-                "svgPx": 759,
+                "diagramChromePx": 84,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.8441558441558445,
+              "minimumProjectedNonEdgeTextPx": 7.924812030075188,
+              "minimumProjectedEdgeTextPx": 6.8441558441558445,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -470,11 +488,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 33.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             },
@@ -494,27 +512,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1533,
+              "readerWidth": 1376,
+              "diagramWidth": 1326,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 417,
-                "svgPx": 759,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 8.61038961038961,
+              "minimumProjectedNonEdgeTextPx": 9.969924812030076,
+              "minimumProjectedEdgeTextPx": 8.61038961038961,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -522,11 +540,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 149.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             }
@@ -590,36 +608,36 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 900,
+              "scrollHeight": 957,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 666,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -642,36 +660,36 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1000,
+              "scrollHeight": 1023,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 746,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -703,27 +721,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1533,
+              "readerWidth": 1084,
+              "diagramWidth": 1054,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 185,
-                "svgPx": 759,
+                "diagramChromePx": 84,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.8441558441558445,
+              "minimumProjectedNonEdgeTextPx": 7.924812030075188,
+              "minimumProjectedEdgeTextPx": 6.8441558441558445,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -731,11 +749,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 33.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             },
@@ -755,27 +773,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1533,
+              "readerWidth": 1376,
+              "diagramWidth": 1326,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 417,
-                "svgPx": 759,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 8.61038961038961,
+              "minimumProjectedNonEdgeTextPx": 9.969924812030076,
+              "minimumProjectedEdgeTextPx": 8.61038961038961,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -783,11 +801,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 149.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             }
@@ -803,36 +821,36 @@
               "innerWidth": 1440,
               "innerHeight": 900,
               "scrollWidth": 1440,
-              "scrollHeight": 900,
+              "scrollHeight": 957,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1376,
-              "diagramWidth": 1346,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 12,
                 "headerPx": 52,
                 "diagramChromePx": 78,
-                "svgPx": 666,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -855,36 +873,36 @@
               "innerWidth": 1600,
               "innerHeight": 1000,
               "scrollWidth": 1600,
-              "scrollHeight": 1000,
+              "scrollHeight": 1023,
               "overflowX": false,
-              "overflowY": false,
-              "verticalScrollAccepted": false,
-              "overflowDisposition": "contained",
+              "overflowY": true,
+              "verticalScrollAccepted": true,
+              "overflowDisposition": "readable-vertical-scroll",
               "readerLayout": "adaptive",
-              "readerOverflow": null,
+              "readerOverflow": "authored",
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1536,
-              "diagramWidth": 1506,
+              "readerWidth": 1028,
+              "diagramWidth": 998,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
                 "diagramChromePx": 84,
-                "svgPx": 746,
+                "svgPx": 814,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.48051948051948,
+              "minimumProjectedNonEdgeTextPx": 7.503759398496241,
+              "minimumProjectedEdgeTextPx": 6.48051948051948,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -916,27 +934,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1856,
-              "diagramWidth": 1533,
+              "readerWidth": 1084,
+              "diagramWidth": 1054,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 60,
-                "diagramChromePx": 185,
-                "svgPx": 759,
+                "diagramChromePx": 84,
+                "svgPx": 860,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 6.8441558441558445,
+              "minimumProjectedNonEdgeTextPx": 7.924812030075188,
+              "minimumProjectedEdgeTextPx": 6.8441558441558445,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -944,11 +962,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 33.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 54,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             },
@@ -968,27 +986,27 @@
               "readerOverflow": null,
               "readerFit": "intrinsic-height",
               "ok": true,
-              "readerWidth": 1920,
-              "diagramWidth": 1533,
+              "readerWidth": 1376,
+              "diagramWidth": 1326,
               "pageComposition": {
                 "bodyPaddingPx": 64,
                 "headerPx": 68,
-                "diagramChromePx": 417,
-                "svgPx": 759,
+                "diagramChromePx": 94,
+                "svgPx": 1082,
                 "cardsPx": 0,
-                "viewBoxHeight": 506
+                "viewBoxHeight": 1194
               },
-              "viewBoxWidth": 1022,
-              "minimumProjectedNodeTextPx": 9.5,
-              "minimumProjectedNonEdgeTextPx": 11,
-              "minimumProjectedEdgeTextPx": 9.5,
-              "minimumProjectedNodeText": "T = Film",
+              "viewBoxWidth": 1463,
+              "minimumProjectedNodeTextPx": 8.61038961038961,
+              "minimumProjectedNonEdgeTextPx": 9.969924812030076,
+              "minimumProjectedEdgeTextPx": 8.61038961038961,
+              "minimumProjectedNodeText": "dùng các repository danh mục",
               "minimumProjectedNodeTextDetail": "edge",
               "minimumProjectedNodeTextOwner": {
                 "kind": "edge",
-                "id": "film-inherits",
-                "from": "filmrepo",
-                "to": "repository"
+                "id": "catalog_repository_layer",
+                "from": "catalog_service",
+                "to": "generic_repository"
               },
               "minimumRequiredNodeTextPx": 6,
               "readabilityOk": true,
@@ -996,11 +1014,11 @@
               "hasNavigationDock": true,
               "legendDockIntersectionArea": 0,
               "dockStageIntersectionArea": 0,
-              "dockStageGap": 149.5,
+              "dockStageGap": 10,
               "requiredDockStageGap": 10,
               "viewerChromeStageOk": true,
-              "viewerChromeReserve": 0,
-              "viewerChromeActive": false,
+              "viewerChromeReserve": 44,
+              "viewerChromeActive": true,
               "viewerChromeOk": true,
               "resolvedTheme": "light"
             }
@@ -1022,46 +1040,21 @@
     "requested": true,
     "ran": true
   },
-  "diagnostics": [
-    {
-      "code": "i18n/locale-fallback",
-      "severity": "warning",
-      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
-      "subject": {
-        "diagramType": "class",
-        "path": "/meta/locale"
-      },
-      "evidence": {
-        "locale": "vi",
-        "bundledLocales": [
-          "en",
-          "zh-CN",
-          "zh-TW",
-          "es",
-          "ko",
-          "ar"
-        ]
-      },
-      "supportedFixes": [
-        "Supply meta.translations for this locale.",
-        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
-      ]
-    }
-  ],
+  "diagnostics": [],
   "evidence": {
     "receipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.finalize.json",
     "summaryReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.finalize-summary.json",
     "browserCheckReceipt": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-10-26T10:05:38.554Z",
-  "durationMs": 2737,
+  "finishedAt": "2026-10-27T14:21:04.930Z",
+  "durationMs": 3864,
   "update": {
     "status": "current",
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "checkedAt": "2026-10-27T13:33:23.564Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null

@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/candidate.json",
-    "sha256": "589a5ea0b2f3ee9d47471f615f0706502b2d41b1c4c2f16455ada2ec86b7a1de",
-    "bytes": 5018
+    "sha256": "e2db6072eb208171d35ff058adb87762a9d8238920b8eb4b2e19035d9875f1c9",
+    "bytes": 14953
   },
   "artifact": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/classes/index.html",
-    "sha256": "7213b1447edeab28b6fc037198fd31f2690d4ceaa03e3a3844652e11cf5df27b",
-    "bytes": 846902
+    "sha256": "ac18066e2951067eebbed0c414d28c2fb645e405db9e04d20c1d34efba7f5b73",
+    "bytes": 894201
   },
   "gates": {
     "validate": "pass",
@@ -21,35 +21,10 @@
     "check": "pass",
     "browser-check": "pass"
   },
-  "diagnostics": [
-    {
-      "code": "i18n/locale-fallback",
-      "severity": "warning",
-      "message": "meta.locale \"vi\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
-      "subject": {
-        "diagramType": "class",
-        "path": "/meta/locale"
-      },
-      "evidence": {
-        "locale": "vi",
-        "bundledLocales": [
-          "en",
-          "zh-CN",
-          "zh-TW",
-          "es",
-          "ko",
-          "ar"
-        ]
-      },
-      "supportedFixes": [
-        "Supply meta.translations for this locale.",
-        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
-      ]
-    }
-  ],
+  "diagnostics": [],
   "diagnosticSummary": {
-    "total": 1,
-    "shown": 1,
+    "total": 0,
+    "shown": 0,
     "truncated": false
   },
   "evidence": {
@@ -62,15 +37,77 @@
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "checkedAt": "2026-10-27T13:33:23.564Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 2737,
+  "durationMs": 3864,
   "browserCheck": {
     "requested": true,
     "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 2
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "seat_room",
+            "from": "seat",
+            "to": "auditorium",
+            "label": "",
+            "collectionIndex": 5,
+            "artifactIndex": 5
+          },
+          "bends": 3,
+          "stretch": 1.09,
+          "directCorridorBlockers": [
+            {
+              "id": "screening",
+              "label": "Screening",
+              "box": [
+                614,
+                932,
+                245,
+                194
+              ]
+            }
+          ]
+        },
+        {
+          "relationship": {
+            "id": "ticket_screening",
+            "from": "ticket",
+            "to": "screening",
+            "label": "",
+            "collectionIndex": 8,
+            "artifactIndex": 8
+          },
+          "bends": 3,
+          "stretch": 1.089,
+          "directCorridorBlockers": [
+            {
+              "id": "seat",
+              "label": "Seat",
+              "box": [
+                904,
+                942,
+                245,
+                174
+              ]
+            }
+          ]
+        }
+      ],
+      "truncated": false
+    },
+    "repair": "Advisory only: this mode places or routes these relationships itself. Report them; do not remove relationships or meaning to reduce crossings."
   }
 }

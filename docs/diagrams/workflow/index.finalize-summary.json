@@ -7,13 +7,13 @@
   "quality": "showcase",
   "specification": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/candidate.json",
-    "sha256": "82c49ec8b851c0c9351847650c780aa0572b8fee95450d4be5ec06750027df56",
-    "bytes": 12769
+    "sha256": "2d588d4189fa394274c4569d905c0f3d3c3b4177d7390cdd1b802575c5d66d80",
+    "bytes": 12358
   },
   "artifact": {
     "path": "/run/media/luulomhe/DATA/Code/Project/pbl2/docs/diagrams/workflow/index.html",
-    "sha256": "54f49d8f274a33e4cec481333ed1e083d2f98b0b1f88a58ff4c6c3b8233e7ebb",
-    "bytes": 880616
+    "sha256": "6340caea54bbcfa5c3f1f636c758b47642110e211b2b5ec23a3f18c9afee004b",
+    "bytes": 869389
   },
   "gates": {
     "validate": "pass",
@@ -37,13 +37,13 @@
     "installedVersion": "3.2.0",
     "availableVersion": "3.2.0",
     "releaseNotes": null,
-    "checkedAt": "2026-10-26T10:05:21.320Z",
+    "checkedAt": "2026-10-27T13:33:23.564Z",
     "source": "cache",
     "noticeRequired": false,
     "noticeText": null
   },
   "visualReview": "not-requested",
-  "durationMs": 7691,
+  "durationMs": 3271,
   "browserCheck": {
     "requested": true,
     "ran": true

@@ -129,9 +129,9 @@ void testFilmsAndClose() {
     assert(directory.isValid());
     ApplicationData data(path(directory));
     data.load(true);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
-    TicketService tickets(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+    TicketService tickets(data.seats, data.screenings, data.tickets);
     MainWindow window(data, catalog, screenings, tickets);
     window.show();
     QApplication::processEvents();
@@ -202,7 +202,8 @@ void testFilmsAndClose() {
 
     // Historical relationships loaded through the core still constrain UI edits.
     catalog.addRoom("Room", 1, 1);
-    data.screenings.insert(Screening(1, 1, 1, "2020-01-01 18:00", 80000));
+    data.screenings.insert(Screening(1, *data.films.findById(1), *data.rooms.findById(1),
+                                      "2020-01-01 18:00", 80000));
     mode->setCurrentIndex(1);
     search->setText("1");
     table->selectRow(0);
@@ -265,10 +266,10 @@ void testFilmsAndClose() {
     ApplicationData reopened(path(directory));
     reopened.load();
     assert(reopened.films.size() == 1 && reopened.films.findById(1)->title() == "Scheduled rename");
-    CatalogService nextCatalog(reopened.films, reopened.rooms, reopened.seats, reopened.screenings);
+    CatalogService nextCatalog(reopened.films, reopened.rooms, reopened.seats,
+                               reopened.screenings, reopened.tickets);
     ScreeningService nextScreenings(reopened.films, reopened.rooms, reopened.screenings, reopened.tickets);
-    TicketService nextTickets(reopened.films, reopened.rooms, reopened.seats,
-                              reopened.screenings, reopened.tickets);
+    TicketService nextTickets(reopened.seats, reopened.screenings, reopened.tickets);
     MainWindow next(reopened, nextCatalog, nextScreenings, nextTickets);
     next.show();
     answerConfirmation(true);
@@ -281,9 +282,9 @@ void testCompleteWorkflow() {
     assert(directory.isValid());
     ApplicationData data(path(directory));
     data.load(true);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets, uiClock);
-    TicketService tickets(data.films, data.rooms, data.seats, data.screenings, data.tickets, uiClock);
+    TicketService tickets(data.seats, data.screenings, data.tickets, uiClock);
     assert(catalog.addFilm("Film", 120) == 1);
     MainWindow window(data, catalog, screenings, tickets);
     window.show();

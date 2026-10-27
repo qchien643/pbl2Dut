@@ -22,17 +22,14 @@ const char* header(const Screening*);
 const char* header(const Ticket*);
 Film parse(const std::string* f, const Film*);
 Auditorium parse(const std::string* f, const Auditorium*);
-Seat parse(const std::string* f, const Seat*);
-Screening parse(const std::string* f, const Screening*);
-Ticket parse(const std::string* f, const Ticket*);
 void writeRecord(std::ostream& out, const Film& value);
 void writeRecord(std::ostream& out, const Auditorium& value);
 void writeRecord(std::ostream& out, const Seat& value);
 void writeRecord(std::ostream& out, const Screening& value);
 void writeRecord(std::ostream& out, const Ticket& value);
 
-template <typename RepositoryType>
-void load(const std::filesystem::path& path, RepositoryType& repository) {
+template <typename RepositoryType, typename Parser>
+void load(const std::filesystem::path& path, RepositoryType& repository, Parser parser) {
     using T = typename RepositoryType::value_type;
     const T* tag = nullptr;
     std::ifstream input(path, std::ios::binary);
@@ -76,7 +73,7 @@ void load(const std::filesystem::path& path, RepositoryType& repository) {
                     start = end + 1;
                 }
             }
-            if (!repository.insert(parse(fields, tag))) {
+            if (!repository.insert(parser(fields))) {
                 throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) {
@@ -91,6 +88,15 @@ void load(const std::filesystem::path& path, RepositoryType& repository) {
     if (lineNumber == 0) {
         throw std::runtime_error(path.string() + ":1: Missing header");
     }
+}
+
+template <typename RepositoryType>
+void load(const std::filesystem::path& path, RepositoryType& repository) {
+    using T = typename RepositoryType::value_type;
+    const T* tag = nullptr;
+    load(path, repository, [tag](const std::string* fields) {
+        return parse(fields, tag);
+    });
 }
 
 template <typename RepositoryType>

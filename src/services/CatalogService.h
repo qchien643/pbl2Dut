@@ -4,6 +4,7 @@
 #include "repositories/FilmRepository.h"
 #include "repositories/ScreeningRepository.h"
 #include "repositories/SeatRepository.h"
+#include "repositories/TicketRepository.h"
 #include "services/SeatMap.h"
 
 #include <cstdint>
@@ -14,7 +15,8 @@ class CatalogService
 {
 public:
     CatalogService(FilmRepository& films, AuditoriumRepository& rooms,
-                   SeatRepository& seats, const ScreeningRepository& screenings);
+                   SeatRepository& seats, const ScreeningRepository& screenings,
+                   TicketRepository& tickets);
 
     EntityId addFilm(std::string title, std::int64_t duration);
     void updateFilm(EntityId id, std::string title, std::int64_t duration);
@@ -38,9 +40,12 @@ private:
     void requireRoomUnused(EntityId id) const;
     void prepareSeats(SeatRepository& staged, EntityId roomId,
                       const Auditorium* replacement) const;
+    static void bindSeats(SeatRepository& staged, const Auditorium& room);
+    void prepareTickets(TicketRepository& staged, const SeatRepository& seats) const;
 
     FilmRepository& films_;
     AuditoriumRepository& rooms_;
     SeatRepository& seats_;
     const ScreeningRepository& screenings_;
+    TicketRepository& tickets_;
 };

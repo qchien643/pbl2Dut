@@ -58,16 +58,6 @@ Film parse(const std::string* f, const Film*) {
 Auditorium parse(const std::string* f, const Auditorium*) {
     return Auditorium(number(f[0]), f[1], number(f[2]), number(f[3]));
 }
-Seat parse(const std::string* f, const Seat*) {
-    return Seat(number(f[0]), number(f[1]), number(f[2]), number(f[3]));
-}
-Screening parse(const std::string* f, const Screening*) {
-    return Screening(number(f[0]), number(f[1]), number(f[2]), f[3], number(f[4]));
-}
-Ticket parse(const std::string* f, const Ticket*) {
-    return Ticket(number(f[0]), number(f[1]), number(f[2]), f[3], number(f[4]));
-}
-
 void writeRecord(std::ostream& out, const Film& value) {
     out << value.id() << '|' << value.title() << '|' << value.durationMinutes();
 }

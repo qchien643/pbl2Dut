@@ -55,9 +55,9 @@ struct Fixture {
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
-    CatalogService catalog{films, rooms, seats, screenings};
+    CatalogService catalog{films, rooms, seats, screenings, tickets};
     ScreeningService schedule{films, rooms, screenings, tickets, fakeClock};
-    TicketService sales{films, rooms, seats, screenings, tickets, fakeClock};
+    TicketService sales{seats, screenings, tickets, fakeClock};
 
     Fixture() {
         currentTime = "2026-10-19 10:00";
@@ -196,13 +196,10 @@ void testLookupValidation() {
     assert(&f.catalog.film(1) == f.films.findById(1));
     assert(&f.catalog.room(1) == f.rooms.findById(1));
     assert(&f.schedule.find(show) == f.screenings.findById(show));
-
-    f.films.erase(1);
-    expectThrow<std::out_of_range>([&] { f.sales.preview(show, 1); });
-    expectThrow<std::out_of_range>([&] { f.schedule.endTime(show); });
-    f.rooms.erase(1);
-    expectThrow<std::out_of_range>([&] { f.sales.preview(show, 1); });
-    expectThrow<std::out_of_range>([&] { f.sales.seatMap(show); });
+    assert(&f.schedule.find(show).film() == f.films.findById(1));
+    assert(&f.schedule.find(show).auditorium() == f.rooms.findById(1));
+    expectThrow([&] { f.catalog.eraseFilm(1); });
+    expectThrow([&] { f.catalog.eraseRoom(1); });
     assert(f.tickets.empty());
 }
 
@@ -248,7 +245,7 @@ void testCalendarAndOverflow() {
     expectThrow<std::overflow_error>([&] { f.schedule.add(1, 2, "9999-12-31 21:45", 1); });
     const auto huge = f.catalog.addFilm("Huge", std::numeric_limits<std::int64_t>::max());
     expectThrow<std::overflow_error>([&] { f.schedule.add(huge, 2, "2027-01-01 00:00", 1); });
-    f.seats.insert(Seat(std::numeric_limits<EntityId>::max(), 2, 1, 3));
+    f.seats.insert(Seat(std::numeric_limits<EntityId>::max(), f.catalog.room(2), 1, 3));
     const auto size = f.seats.size();
     expectThrow<std::overflow_error>([&] { f.catalog.updateRoom(2, "No ID space", 1, 1); });
     assert(f.seats.size() == size && f.catalog.room(2).capacity() == 2);
@@ -258,7 +255,7 @@ void testCalendarAndOverflow() {
         ScreeningService invalid(f.films, f.rooms, f.screenings, f.tickets, nullptr);
     });
     expectThrow([&] {
-        TicketService invalid(f.films, f.rooms, f.seats, f.screenings, f.tickets, nullptr);
+        TicketService invalid(f.seats, f.screenings, f.tickets, nullptr);
     });
     assert(entity_detail::dateTime(localMinuteNow()).size() == 16);
 }
@@ -325,9 +322,11 @@ void testSales() { // SAT-04/05/06/07/10/11/13, FR-SALE-*, FR-QUERY-*, FR-REPORT
     expectThrow([&] { f.sales.sell(second, 2, true); });
 
     // Report uses ticket snapshots, not the current screening price.
-    f.screenings.update(first, Screening(first, 1, 1, "2026-11-01 18:00", 1));
+    f.screenings.update(first, Screening(first, f.catalog.film(1), f.catalog.room(1),
+                                         "2026-11-01 18:00", 1));
     assert(f.sales.revenue("2026-10-19").amount == 170000);
-    f.tickets.insert(Ticket(3, first, 2, "2026-10-19 11:00", std::numeric_limits<std::int64_t>::max()));
+    f.tickets.insert(Ticket(3, f.schedule.find(first), *f.seats.findById(2),
+                            "2026-10-19 11:00", std::numeric_limits<std::int64_t>::max()));
     expectThrow<std::overflow_error>([&] { f.sales.revenue("2026-10-19"); });
 }
 
@@ -378,6 +377,7 @@ void testAllocationRollback() { // FR-ROOM-07/08, FR-SALE-09, NFR-03/11.
                     succeeded = true;
                     if (operation <= 2) {
                         assert(f.rooms.isDirty() && f.seats.isDirty());
+                        assert(f.tickets.isDirty() == initiallyDirty);
                         assert(f.seats.size() == (operation == 0 ? 24u : operation == 1 ? 22u : 12u));
                         if (operation != 2) {
                             assert(f.catalog.seatMap(operation == 0 ? 3 : 2)->size() == 10);
@@ -392,6 +392,11 @@ void testAllocationRollback() { // FR-ROOM-07/08, FR-SALE-09, NFR-03/11.
                 }
                 for (const Seat& seat : f.seats) {
                     assert(f.seats.findById(seat.id()) == &seat);
+                    assert(f.rooms.findById(seat.auditoriumId()) == &seat.auditorium());
+                }
+                for (const Ticket& ticket : f.tickets) {
+                    assert(f.screenings.findById(ticket.screeningId()) == &ticket.screening());
+                    assert(f.seats.findById(ticket.seatId()) == &ticket.seat());
                 }
                 if (succeeded) {
                     break;
@@ -414,22 +419,24 @@ void testInvalidMapsAndReconfirmation() {
 
     f.seats.erase(2);
     expectThrow([&] { f.catalog.seatMap(1); });
-    f.seats.insert(Seat(2, 1, 1, 2));
-    f.seats.insert(Seat(15, 1, 1, 2));
+    f.seats.insert(Seat(2, f.catalog.room(1), 1, 2));
+    f.seats.insert(Seat(15, f.catalog.room(1), 1, 2));
     expectThrow([&] { f.sales.seatMap(show); });
     f.seats.erase(15);
-    f.seats.insert(Seat(16, 1, 4, 1));
+    f.seats.insert(Seat(16, f.catalog.room(1), 4, 1));
     expectThrow([&] { f.sales.seatMap(show); });
     expectThrow([&] { f.sales.sell(show, 16, true); });
     f.seats.erase(16);
-    f.tickets.insert(Ticket(2, show, 1, "2026-10-19 10:00", 90000));
+    f.tickets.insert(Ticket(2, f.schedule.find(show), *f.seats.findById(1),
+                            "2026-10-19 10:00", 90000));
     expectThrow([&] { f.sales.seatMap(show); });
 
     Fixture other;
     other.schedule.add(1, 1, "2026-11-01 18:00", 80000);
-    other.tickets.insert(Ticket(1, 1, 13, "2026-10-19 10:00", 80000));
-    expectThrow([&] { other.sales.seatMap(1); });
-    expectThrow([&] { other.sales.find(1); });
+    expectThrow([&] {
+        Ticket invalid(1, other.schedule.find(1), *other.seats.findById(13),
+                       "2026-10-19 10:00", 80000);
+    });
 }
 
 void testPerformanceBaseline() { // NFR-02.
@@ -438,7 +445,7 @@ void testPerformanceBaseline() { // NFR-02.
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
-    CatalogService catalog(films, rooms, seats, screenings);
+    CatalogService catalog(films, rooms, seats, screenings, tickets);
     for (int index = 1; index <= 100; ++index) {
         catalog.addFilm("Film " + std::to_string(index), 90);
     }
@@ -454,15 +461,17 @@ void testPerformanceBaseline() { // NFR-02.
         std::ostringstream start;
         start << "2099-" << std::setfill('0') << std::setw(2) << dayIndex / 28 + 1
               << '-' << std::setw(2) << dayIndex % 28 + 1 << " 18:00";
-        assert(screenings.insert(Screening(screeningId, filmId, roomId, start.str(), 80000)));
+        assert(screenings.insert(Screening(screeningId, *films.findById(filmId),
+                                           *rooms.findById(roomId), start.str(), 80000)));
+        const Screening& screening = *screenings.findById(screeningId);
         const EntityId firstSeat = (roomId - 1) * 200 + 1;
         for (int seat = 0; seat < 10; ++seat) {
-            assert(tickets.insert(Ticket(ticketId++, screeningId, firstSeat + seat,
+            assert(tickets.insert(Ticket(ticketId++, screening, *seats.findById(firstSeat + seat),
                                          "2026-10-19 10:00", 80000)));
         }
     }
     ScreeningService schedule(films, rooms, screenings, tickets, fakeClock);
-    TicketService sales(films, rooms, seats, screenings, tickets, fakeClock);
+    TicketService sales(seats, screenings, tickets, fakeClock);
     const auto check = [](auto operation) {
         const auto start = std::chrono::steady_clock::now();
         operation();

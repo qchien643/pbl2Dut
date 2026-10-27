@@ -4,8 +4,9 @@
 #include <stdexcept>
 
 CatalogService::CatalogService(FilmRepository& films, AuditoriumRepository& rooms,
-                               SeatRepository& seats, const ScreeningRepository& screenings)
-    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings)
+                               SeatRepository& seats, const ScreeningRepository& screenings,
+                               TicketRepository& tickets)
+    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings), tickets_(tickets)
 {
 }
 
@@ -139,8 +140,35 @@ void CatalogService::prepareSeats(SeatRepository& staged, EntityId roomId,
         const EntityId seatId = first + offset;
         const std::int64_t row = offset / replacement->seatsPerRow() + 1;
         const std::int64_t column = offset % replacement->seatsPerRow() + 1;
-        const Seat seat(seatId, roomId, row, column);
+        const Seat seat(seatId, *replacement, row, column);
         staged.insert(seat);
+    }
+}
+
+void CatalogService::bindSeats(SeatRepository& staged, const Auditorium& room)
+{
+    for (const Seat& seat : staged)
+    {
+        if (seat.auditoriumId() == room.id())
+        {
+            const Seat replacement(seat.id(), room, seat.rowNumber(), seat.seatNumber());
+            staged.update(seat.id(), replacement);
+        }
+    }
+}
+
+void CatalogService::prepareTickets(TicketRepository& staged,
+                                    const SeatRepository& seats) const
+{
+    for (const Ticket& ticket : tickets_)
+    {
+        const Seat* seat = seats.findById(ticket.seatId());
+        if (seat == nullptr)
+        {
+            throw std::invalid_argument("Ticket references a removed seat");
+        }
+        staged.insert(Ticket(ticket.id(), ticket.screening(), *seat,
+                             ticket.soldAt(), ticket.unitPrice()));
     }
 }
 
@@ -150,8 +178,12 @@ EntityId CatalogService::addRoom(std::string name, std::int64_t rows, std::int64
     const Auditorium candidate(id, name, rows, columns);
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
+    TicketRepository stagedTickets;
+    prepareTickets(stagedTickets, staged);
     rooms_.insert(candidate);
+    bindSeats(staged, *rooms_.findById(id));
     seats_.replaceWith(staged);
+    tickets_.relinkWith(stagedTickets);
     return id;
 }
 
@@ -162,8 +194,12 @@ void CatalogService::updateRoom(EntityId id, std::string name,
     const Auditorium candidate(id, name, rows, columns);
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
+    TicketRepository stagedTickets;
+    prepareTickets(stagedTickets, staged);
     rooms_.update(id, candidate);
+    bindSeats(staged, *rooms_.findById(id));
     seats_.replaceWith(staged);
+    tickets_.relinkWith(stagedTickets);
 }
 
 void CatalogService::eraseRoom(EntityId id)
@@ -171,8 +207,11 @@ void CatalogService::eraseRoom(EntityId id)
     requireRoomUnused(id);
     SeatRepository staged;
     prepareSeats(staged, id, nullptr);
+    TicketRepository stagedTickets;
+    prepareTickets(stagedTickets, staged);
     rooms_.erase(id);
     seats_.replaceWith(staged);
+    tickets_.relinkWith(stagedTickets);
 }
 
 std::unique_ptr<SeatMap> CatalogService::seatMap(EntityId roomId) const

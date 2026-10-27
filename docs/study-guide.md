@@ -99,8 +99,9 @@ Với `Auditorium`, kiểm tra `rows > maximum / columns` trước khi nhân.
 Nếu nhân trước rồi mới kiểm tra, phép nhân số nguyên có dấu đã có thể tràn.
 `capacity()` chỉ nhân hai giá trị đã được constructor kiểm tra.
 
-Tự kiểm tra: vì sao `Seat(1, 999, 1, 1)` có thể tạo được dù phòng 999 không tồn tại?
-Đáp án: constructor chỉ biết giá trị của ghế; service/validate mới có repository phòng.
+Tự kiểm tra: vì sao constructor `Seat` nhận `const Auditorium&` thay vì chỉ nhận
+`auditoriumId`? Đáp án: nhánh thử nghiệm dùng direct association; ghế liên kết
+ngay với một đối tượng phòng. `auditoriumId()` được lấy từ đối tượng đó khi ghi TXT.
 
 ## 4. DSA: biết từng con trỏ trỏ vào đâu
 
@@ -263,8 +264,9 @@ nó gọi chuyển tiếp sang thành viên bên trong.
 `CatalogService::prepareSeats` chép ghế của các phòng khác vào repository tạm,
 bỏ bộ ghế của phòng đang thay; nếu có cấu hình mới thì sinh ghế theo offset:
 `row = offset / columns + 1`, `column = offset % columns + 1`.
-Kiểm tra đủ miền ID trước khi cộng. Sau khi chuẩn bị thành công mới đổi phòng
-và thay bộ ghế bằng `replaceWith`.
+Kiểm tra đủ miền ID trước khi cộng. Vì `Ticket` trỏ trực tiếp đến `Seat`, service
+cũng dựng kho vé tạm trỏ sang các ghế tạm. Sau khi chuẩn bị thành công mới đổi
+phòng, thay bộ ghế và nối lại kho vé.
 
 Không phải sửa từng ghế trực tiếp trong repository chính. Lỗi chuẩn bị thì
 phòng/ghế cũ còn nguyên; thành công thì địa chỉ ghế cũ không còn dùng lâu dài được.
@@ -273,9 +275,9 @@ ma trận tạm nếu bất kỳ bước nào ném lỗi.
 
 ### Tạo suất
 
-`ScreeningService::add` tạo candidate rồi validate trước insert.
-`service_validation::screening` tra phim/phòng, quy đổi giờ ra phút, bỏ qua chính
-ID đang sửa, chỉ đối chiếu các suất cùng phòng.
+`ScreeningService::add` tra phim/phòng một lần, tạo candidate chứa association
+trực tiếp rồi validate trước insert. `service_validation::screening` quy đổi giờ
+ra phút, bỏ qua chính ID đang sửa và chỉ đối chiếu các suất trỏ cùng phòng.
 
 Hai khoảng `[a, b)` và `[c, d)` trùng khi `a < d && c < b`.
 `b`, `d` gồm 15 phút nghỉ; bắt đầu đúng lúc kết thúc khoảng kia được phép.
@@ -299,7 +301,7 @@ Trong `TicketService::sell`:
 | Dòng/thao tác | Ý nghĩa |
 |---|---|
 | `if (!cashConfirmed) throw ...` | Không tạo vé khi chưa xác nhận nhận tiền |
-| `const SaleDetails sale = details(...)` | Tra ID, đúng phòng; tạo bản sao dữ liệu dùng cho lần bán |
+| `const SaleDetails sale = details(...)` | Tra ID đầu vào, kiểm tra association đúng phòng; tạo bản sao dùng cho xác nhận |
 | `const std::string now = clock_();` | Gọi con trỏ hàm; lấy thời điểm cho cả kiểm tra và ghi vé |
 | `requireAvailable(sale, now);` | Kiểm tra chưa bắt đầu và chưa có vé cùng suất-ghế |
 | `const EntityId id = tickets_.nextId();` | Lấy mã dự kiến, có kiểm tra tràn |
@@ -449,7 +451,8 @@ Tự trả lời trước; các ý sau là điểm đối chiếu, không phải
 | Bài có bốn tính chất OOP ở đâu? | Chỉ đúng code đóng gói/trừu tượng/kế thừa; đa hình động có ở Qt, không tự nhận core dùng hàm ảo |
 | Có phải FilmRepository kế thừa Film? | Không, kế thừa Repository có tham số kiểu Film |
 | Vì sao TicketRepository chứa thay vì kế thừa? | Hạn chế public API sửa/xóa; đổi lại phải viết hàm chuyển tiếp |
-| Vì sao không lưu con trỏ Film trong Screening? | ID phù hợp TXT, tra lại qua repository, không phụ thuộc địa chỉ RAM |
+| `Screening` liên kết `Film` như thế nào? | Giữ `const Film*` không sở hữu; `filmId()` lấy ID từ đối tượng để ghi TXT |
+| Điểm khó của direct association là gì? | Repository đích phải sống lâu hơn; thay kho ghế phải nối lại các `Ticket` đang trỏ tới ghế |
 | Dữ liệu bị copy ở đâu? | Entity vào node; kết quả truy vấn/chi tiết; service giữ reference, không copy repository |
 | Xóa phim có cần xóa suất theo không? | Hiện chặn xóa phim có suất, không cascade |
 | Chỉ có PK ticket_id đã chống bán trùng chưa? | Chưa, phải kiểm tra khóa nghiệp vụ suất-ghế |

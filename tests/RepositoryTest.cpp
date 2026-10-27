@@ -107,19 +107,24 @@ void testCrudAndIds() {
 }
 
 void testAllEntityRepositories() {
+    FilmRepository films;
     AuditoriumRepository rooms;
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
+    assert(films.insert(Film(1, "Film", 120)));
     assert(rooms.insert(Auditorium(1, "Room", 2, 3)));
+    const Film& film = *films.findById(1);
+    const Auditorium& room = *rooms.findById(1);
     for (EntityId id = 1; id <= 6; ++id) {
-        assert(seats.insert(Seat(id, 1, (id - 1) / 3 + 1, (id - 1) % 3 + 1)));
+        assert(seats.insert(Seat(id, room, (id - 1) / 3 + 1, (id - 1) % 3 + 1)));
     }
-    assert(screenings.insert(Screening(1, 1, 1, "2026-11-01 18:00", 80000)));
+    assert(screenings.insert(Screening(1, film, room, "2026-11-01 18:00", 80000)));
+    const Screening& screening = *screenings.findById(1);
     assert(tickets.empty() && tickets.nextId() == 1 && !tickets.isDirty());
-    assert(tickets.insert(Ticket(1, 1, 1, "2026-10-31 10:00", 80000)));
-    assert(tickets.insert(Ticket(2, 1, 2, "2026-10-31 10:05", 80000)));
-    assert(!tickets.insert(Ticket(2, 1, 3, "2026-10-31 10:06", 80000)));
+    assert(tickets.insert(Ticket(1, screening, *seats.findById(1), "2026-10-31 10:00", 80000)));
+    assert(tickets.insert(Ticket(2, screening, *seats.findById(2), "2026-10-31 10:05", 80000)));
+    assert(!tickets.insert(Ticket(2, screening, *seats.findById(3), "2026-10-31 10:06", 80000)));
     assert(tickets.size() == 2 && tickets.nextId() == 3 && tickets.isDirty());
     assert(rooms.findById(1)->capacity() == 6 && seats.size() == 6);
     assert(seats.findById(6)->seatNumber() == 3);

@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
         if (!loadApplicationData(data)) {
             return 1;
         }
-        CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+        CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
         ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
-        TicketService tickets(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+        TicketService tickets(data.seats, data.screenings, data.tickets);
         MainWindow window(data, catalog, screenings, tickets);
         window.show();
         return app.exec();

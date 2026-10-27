@@ -1,12 +1,14 @@
 #include "entities/Screening.h"
+#include "entities/Auditorium.h"
 #include "entities/EntityValidation.h"
+#include "entities/Film.h"
 
-Screening::Screening(EntityId id, EntityId filmId, EntityId auditoriumId,
+Screening::Screening(EntityId id, const Film& film, const Auditorium& auditorium,
                      std::string startTime, std::int64_t ticketPrice)
 {
     this->id_ = entity_detail::positive(id, "Screening ID");
-    this->filmId_ = entity_detail::positive(filmId, "Film ID");
-    this->auditoriumId_ = entity_detail::positive(auditoriumId, "Auditorium ID");
+    this->film_ = &film;
+    this->auditorium_ = &auditorium;
     this->startTime_ = entity_detail::dateTime(startTime);
     this->ticketPrice_ = entity_detail::positive(ticketPrice, "Ticket price");
 }
@@ -18,12 +20,22 @@ EntityId Screening::id() const
 
 EntityId Screening::filmId() const
 {
-    return this->filmId_;
+    return this->film_->id();
 }
 
 EntityId Screening::auditoriumId() const
 {
-    return this->auditoriumId_;
+    return this->auditorium_->id();
+}
+
+const Film& Screening::film() const
+{
+    return *this->film_;
+}
+
+const Auditorium& Screening::auditorium() const
+{
+    return *this->auditorium_;
 }
 
 const std::string& Screening::startTime() const

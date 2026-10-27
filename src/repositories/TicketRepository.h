@@ -21,6 +21,8 @@ public:
 
 private:
     friend class ApplicationData;
+    friend class CatalogService;
+    void relinkWith(TicketRepository& replacement) noexcept;
     Repository<Ticket> records_;
 };
 

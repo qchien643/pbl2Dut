@@ -3,6 +3,10 @@
 Đối chiếu mã nguồn ngày **26/10/2026**. Mở trực tiếp HTML bằng trình duyệt,
 không cần chạy Qt, server hay cài Archify để xem.
 
+Các HTML là ảnh chụp thiết kế trên `main` trước nhánh thử nghiệm
+`experiment/direct-association`; xem `docs/design/class-design.md` cho thiết kế
+direct association hiện tại của nhánh này.
+
 | Sơ đồ | Nội dung ôn tập |
 |---|---|
 | [Kiến trúc ứng dụng](architecture/index.html) | Qt → service → RAM; nhánh lưu qua ApplicationData và TXT |

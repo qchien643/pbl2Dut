@@ -1,6 +1,7 @@
 #include "services/ScreeningTime.h"
 
 #include "entities/EntityValidation.h"
+#include "entities/Film.h"
 
 #include <iomanip>
 #include <limits>
@@ -32,15 +33,9 @@ std::int64_t screening_time::minutes(const std::string& value) {
     return days * 1440 + std::stoi(value.substr(11, 2)) * 60 + std::stoi(value.substr(14, 2));
 }
 
-std::int64_t screening_time::endMinute(const Screening& screening,
-                                       const FilmRepository& films, int buffer) {
+std::int64_t screening_time::endMinute(const Screening& screening, int buffer) {
     const std::int64_t start = minutes(screening.startTime());
-    const Film* film = films.findById(screening.filmId());
-    if (film == nullptr)
-    {
-        throw std::out_of_range("Record not found");
-    }
-    const std::int64_t duration = film->durationMinutes();
+    const std::int64_t duration = screening.film().durationMinutes();
     static const std::int64_t maximum = minutes("9999-12-31 23:59");
     if (duration > maximum - start - buffer) {
         throw std::overflow_error("Screening end exceeds supported date range");

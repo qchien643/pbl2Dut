@@ -44,3 +44,13 @@ LinkedList<Ticket>::ConstIterator TicketRepository::end() const
 {
     return this->records_.end();
 }
+
+void TicketRepository::relinkWith(TicketRepository& replacement) noexcept
+{
+    const bool wasDirty = this->isDirty();
+    this->records_.replaceWith(replacement.records_);
+    if (!wasDirty)
+    {
+        this->markSaved();
+    }
+}

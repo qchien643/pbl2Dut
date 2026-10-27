@@ -4,8 +4,9 @@
 #include <stdexcept>
 
 CatalogService::CatalogService(FilmRepository& films, AuditoriumRepository& rooms,
-                               SeatRepository& seats, const ScreeningRepository& screenings)
-    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings)
+                               SeatRepository& seats, const ScreeningRepository& screenings,
+                               TicketRepository& tickets)
+    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings), tickets_(tickets)
 {
 }
 
@@ -139,8 +140,20 @@ void CatalogService::prepareSeats(SeatRepository& staged, EntityId roomId,
         const EntityId seatId = first + offset;
         const std::int64_t row = offset / replacement->seatsPerRow() + 1;
         const std::int64_t column = offset % replacement->seatsPerRow() + 1;
-        const Seat seat(seatId, roomId, row, column);
+        const Seat seat(seatId, *replacement, row, column);
         staged.insert(seat);
+    }
+}
+
+void CatalogService::bindSeats(SeatRepository& staged, const Auditorium& room)
+{
+    for (const Seat& seat : staged)
+    {
+        if (seat.auditoriumId() == room.id())
+        {
+            const Seat replacement(seat.id(), room, seat.rowNumber(), seat.seatNumber());
+            staged.update(seat.id(), replacement);
+        }
     }
 }
 
@@ -151,6 +164,8 @@ EntityId CatalogService::addRoom(std::string name, std::int64_t rows, std::int64
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
     rooms_.insert(candidate);
+    bindSeats(staged, *rooms_.findById(id));
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
     return id;
 }
@@ -163,6 +178,8 @@ void CatalogService::updateRoom(EntityId id, std::string name,
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
     rooms_.update(id, candidate);
+    bindSeats(staged, *rooms_.findById(id));
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
 }
 
@@ -172,6 +189,7 @@ void CatalogService::eraseRoom(EntityId id)
     SeatRepository staged;
     prepareSeats(staged, id, nullptr);
     rooms_.erase(id);
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
 }
 

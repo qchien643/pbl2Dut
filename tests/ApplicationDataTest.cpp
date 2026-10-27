@@ -97,9 +97,9 @@ std::string fixedClock() { return "2020-01-01 10:00"; }
 
 void populate(ApplicationData& data) {
     assert(data.load(true) == ApplicationData::LoadResult::Loaded);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
     ScreeningService schedule(data.films, data.rooms, data.screenings, data.tickets, fixedClock);
-    TicketService sales(data.films, data.rooms, data.seats, data.screenings, data.tickets, fixedClock);
+    TicketService sales(data.seats, data.screenings, data.tickets, fixedClock);
     assert(catalog.addFilm(u8"Phim Vi\u1ec7t", 120) == 1);
     assert(catalog.addRoom(u8"Ph\u00f2ng 1", 2, 2) == 1);
     assert(catalog.addRoom("Room 2", 1, 1) == 2);
@@ -116,6 +116,13 @@ void assertOriginal(const ApplicationData& data) {
     assert(data.seats.findById(4)->rowNumber() == 2);
     assert(data.tickets.findById(1)->unitPrice() == 80000);
     assert(data.tickets.nextId() == 2);
+    const Seat* seat = data.seats.findById(1);
+    const Screening* screening = data.screenings.findById(1);
+    const Ticket* ticket = data.tickets.findById(1);
+    assert(&seat->auditorium() == data.rooms.findById(1));
+    assert(&screening->film() == data.films.findById(1));
+    assert(&screening->auditorium() == data.rooms.findById(1));
+    assert(&ticket->screening() == screening && &ticket->seat() == seat);
 }
 
 void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
@@ -132,7 +139,8 @@ void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     reloaded.load(); // Historical screenings are valid; no comparison against today's clock.
     assertOriginal(reloaded);
     expectError([&] { reloaded.load(); }, "fresh");
-    CatalogService catalog(reloaded.films, reloaded.rooms, reloaded.seats, reloaded.screenings);
+    CatalogService catalog(reloaded.films, reloaded.rooms, reloaded.seats,
+                           reloaded.screenings, reloaded.tickets);
     catalog.updateFilm(1, "New title", 120);
     catalog.eraseRoom(2);
     catalog.addFilm("New film", 90);
@@ -284,7 +292,8 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
                         before[i] = read(directory.path / names[i]);
                     }
                 }
-                CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+                CatalogService catalog(data.films, data.rooms, data.seats,
+                                       data.screenings, data.tickets);
                 catalog.updateFilm(1, "Changed", 120);
                 failurePhase = phase;
                 failureIndex = index;
@@ -322,7 +331,7 @@ void testFailedRecoveryAndValidation() {
     populate(data);
     data.save();
     const auto original = read(directory.path / "films.txt");
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
     catalog.updateFilm(1, "Changed", 120);
     failurePhase = "install";
     failureIndex = 2;
@@ -349,7 +358,8 @@ void testFailedRecoveryAndValidation() {
     populate(invalid);
     invalid.save();
     const auto tickets = read(invalidDirectory.path / "tickets.txt");
-    invalid.tickets.insert(Ticket(2, 1, 2, "2020-01-02 23:00", 80000));
+    invalid.tickets.insert(Ticket(2, *invalid.screenings.findById(1),
+                                  *invalid.seats.findById(2), "2020-01-02 23:00", 80000));
     expectError([&] { invalid.save(); }, "before screening");
     assert(invalid.isDirty() && !fs::exists(invalidDirectory.path / ".cms-save"));
     assert(read(invalidDirectory.path / "tickets.txt") == tickets);

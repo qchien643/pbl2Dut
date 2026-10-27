@@ -1,13 +1,13 @@
 # Thiết kế lớp và quan hệ đối tượng
 
-Cập nhật: 26/10/2026. Mô tả mã nguồn hiện có, không phải kiến trúc dự kiến.
+Cập nhật: 27/10/2026 cho nhánh thử nghiệm `experiment/direct-association`.
 Đọc cùng [thiết kế dữ liệu](data-design.md) và [hướng dẫn vấn đáp](../study-guide.md).
 
 ## 1. Phân chia trách nhiệm
 
 | Nhóm | Dữ liệu/trách nhiệm | Không làm |
 |---|---|---|
-| `entities/` | Năm lớp dữ liệu; constructor kiểm tra giá trị nội tại | Không tìm khóa ngoại, không đọc file, không gọi Qt |
+| `entities/` | Năm lớp dữ liệu; constructor kiểm tra giá trị và giữ association trực tiếp | Không đọc file, không gọi Qt |
 | `DataStructures/` | Danh sách, bảng băm, ma trận dùng template | Không biết phim, phòng hay quy tắc bán vé |
 | `repositories/` | Lưu bản ghi trên RAM, tìm ID, đồng bộ danh sách/chỉ mục, đánh dấu thay đổi | Không bảo vệ đầy đủ quy tắc liên thực thể |
 | `services/` | Phối hợp repository, kiểm tra nghiệp vụ | Không ghi TXT, không tạo widget |
@@ -47,7 +47,9 @@ cung cấp những thao tác mà nó cần.
 | Chỉ mục → entity | Entry chứa giá trị `T*` | Tham chiếu không sở hữu; bảng băm không `delete` entity |
 | Service → repository | `FilmRepository& films_;` | Association không sở hữu; repository sống lâu hơn service |
 | `MainWindow` → service/data | Các thành viên tham chiếu | Association không sở hữu; cửa sổ không hủy chúng |
-| `Screening` → `Film` | `EntityId filmId_;` | Liên kết gián tiếp bằng ID; service/repository thực hiện tra cứu |
+| `Seat` → `Auditorium` | `const Auditorium* auditorium_;` | Association trực tiếp, không sở hữu |
+| `Screening` → `Film`, `Auditorium` | Hai con trỏ `const` | Association trực tiếp, không sở hữu |
+| `Ticket` → `Screening`, `Seat` | Hai con trỏ `const` | Association trực tiếp, không sở hữu |
 | Service → helper | Gọi `screening_time::endMinute(...)` | Dependency: sử dụng hàm hỗ trợ |
 | Qt parent → widget con | `new QLabel(parent)` | Qt quản lý vòng đời widget con qua parent |
 
@@ -61,6 +63,11 @@ là aggregation. Quan hệ “toàn thể–bộ phận” phải có ý nghĩa 
 `LinkedList<Seat>`; `SeatRepository` mới sở hữu các đối tượng ghế.
 Không đồng nhất ERD với sơ đồ sở hữu bộ nhớ.
 
+Entity liên quan giữ con trỏ tới đối tượng thật trong repository. Getter ID vẫn
+có để ghi TXT, nhưng ID được lấy từ đối tượng đích, không lưu thành thuộc tính
+thứ hai. Vì vậy repository sở hữu phải sống lâu hơn entity tham chiếu và không
+được xóa đối tượng đích khi còn quan hệ. Service thực thi quy tắc vòng đời này.
+
 ## 4. Entity: tính hợp lệ của một đối tượng
 
 Mỗi entity có cặp `.h/.cpp` riêng dưới `src/entities/`.
@@ -70,14 +77,14 @@ Mỗi entity có cặp `.h/.cpp` riêng dưới `src/entities/`.
 |---|---|---|
 | `Film` | ID, thời lượng dương; tên hợp lệ | Có suất tham chiếu hay chưa |
 | `Auditorium` | ID, kích thước dương; tên; tích kích thước không tràn | Đủ ghế và không có suất khi sửa/xóa |
-| `Seat` | Bốn số dương | Phòng tồn tại; vị trí nằm trong phòng và duy nhất |
-| `Screening` | ID/FK dương; ngày giờ đúng; giá dương | Phim/phòng tồn tại; không trùng lịch; tương lai khi tạo/sửa |
-| `Ticket` | ID/FK dương; ngày giờ đúng; giá dương | Ghế đúng phòng, không trùng suất-ghế, bán trước suất |
+| `Seat` | ID/vị trí dương; nhận một `Auditorium&` hợp lệ | Vị trí nằm trong phòng và duy nhất |
+| `Screening` | ID, ngày giờ, giá; nhận `Film&` và `Auditorium&` | Không trùng lịch; tương lai khi tạo/sửa |
+| `Ticket` | ID, ngày giờ, giá; nhận `Screening&`, `Seat&`; ghế cùng phòng | Không trùng suất-ghế, bán trước suất |
 
 `EntityValidation` chứa hàm tự do trong namespace, không phải lớp cha.
 Entity không có constructor mặc định để tránh tạo bản ghi thiếu dữ liệu.
-Destructor do compiler sinh đủ dùng vì thành viên là số và `std::string`.
-Copy entity sao chép giá trị; không có con trỏ sở hữu tự quản lý trong entity.
+Destructor do compiler sinh đủ dùng vì các con trỏ association không sở hữu.
+Copy entity sao chép con trỏ, nên bản sao vẫn liên kết đến cùng đối tượng đích.
 
 Getter `const std::string& title() const` không sao chép chuỗi và không cho sửa
 qua tham chiếu trả về. Tham chiếu vẫn phụ thuộc vòng đời entity.
@@ -113,8 +120,9 @@ trong danh sách.
 | `isDirty`, `markSaved` | Đọc/xóa cờ thay đổi; không tự so sánh hoặc ghi dữ liệu trên đĩa |
 
 `replaceWith()` chuyển trạng thái cũ sang đối tượng tạm; khi đối tượng tạm hủy,
-dữ liệu cũ mới được giải phóng. Con trỏ giữ từ trước có thể mất hiệu lực.
-Sau thao tác tạo lại ghế, UI giữ ID và tra lại thay vì giữ con trỏ ghế.
+dữ liệu cũ mới được giải phóng. Vì `Ticket` trỏ trực tiếp tới `Seat`, thao tác
+tạo lại kho ghế sẽ nối lại con trỏ ghế trên các vé hiện có trước khi dữ liệu cũ
+bị hủy. Không tạo kho vé tạm và không sao chép lại dữ liệu vé.
 
 ### Vì sao cấm copy/move?
 
@@ -134,15 +142,16 @@ Bốn repository còn lại kế thừa để dùng CRUD chung. `TicketRepositor
 Không công khai `update`, `erase`, `replaceWith`: tránh cung cấp thao tác sửa/xóa
 vé đã bán. Các hàm chuyển tiếp không cài lại thuật toán.
 
-`friend class ApplicationData` cho phép lớp điều phối thay dữ liệu khi nạp.
-Đó là ngoại lệ có chủ đích, không phải quyền truy cập của mọi service.
+`friend class ApplicationData` cho phép thay dữ liệu khi nạp; `CatalogService`
+được phép yêu cầu `TicketRepository` nối lại con trỏ ghế. Việc chỉ đổi con trỏ
+không làm thay đổi dữ liệu TXT nên trạng thái dirty của vé được giữ nguyên.
 Composition ở đây hạn chế API; vẫn không tự kiểm tra tiền mặt hoặc khóa ngoại.
 
 ## 6. Service: đặt quy tắc đúng nơi
 
 | Service | Repository được sửa | Nhiệm vụ chính |
 |---|---|---|
-| `CatalogService` | Phim, phòng, ghế | CRUD danh mục; chặn dữ liệu đang được tham chiếu; chuẩn bị bộ ghế mới trước khi thay |
+| `CatalogService` | Phim, phòng, ghế; yêu cầu vé nối lại con trỏ | CRUD danh mục; chặn dữ liệu đang được tham chiếu; chuẩn bị dữ liệu mới trước khi thay |
 | `ScreeningService` | Suất | Kiểm tra phim/phòng, lịch phòng, tương lai, vé tham chiếu |
 | `TicketService` | Vé | Xem trước, bán, tìm vé, dựng sơ đồ, lọc vé và tính doanh thu |
 
@@ -172,11 +181,11 @@ Chi phí bảng băm trung bình giả định phân bố khóa hợp lý.
 | Insert hash | Trung bình khấu hao O(1); lần rehash phải duyệt entries/buckets |
 | Erase repository | O(n) do list phải tìm node bằng địa chỉ |
 | Truy cập ô ma trận | O(1); bộ nhớ O(hàng × cột) |
-| Kiểm tra trùng lịch một suất | O(k) với tra phim trung bình O(1) |
+| Kiểm tra trùng lịch một suất | O(k); thời lượng lấy trực tiếp từ `Screening::film()` |
 | Kiểm tra toàn bộ lịch lúc nạp/lưu | O(k²), do mỗi suất đối chiếu các suất khác |
 | Kiểm tra ghế đã bán / doanh thu | O(t) |
 | Dựng sơ đồ suất | O(s + t + số ô), với tra ID trung bình O(1) |
-| Tạo lại ghế phòng | Dựng repository ghế tạm, tốn thêm bộ nhớ theo tổng số ghế |
+| Tạo lại ghế phòng | Dựng kho ghế tạm rồi đổi con trỏ ghế trên vé; tốn thêm bộ nhớ theo tổng số ghế |
 
 `unique_ptr<SeatMap>` sở hữu ma trận tạm và tự hủy khi ra khỏi phạm vi.
 Trong Qt, parent hoặc container như `QTableWidget` nhận quyền sở hữu widget/item

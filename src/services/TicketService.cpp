@@ -6,12 +6,10 @@
 #include <limits>
 #include <stdexcept>
 
-TicketService::TicketService(const FilmRepository& films, const AuditoriumRepository& rooms,
-                             const SeatRepository& seats,
+TicketService::TicketService(const SeatRepository& seats,
                              const ScreeningRepository& screenings,
                              TicketRepository& tickets, ServiceClock clock)
-    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings),
-      tickets_(tickets), clock_(clock)
+    : seats_(seats), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)
     {
@@ -39,25 +37,16 @@ SaleDetails TicketService::details(EntityId screeningId, EntityId seatId) const
     {
         throw std::out_of_range("Record not found");
     }
-    const Auditorium* room = rooms_.findById(screening->auditoriumId());
-    if (room == nullptr)
-    {
-        throw std::out_of_range("Record not found");
-    }
-    if (seat->auditoriumId() != room->id()
-        || seat->rowNumber() > room->rowCount() || seat->seatNumber() > room->seatsPerRow())
+    const Auditorium& room = screening->auditorium();
+    if (&seat->auditorium() != &room
+        || seat->rowNumber() > room.rowCount() || seat->seatNumber() > room.seatsPerRow())
     {
         throw std::invalid_argument("Seat does not belong to screening room");
     }
-    const Film* film = films_.findById(screening->filmId());
-    if (film == nullptr)
-    {
-        throw std::out_of_range("Record not found");
-    }
 
-    const std::int64_t endMinute = screening_time::endMinute(*screening, films_);
+    const std::int64_t endMinute = screening_time::endMinute(*screening);
     const std::string endTime = screening_time::formatMinute(endMinute);
-    SaleDetails result{*film, *room, *screening, *seat, endTime};
+    SaleDetails result{screening->film(), room, *screening, *seat, endTime};
     return result;
 }
 
@@ -96,7 +85,13 @@ EntityId TicketService::sell(EntityId screeningId, EntityId seatId, bool cashCon
     requireAvailable(sale, now);
     const EntityId id = tickets_.nextId();
     const std::int64_t price = sale.screening.ticketPrice();
-    const Ticket ticket(id, screeningId, seatId, now, price);
+    const Screening* screening = screenings_.findById(screeningId);
+    const Seat* seat = seats_.findById(seatId);
+    if (screening == nullptr || seat == nullptr)
+    {
+        throw std::out_of_range("Record not found");
+    }
+    const Ticket ticket(id, *screening, *seat, now, price);
     tickets_.insert(ticket);
     return id;
 }
@@ -128,29 +123,21 @@ std::unique_ptr<SeatMap> TicketService::seatMap(EntityId screeningId) const
     {
         throw std::out_of_range("Record not found");
     }
-    const Auditorium* room = rooms_.findById(screening->auditoriumId());
-    if (room == nullptr)
-    {
-        throw std::out_of_range("Record not found");
-    }
-    std::unique_ptr<SeatMap> result = makeSeatMap(*room, seats_);
+    const Auditorium& room = screening->auditorium();
+    std::unique_ptr<SeatMap> result = makeSeatMap(room, seats_);
     for (const Ticket& ticket : tickets_)
     {
-        if (ticket.screeningId() != screeningId)
+        if (&ticket.screening() != screening)
         {
             continue;
         }
-        const Seat* seat = seats_.findById(ticket.seatId());
-        if (seat == nullptr)
-        {
-            throw std::out_of_range("Record not found");
-        }
-        if (seat->auditoriumId() != screening->auditoriumId())
+        const Seat& seat = ticket.seat();
+        if (&seat.auditorium() != &room)
         {
             throw std::invalid_argument("Ticket seat belongs to another room");
         }
-        const std::size_t row = static_cast<std::size_t>(seat->rowNumber() - 1);
-        const std::size_t column = static_cast<std::size_t>(seat->seatNumber() - 1);
+        const std::size_t row = static_cast<std::size_t>(seat.rowNumber() - 1);
+        const std::size_t column = static_cast<std::size_t>(seat.seatNumber() - 1);
         SeatStatus& cell = result->at(row, column);
         if (cell.sold)
         {

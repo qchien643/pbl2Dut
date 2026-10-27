@@ -18,7 +18,7 @@ std::unique_ptr<SeatMap> makeSeatMap(const Auditorium& room, const SeatRepositor
     std::size_t count = 0;
     for (const Seat& seat : seats)
     {
-        if (seat.auditoriumId() != room.id())
+        if (&seat.auditorium() != &room)
         {
             continue;
         }

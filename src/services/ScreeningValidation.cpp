@@ -4,28 +4,22 @@
 
 #include <stdexcept>
 
-void service_validation::screening(const Screening& candidate, const FilmRepository& films,
-                                   const AuditoriumRepository& rooms,
+void service_validation::screening(const Screening& candidate,
                                    const ScreeningRepository& screenings)
 {
-    const Auditorium* room = rooms.findById(candidate.auditoriumId());
-    if (room == nullptr)
-    {
-        throw std::out_of_range("Record not found");
-    }
     const std::int64_t start = screening_time::minutes(candidate.startTime());
-    const std::int64_t end = screening_time::endMinute(candidate, films, 15);
+    const std::int64_t end = screening_time::endMinute(candidate, 15);
     for (const Screening& item : screenings)
     {
         if (item.id() == candidate.id())
         {
             continue;
         }
-        if (item.auditoriumId() != candidate.auditoriumId())
+        if (&item.auditorium() != &candidate.auditorium())
         {
             continue;
         }
-        const std::int64_t otherEnd = screening_time::endMinute(item, films, 15);
+        const std::int64_t otherEnd = screening_time::endMinute(item, 15);
         if (start >= otherEnd)
         {
             continue;

@@ -34,13 +34,13 @@ const Screening& ScreeningService::find(EntityId id) const
 std::string ScreeningService::endTime(EntityId id) const
 {
     const Screening& screening = find(id);
-    const std::int64_t end = screening_time::endMinute(screening, films_);
+    const std::int64_t end = screening_time::endMinute(screening);
     return screening_time::formatMinute(end);
 }
 
 void ScreeningService::validate(const Screening& candidate) const
 {
-    service_validation::screening(candidate, films_, rooms_, screenings_);
+    service_validation::screening(candidate, screenings_);
     const std::int64_t start = screening_time::minutes(candidate.startTime());
     const std::string currentTime = clock_();
     const std::int64_t now = screening_time::minutes(currentTime);
@@ -53,8 +53,18 @@ void ScreeningService::validate(const Screening& candidate) const
 EntityId ScreeningService::add(EntityId filmId, EntityId roomId,
                                std::string startTime, std::int64_t price)
 {
+    if (filmId <= 0 || roomId <= 0)
+    {
+        throw std::invalid_argument("ID must be positive");
+    }
+    const Film* film = films_.findById(filmId);
+    const Auditorium* room = rooms_.findById(roomId);
+    if (film == nullptr || room == nullptr)
+    {
+        throw std::out_of_range("Record not found");
+    }
     const EntityId id = screenings_.nextId();
-    const Screening candidate(id, filmId, roomId, startTime, price);
+    const Screening candidate(id, *film, *room, startTime, price);
     validate(candidate);
     screenings_.insert(candidate);
     return id;
@@ -62,10 +72,10 @@ EntityId ScreeningService::add(EntityId filmId, EntityId roomId,
 
 void ScreeningService::requireNoTickets(EntityId id) const
 {
-    find(id);
+    const Screening& screening = find(id);
     for (const Ticket& ticket : tickets_)
     {
-        if (ticket.screeningId() == id)
+        if (&ticket.screening() == &screening)
         {
             throw std::invalid_argument("Screening already has tickets");
         }
@@ -110,7 +120,17 @@ void ScreeningService::update(EntityId id, EntityId filmId, EntityId roomId,
                               std::string startTime, std::int64_t price)
 {
     requireNoTickets(id);
-    const Screening candidate(id, filmId, roomId, startTime, price);
+    if (filmId <= 0 || roomId <= 0)
+    {
+        throw std::invalid_argument("ID must be positive");
+    }
+    const Film* film = films_.findById(filmId);
+    const Auditorium* room = rooms_.findById(roomId);
+    if (film == nullptr || room == nullptr)
+    {
+        throw std::out_of_range("Record not found");
+    }
+    const Screening candidate(id, *film, *room, startTime, price);
     validate(candidate);
     screenings_.update(id, candidate);
 }

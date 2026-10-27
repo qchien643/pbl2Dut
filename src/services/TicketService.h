@@ -1,7 +1,7 @@
 #pragma once
 
-#include "repositories/AuditoriumRepository.h"
-#include "repositories/FilmRepository.h"
+#include "entities/Auditorium.h"
+#include "entities/Film.h"
 #include "repositories/ScreeningRepository.h"
 #include "repositories/SeatRepository.h"
 #include "repositories/TicketRepository.h"
@@ -37,8 +37,7 @@ struct DailyRevenue
 class TicketService
 {
 public:
-    TicketService(const FilmRepository& films, const AuditoriumRepository& rooms,
-                  const SeatRepository& seats, const ScreeningRepository& screenings,
+    TicketService(const SeatRepository& seats, const ScreeningRepository& screenings,
                   TicketRepository& tickets, ServiceClock clock = localMinuteNow);
 
     SaleDetails preview(EntityId screeningId, EntityId seatId) const;
@@ -54,8 +53,6 @@ private:
     void requireAvailable(const SaleDetails& sale, const std::string& now) const;
     static void validateSaleDate(const std::string& saleDate);
 
-    const FilmRepository& films_;
-    const AuditoriumRepository& rooms_;
     const SeatRepository& seats_;
     const ScreeningRepository& screenings_;
     TicketRepository& tickets_;

@@ -128,9 +128,32 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     ApplicationData staged(directory_);
     txt_persistence::load(directory_ / files[0], staged.films);
     txt_persistence::load(directory_ / files[1], staged.rooms);
-    txt_persistence::load(directory_ / files[2], staged.seats);
-    txt_persistence::load(directory_ / files[3], staged.screenings);
-    txt_persistence::load(directory_ / files[4], staged.tickets);
+    txt_persistence::load(directory_ / files[2], staged.seats, [&](const std::string* fields) {
+        const Auditorium* room = staged.rooms.findById(txt_persistence::number(fields[1]));
+        if (room == nullptr) {
+            throw std::invalid_argument("Seat references a missing room");
+        }
+        return Seat(txt_persistence::number(fields[0]), *room,
+                    txt_persistence::number(fields[2]), txt_persistence::number(fields[3]));
+    });
+    txt_persistence::load(directory_ / files[3], staged.screenings, [&](const std::string* fields) {
+        const Film* film = staged.films.findById(txt_persistence::number(fields[1]));
+        const Auditorium* room = staged.rooms.findById(txt_persistence::number(fields[2]));
+        if (film == nullptr || room == nullptr) {
+            throw std::invalid_argument("Screening references a missing film or room");
+        }
+        return Screening(txt_persistence::number(fields[0]), *film, *room,
+                         fields[3], txt_persistence::number(fields[4]));
+    });
+    txt_persistence::load(directory_ / files[4], staged.tickets, [&](const std::string* fields) {
+        const Screening* screening = staged.screenings.findById(txt_persistence::number(fields[1]));
+        const Seat* seat = staged.seats.findById(txt_persistence::number(fields[2]));
+        if (screening == nullptr || seat == nullptr) {
+            throw std::invalid_argument("Ticket references a missing screening or seat");
+        }
+        return Ticket(txt_persistence::number(fields[0]), *screening, *seat,
+                      fields[3], txt_persistence::number(fields[4]));
+    });
     staged.validate();
     films.replaceWith(staged.films);
     rooms.replaceWith(staged.rooms);
@@ -159,9 +182,11 @@ void ApplicationData::validate() const {
         line = 1;
         for (const Seat& seat : seats) {
             ++line;
-            Seat(seat.id(), seat.auditoriumId(), seat.rowNumber(), seat.seatNumber());
+            Seat(seat.id(), seat.auditorium(), seat.rowNumber(), seat.seatNumber());
             const Auditorium* room = rooms.findById(seat.auditoriumId());
-            if (room == nullptr || seat.rowNumber() > room->rowCount() || seat.seatNumber() > room->seatsPerRow()) {
+            if (room != &seat.auditorium()
+                || seat.rowNumber() > seat.auditorium().rowCount()
+                || seat.seatNumber() > seat.auditorium().seatsPerRow()) {
                 throw std::invalid_argument("Seat references a missing room or an out-of-range position");
             }
             const std::string key = std::to_string(seat.auditoriumId()) + ":"
@@ -191,21 +216,24 @@ void ApplicationData::validate() const {
         line = 1;
         for (const Screening& screening : screenings) {
             ++line;
-            Screening(screening.id(), screening.filmId(), screening.auditoriumId(),
+            Screening(screening.id(), screening.film(), screening.auditorium(),
                       screening.startTime(), screening.ticketPrice());
-            service_validation::screening(screening, films, rooms, screenings);
+            if (films.findById(screening.filmId()) != &screening.film()
+                || rooms.findById(screening.auditoriumId()) != &screening.auditorium()) {
+                throw std::invalid_argument("Screening references a missing film or room");
+            }
+            service_validation::screening(screening, screenings);
         }
         path = directory_ / files[4];
         line = 1;
         for (const Ticket& ticket : tickets) {
             ++line;
-            Ticket(ticket.id(), ticket.screeningId(), ticket.seatId(), ticket.soldAt(), ticket.unitPrice());
-            const Screening* screening = screenings.findById(ticket.screeningId());
-            const Seat* seat = seats.findById(ticket.seatId());
-            if (screening == nullptr || seat == nullptr || seat->auditoriumId() != screening->auditoriumId()) {
+            Ticket(ticket.id(), ticket.screening(), ticket.seat(), ticket.soldAt(), ticket.unitPrice());
+            if (screenings.findById(ticket.screeningId()) != &ticket.screening()
+                || seats.findById(ticket.seatId()) != &ticket.seat()) {
                 throw std::invalid_argument("Ticket references a missing screening/seat or the wrong room");
             }
-            if (ticket.soldAt() >= screening->startTime()) {
+            if (ticket.soldAt() >= ticket.screening().startTime()) {
                 throw std::invalid_argument("Ticket must be sold before screening start");
             }
             const std::string key = std::to_string(ticket.screeningId()) + ":" + std::to_string(ticket.seatId());

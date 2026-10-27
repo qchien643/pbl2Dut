@@ -121,8 +121,8 @@ trong danh sách.
 
 `replaceWith()` chuyển trạng thái cũ sang đối tượng tạm; khi đối tượng tạm hủy,
 dữ liệu cũ mới được giải phóng. Vì `Ticket` trỏ trực tiếp tới `Seat`, thao tác
-tạo lại kho ghế cũng dựng lại kho vé để mọi vé trỏ tới node ghế mới trước khi
-dữ liệu cũ bị hủy. UI vẫn giữ ID và tra lại, không giữ con trỏ lâu dài.
+tạo lại kho ghế sẽ nối lại con trỏ ghế trên các vé hiện có trước khi dữ liệu cũ
+bị hủy. Không tạo kho vé tạm và không sao chép lại dữ liệu vé.
 
 ### Vì sao cấm copy/move?
 
@@ -143,15 +143,15 @@ Không công khai `update`, `erase`, `replaceWith`: tránh cung cấp thao tác 
 vé đã bán. Các hàm chuyển tiếp không cài lại thuật toán.
 
 `friend class ApplicationData` cho phép thay dữ liệu khi nạp; `CatalogService`
-được phép nối lại kho vé với kho ghế mới. Việc chỉ đổi con trỏ không làm thay
-đổi dữ liệu TXT nên trạng thái dirty trước đó của vé được giữ nguyên.
+được phép yêu cầu `TicketRepository` nối lại con trỏ ghế. Việc chỉ đổi con trỏ
+không làm thay đổi dữ liệu TXT nên trạng thái dirty của vé được giữ nguyên.
 Composition ở đây hạn chế API; vẫn không tự kiểm tra tiền mặt hoặc khóa ngoại.
 
 ## 6. Service: đặt quy tắc đúng nơi
 
 | Service | Repository được sửa | Nhiệm vụ chính |
 |---|---|---|
-| `CatalogService` | Phim, phòng, ghế; nối lại vé khi thay kho ghế | CRUD danh mục; chặn dữ liệu đang được tham chiếu; chuẩn bị dữ liệu mới trước khi thay |
+| `CatalogService` | Phim, phòng, ghế; yêu cầu vé nối lại con trỏ | CRUD danh mục; chặn dữ liệu đang được tham chiếu; chuẩn bị dữ liệu mới trước khi thay |
 | `ScreeningService` | Suất | Kiểm tra phim/phòng, lịch phòng, tương lai, vé tham chiếu |
 | `TicketService` | Vé | Xem trước, bán, tìm vé, dựng sơ đồ, lọc vé và tính doanh thu |
 
@@ -185,7 +185,7 @@ Chi phí bảng băm trung bình giả định phân bố khóa hợp lý.
 | Kiểm tra toàn bộ lịch lúc nạp/lưu | O(k²), do mỗi suất đối chiếu các suất khác |
 | Kiểm tra ghế đã bán / doanh thu | O(t) |
 | Dựng sơ đồ suất | O(s + t + số ô), với tra ID trung bình O(1) |
-| Tạo lại ghế phòng | Dựng kho ghế và vé tạm để nối lại con trỏ; tốn thêm bộ nhớ theo tổng ghế + vé |
+| Tạo lại ghế phòng | Dựng kho ghế tạm rồi đổi con trỏ ghế trên vé; tốn thêm bộ nhớ theo tổng số ghế |
 
 `unique_ptr<SeatMap>` sở hữu ma trận tạm và tự hủy khi ra khỏi phạm vi.
 Trong Qt, parent hoặc container như `QTableWidget` nhận quyền sở hữu widget/item

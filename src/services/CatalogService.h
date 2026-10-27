@@ -41,7 +41,6 @@ private:
     void prepareSeats(SeatRepository& staged, EntityId roomId,
                       const Auditorium* replacement) const;
     static void bindSeats(SeatRepository& staged, const Auditorium& room);
-    void prepareTickets(TicketRepository& staged, const SeatRepository& seats) const;
 
     FilmRepository& films_;
     AuditoriumRepository& rooms_;

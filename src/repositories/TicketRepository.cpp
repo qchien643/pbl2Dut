@@ -45,12 +45,12 @@ LinkedList<Ticket>::ConstIterator TicketRepository::end() const
     return this->records_.end();
 }
 
-void TicketRepository::relinkWith(TicketRepository& replacement) noexcept
+void TicketRepository::relinkSeats(const SeatRepository& seats) noexcept
 {
-    const bool wasDirty = this->isDirty();
-    this->records_.replaceWith(replacement.records_);
-    if (!wasDirty)
+    // ponytail: services preserve seat IDs; add checked relinking if direct repository edits become supported.
+    for (const Ticket& ticket : *this)
     {
-        this->markSaved();
+        Ticket* stored = this->records_.findMutableById(ticket.id());
+        stored->setSeat(*seats.findById(ticket.seatId()));
     }
 }

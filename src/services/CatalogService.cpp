@@ -157,33 +157,16 @@ void CatalogService::bindSeats(SeatRepository& staged, const Auditorium& room)
     }
 }
 
-void CatalogService::prepareTickets(TicketRepository& staged,
-                                    const SeatRepository& seats) const
-{
-    for (const Ticket& ticket : tickets_)
-    {
-        const Seat* seat = seats.findById(ticket.seatId());
-        if (seat == nullptr)
-        {
-            throw std::invalid_argument("Ticket references a removed seat");
-        }
-        staged.insert(Ticket(ticket.id(), ticket.screening(), *seat,
-                             ticket.soldAt(), ticket.unitPrice()));
-    }
-}
-
 EntityId CatalogService::addRoom(std::string name, std::int64_t rows, std::int64_t columns)
 {
     const EntityId id = rooms_.nextId();
     const Auditorium candidate(id, name, rows, columns);
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
-    TicketRepository stagedTickets;
-    prepareTickets(stagedTickets, staged);
     rooms_.insert(candidate);
     bindSeats(staged, *rooms_.findById(id));
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
-    tickets_.relinkWith(stagedTickets);
     return id;
 }
 
@@ -194,12 +177,10 @@ void CatalogService::updateRoom(EntityId id, std::string name,
     const Auditorium candidate(id, name, rows, columns);
     SeatRepository staged;
     prepareSeats(staged, id, &candidate);
-    TicketRepository stagedTickets;
-    prepareTickets(stagedTickets, staged);
     rooms_.update(id, candidate);
     bindSeats(staged, *rooms_.findById(id));
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
-    tickets_.relinkWith(stagedTickets);
 }
 
 void CatalogService::eraseRoom(EntityId id)
@@ -207,11 +188,9 @@ void CatalogService::eraseRoom(EntityId id)
     requireRoomUnused(id);
     SeatRepository staged;
     prepareSeats(staged, id, nullptr);
-    TicketRepository stagedTickets;
-    prepareTickets(stagedTickets, staged);
     rooms_.erase(id);
+    tickets_.relinkSeats(staged);
     seats_.replaceWith(staged);
-    tickets_.relinkWith(stagedTickets);
 }
 
 std::unique_ptr<SeatMap> CatalogService::seatMap(EntityId roomId) const

@@ -264,9 +264,10 @@ nó gọi chuyển tiếp sang thành viên bên trong.
 `CatalogService::prepareSeats` chép ghế của các phòng khác vào repository tạm,
 bỏ bộ ghế của phòng đang thay; nếu có cấu hình mới thì sinh ghế theo offset:
 `row = offset / columns + 1`, `column = offset % columns + 1`.
-Kiểm tra đủ miền ID trước khi cộng. Vì `Ticket` trỏ trực tiếp đến `Seat`, service
-cũng dựng kho vé tạm trỏ sang các ghế tạm. Sau khi chuẩn bị thành công mới đổi
-phòng, thay bộ ghế và nối lại kho vé.
+Kiểm tra đủ miền ID trước khi cộng. Vì `Ticket` trỏ trực tiếp đến `Seat`,
+`CatalogService` yêu cầu `TicketRepository` đổi con trỏ ghế sang node tạm
+trước khi đổi kho ghế. Không tạo bản sao hoặc repository vé tạm; dữ liệu vé và
+cờ dirty của vé được giữ nguyên.
 
 Không phải sửa từng ghế trực tiếp trong repository chính. Lỗi chuẩn bị thì
 phòng/ghế cũ còn nguyên; thành công thì địa chỉ ghế cũ không còn dùng lâu dài được.
@@ -452,7 +453,7 @@ Tự trả lời trước; các ý sau là điểm đối chiếu, không phải
 | Có phải FilmRepository kế thừa Film? | Không, kế thừa Repository có tham số kiểu Film |
 | Vì sao TicketRepository chứa thay vì kế thừa? | Hạn chế public API sửa/xóa; đổi lại phải viết hàm chuyển tiếp |
 | `Screening` liên kết `Film` như thế nào? | Giữ `const Film*` không sở hữu; `filmId()` lấy ID từ đối tượng để ghi TXT |
-| Điểm khó của direct association là gì? | Repository đích phải sống lâu hơn; thay kho ghế phải nối lại các `Ticket` đang trỏ tới ghế |
+| Điểm khó của direct association là gì? | Repository đích phải sống lâu hơn; thay kho ghế phải nối lại con trỏ trên các `Ticket` |
 | Dữ liệu bị copy ở đâu? | Entity vào node; kết quả truy vấn/chi tiết; service giữ reference, không copy repository |
 | Xóa phim có cần xóa suất theo không? | Hiện chặn xóa phim có suất, không cascade |
 | Chỉ có PK ticket_id đã chống bán trùng chưa? | Chưa, phải kiểm tra khóa nghiệp vụ suất-ghế |

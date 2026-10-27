@@ -44,6 +44,11 @@ const Seat& Ticket::seat() const
     return *this->seat_;
 }
 
+void Ticket::setSeat(const Seat& seat) noexcept
+{
+    this->seat_ = &seat;
+}
+
 const std::string& Ticket::soldAt() const
 {
     return this->soldAt_;

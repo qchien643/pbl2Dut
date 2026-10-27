@@ -23,6 +23,9 @@ public:
     std::int64_t unitPrice() const;
 
 private:
+    friend class TicketRepository;
+    void setSeat(const Seat& seat) noexcept;
+
     EntityId id_;
     const Screening* screening_;
     const Seat* seat_;

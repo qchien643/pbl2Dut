@@ -2,6 +2,7 @@
 
 #include "entities/Ticket.h"
 #include "repositories/Repository.h"
+#include "repositories/SeatRepository.h"
 
 class TicketRepository final
 {
@@ -22,7 +23,7 @@ public:
 private:
     friend class ApplicationData;
     friend class CatalogService;
-    void relinkWith(TicketRepository& replacement) noexcept;
+    void relinkSeats(const SeatRepository& seats) noexcept;
     Repository<Ticket> records_;
 };
 

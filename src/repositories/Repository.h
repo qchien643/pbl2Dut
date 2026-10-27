@@ -11,6 +11,8 @@
 #include <type_traits>
 #include <utility>
 
+class TicketRepository;
+
 template <typename T>
 class Repository
 {
@@ -39,11 +41,21 @@ public:
     void replaceWith(Repository& replacement) noexcept;
 
 private:
+    friend class TicketRepository;
+    T* findMutableById(EntityId id);
+
     LinkedList<T> records_;
     HashTable<EntityId, T*> index_;
     EntityId highestId_ = 0;
     bool dirty_ = false;
 };
+
+template <typename T>
+T* Repository<T>::findMutableById(EntityId id)
+{
+    T** indexed = this->index_.find(id);
+    return indexed == nullptr ? nullptr : *indexed;
+}
 
 template <typename T>
 bool Repository<T>::empty() const

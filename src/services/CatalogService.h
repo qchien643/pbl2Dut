@@ -1,25 +1,29 @@
 #pragma once
 
-#include "repositories/AuditoriumRepository.h"
-#include "repositories/FilmRepository.h"
-#include "repositories/ScreeningRepository.h"
-#include "repositories/SeatRepository.h"
-#include "repositories/TicketRepository.h"
+#include "entities/Auditorium.h"
+#include "entities/Film.h"
+#include "entities/Screening.h"
+#include "entities/Seat.h"
+#include "repositories/IRepository.h"
+#include "repositories/IRoomStorage.h"
 #include "services/SeatMap.h"
 
 #include <cstdint>
 #include <memory>
 #include <string>
 
+class ITicketRepository;
+
 class CatalogService
 {
 public:
-    CatalogService(FilmRepository& films, AuditoriumRepository& rooms,
-                   SeatRepository& seats, const ScreeningRepository& screenings,
-                   TicketRepository& tickets);
+    CatalogService(IRepository<Film>& films, IRepository<Auditorium>& rooms,
+                   IRepository<Seat>& seats, const IRepository<Screening>& screenings,
+                   IRoomStorage& roomStorage);
 
     EntityId addFilm(std::string title, std::int64_t duration);
     void updateFilm(EntityId id, std::string title, std::int64_t duration);
+    // Reject deletion while any screening references this film, including history.
     void eraseFilm(EntityId id);
     const Film& film(EntityId id) const;
 
@@ -28,6 +32,7 @@ public:
 
     EntityId addRoom(std::string name, std::int64_t rows, std::int64_t columns);
     void updateRoom(EntityId id, std::string name, std::int64_t rows, std::int64_t columns);
+    // Reject rooms with screenings; otherwise delete their seats before the room.
     void eraseRoom(EntityId id);
     const Auditorium& room(EntityId id) const;
 
@@ -38,13 +43,12 @@ public:
 private:
     bool filmReferenced(EntityId id) const;
     void requireRoomUnused(EntityId id) const;
-    void prepareSeats(SeatRepository& staged, EntityId roomId,
-                      const Auditorium* replacement) const;
-    static void bindSeats(SeatRepository& staged, const Auditorium& room);
+    void prepareSeats(LinkedList<Seat>& staged, const Auditorium& replacement) const;
+    void prepareTickets(ITicketRepository& staged, const IRepository<Seat>& seats) const;
 
-    FilmRepository& films_;
-    AuditoriumRepository& rooms_;
-    SeatRepository& seats_;
-    const ScreeningRepository& screenings_;
-    TicketRepository& tickets_;
+    IRepository<Film>& films_;
+    IRepository<Auditorium>& rooms_;
+    IRepository<Seat>& seats_;
+    const IRepository<Screening>& screenings_;
+    IRoomStorage& roomStorage_;
 };

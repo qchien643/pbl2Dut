@@ -32,11 +32,30 @@ chi nhánh, nhiều phiên đồng thời, khuyến mãi và DBMS.
 - ID là số dương, duy nhất trong từng entity và không đổi sau khi tạo.
 - Vị trí `(phòng, hàng, cột)` là duy nhất.
 - Một phòng không có hai suất dùng thời gian giao nhau; sau mỗi suất có 15 phút nghỉ.
-- Không sửa hoặc xóa phim/phòng/suất đang được dữ liệu khác tham chiếu.
+- Phim đã có suất chỉ được sửa tên; phòng có suất và suất đã bán vé không được sửa.
 - Chỉ bán trước giờ bắt đầu; ghế phải thuộc phòng của suất.
 - Cặp `(screening_id, seat_id)` là duy nhất, nên một ghế chỉ bán một lần trong mỗi suất.
 - Vé lưu giá tại thời điểm bán; doanh thu không phụ thuộc giá suất sau đó.
 - Hủy xác nhận hoặc gặp lỗi không được tạo vé dở dang.
+
+### Quy ước xóa dữ liệu
+
+| Đối tượng | Cách xử lý |
+|---|---|
+| Phim | Chỉ xóa nếu không còn suất tham chiếu; không xóa kèm suất hoặc vé. |
+| Phòng | Chỉ xóa nếu không còn suất sử dụng; xóa kèm toàn bộ ghế thuộc phòng. |
+| Ghế | Không có thao tác xóa riêng; quản lý theo kích thước và vòng đời phòng. |
+| Suất chiếu | Chỉ xóa nếu chưa bán vé, kể cả suất đã qua giờ chiếu. |
+| Vé | Không cung cấp sửa/xóa; giữ để tra cứu và tính doanh thu. |
+
+Quy tắc áp dụng cả dữ liệu lịch sử. Muốn xóa phim/phòng, người dùng xóa các
+suất chưa bán vé trước; nếu còn suất đã bán vé thì phải giữ dữ liệu liên quan.
+Không chuyển liên kết thành `NULL`, không dùng bản ghi mặc định, không bổ sung
+xóa mềm hay trạng thái ngừng sử dụng trong phạm vi này.
+
+Service kiểm tra nghiệp vụ trước khi gọi repository. Xóa bị chặn hoặc hủy xác
+nhận không thay đổi dữ liệu. Xóa thành công chỉ tác động RAM; TXT được ghi lại
+khi lưu. Giao diện phải xác nhận đối tượng và nêu rõ ghế bị xóa kèm phòng.
 
 ## 4. Mô hình dữ liệu
 

@@ -2,9 +2,10 @@
 
 #include "entities/Auditorium.h"
 #include "entities/Film.h"
-#include "repositories/ScreeningRepository.h"
-#include "repositories/SeatRepository.h"
-#include "repositories/TicketRepository.h"
+#include "entities/Screening.h"
+#include "entities/Seat.h"
+#include "repositories/IRepository.h"
+#include "repositories/ITicketRepository.h"
 #include "services/SeatMap.h"
 #include "services/ServiceClock.h"
 
@@ -37,8 +38,8 @@ struct DailyRevenue
 class TicketService
 {
 public:
-    TicketService(const SeatRepository& seats, const ScreeningRepository& screenings,
-                  TicketRepository& tickets, ServiceClock clock = localMinuteNow);
+    TicketService(const IRepository<Seat>& seats, const IRepository<Screening>& screenings,
+                  ITicketRepository& tickets, ServiceClock clock = localMinuteNow);
 
     SaleDetails preview(EntityId screeningId, EntityId seatId) const;
     EntityId sell(EntityId screeningId, EntityId seatId, bool cashConfirmed);
@@ -53,8 +54,8 @@ private:
     void requireAvailable(const SaleDetails& sale, const std::string& now) const;
     static void validateSaleDate(const std::string& saleDate);
 
-    const SeatRepository& seats_;
-    const ScreeningRepository& screenings_;
-    TicketRepository& tickets_;
+    const IRepository<Seat>& seats_;
+    const IRepository<Screening>& screenings_;
+    ITicketRepository& tickets_;
     ServiceClock clock_;
 };

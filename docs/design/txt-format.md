@@ -14,6 +14,34 @@ File dùng UTF-8, mỗi bản ghi một dòng, phân cách bằng `|`. Chuỗi k
 chứa `|`, xuống dòng hoặc ký tự điều khiển. Thời gian có dạng
 `YYYY-MM-DD HH:mm`; tiền là số nguyên VND.
 
+Header ở bảng trên là thứ tự chuẩn khi ghi. Khi đọc, các cột được phép đổi vị
+trí nếu header và dữ liệu đổi tương ứng; không được thiếu, thêm hoặc trùng tên cột.
+
+## Ánh xạ model và TXT
+
+`persistence/ModelMappings.h` khai báo một ánh xạ cho mỗi model. Mỗi cột gồm tên,
+getter khi ghi và quy tắc đọc: `integerColumn`, `textColumn` hoặc `referenceColumn`.
+Thứ tự khai báo ánh xạ phải khớp tham số constructor, không phụ thuộc thứ tự
+thuộc tính trong `.h` hay thứ tự cột của file đầu vào.
+
+```cpp
+const auto columns = txt_persistence::seatMapping(data.rooms);
+txt_persistence::load(path, data.seats, columns);
+txt_persistence::save(path, data.seats, columns);
+```
+
+- `Mapping.h`: ghép tên cột với vị trí trong header, chuyển kiểu và gọi constructor.
+- `TxtPersistence::load()`: đọc dòng, kiểm tra dữ liệu và thêm model vào repository.
+- `TxtPersistence::save()`: sinh header và ghi giá trị qua getter từ cùng ánh xạ.
+- `referenceColumn`: khi đọc dùng `findById()` rồi trả reference tới đối tượng
+  trong `IRepository<T>` được truyền vào; khi ghi gọi getter lấy ID, không lưu
+  địa chỉ con trỏ.
+
+Ánh xạ chỉ mượn repository; repository phải còn sống khi đọc. Không còn hàm
+`parse()` hay `writeRecord()` riêng cho từng model. C++17 dùng `std::tuple`,
+`std::apply` và parameter pack để truyền các kết quả đọc đúng kiểu vào constructor;
+validation và thuộc tính private của model được giữ nguyên.
+
 ## 2. Nạp dữ liệu
 
 Thứ tự nạp:

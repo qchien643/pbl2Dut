@@ -2,7 +2,7 @@
 
 Mở trực tiếp các file HTML bằng trình duyệt; không cần chạy ứng dụng Qt.
 
-## Sơ đồ hiện hành
+## Sơ đồ tham khảo
 
 | Sơ đồ | Nội dung |
 |---|---|
@@ -11,6 +11,9 @@ Mở trực tiếp các file HTML bằng trình duyệt; không cần chạy ứ
 
 Hai sơ đồ trên được đối chiếu với commit `3395a7e` trên `main`. Mỗi node có thể
 mở phần nguồn tương ứng. Bản HTML đã qua validate, artifact check và browser check.
+Chúng chưa phản ánh đợt cập nhật DI/DIP và ánh xạ TXT ngày 18/11/2026;
+đọc [thiết kế lớp](../design/class-design.md) và [định dạng TXT](../design/txt-format.md)
+để đối chiếu code hiện tại.
 
 ## Sơ đồ bổ sung
 
@@ -20,7 +23,7 @@ mở phần nguồn tương ứng. Bản HTML đã qua validate, artifact check 
 | [ERD](erd/index.html) | Năm thực thể, PK/FK và lực lượng quan hệ |
 
 Sơ đồ bổ sung được tạo từ snapshot cũ hơn; dùng để tham khảo bố cục. Thiết kế
-direct association hiện tại phải đọc theo sơ đồ class mới và
+direct association hiện tại phải đọc theo
 [thiết kế lớp](../design/class-design.md).
 
 Nội dung sơ đồ bằng tiếng Việt; thanh công cụ Archify dùng tiếng Anh. Các file

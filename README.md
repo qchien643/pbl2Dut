@@ -12,6 +12,10 @@ mạng. Phiên bản hiện tại đã hoàn thiện giao diện, nghiệp vụ 
 - Xem toàn bộ vé bán theo ngày, tìm nhanh theo mã và tính doanh thu ngày.
 - Kiểm tra toàn vẹn dữ liệu khi mở; lưu đồng bộ năm file và giữ bản sao phục hồi.
 
+Xóa phim/phòng bị chặn khi còn suất; suất đã bán vé không được xóa. Xóa phòng
+hợp lệ sẽ xóa kèm ghế. Không hỗ trợ xóa vé, xóa mềm hoặc hủy/hoàn tiền;
+xem [quy ước xóa dữ liệu](docs/requirements/srs.md#quy-ước-xóa-dữ-liệu).
+
 ## Cài đặt công cụ
 
 ### Ubuntu/Debian
@@ -59,7 +63,7 @@ Trên MSYS2 UCRT64, thêm Ninja ở bước cấu hình:
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 ```
 
-Kết quả đúng là toàn bộ 8 test đều `Passed`. CMake cũng tạo
+Kết quả đúng là toàn bộ 9 test đều `Passed` (8 nếu không build Qt). CMake cũng tạo
 `build/compile_commands.json` để VS Code nhận các header Qt sau lần build đầu tiên.
 
 Nếu chỉ cần kiểm thử phần lõi mà không có Qt:
@@ -111,19 +115,23 @@ src/
 ├── ui/               Giao diện Qt Widgets
 ├── ApplicationData.* Điều phối nạp, kiểm tra và lưu dữ liệu
 └── main.cpp           Điểm khởi động chương trình
-tests/                 Tám bộ kiểm thử tự chạy bằng CTest
+tests/                 Chín bộ kiểm thử tự chạy bằng CTest
 data/demo/             Bộ dữ liệu mẫu
 docs/design/           Thiết kế dữ liệu, lớp, TXT và giao diện
 docs/requirements/     Đặc tả yêu cầu hiện hành
 ```
 
 Quy tắc nghiệp vụ nằm trong service, không nằm trong widget. Repository dùng cấu
-trúc dữ liệu tự cài đặt làm nơi lưu chính; Qt chỉ phục vụ giao diện.
+trúc dữ liệu tự cài đặt làm nơi lưu chính; Qt chỉ phục vụ giao diện. Service nhận
+dependency qua constructor (DI) và phụ thuộc `IRepository<T>`/`ITicketRepository`
+(DIP), không biết cách lưu bằng linked list/hash table. `IRoomStorage` tách thao
+tác lưu đồng bộ phòng/ghế khỏi service. Không mở rộng interface ra mọi tầng.
 
 Cách trình bày tham khảo `docs/ref/oop`: lớp thường tách `.h/.cpp`, template khai
 báo trước và định nghĩa bên dưới trong header; dùng kiểu tường minh và vòng lặp
-thay callback duyệt dữ liệu. Giữ `Repository<T>` dùng chung. Các ngoại lệ vì an
-toàn bộ nhớ và kết nối sự kiện Qt được giải thích trong tài liệu thiết kế lớp.
+thay callback duyệt dữ liệu nghiệp vụ. Giữ `Repository<T>` dùng chung. Phần TXT
+dùng `std::tuple`/`std::apply` để tái sử dụng một ánh xạ cho cả đọc và ghi;
+xem [định dạng TXT](docs/design/txt-format.md).
 
 ## Kiến trúc
 
@@ -133,10 +141,14 @@ MainWindow (Qt UI)
         ▼
 CatalogService / ScreeningService / TicketService
         │
-        ▼
-Repository<T> ── LinkedList<T> + HashTable<ID, T*>
-        ▲
+        ▼ phụ thuộc interface
+IRepository<T> / ITicketRepository / IRoomStorage
+        ▲ triển khai bởi
+Repository<T> / TicketRepository / RoomStorage
         │
+        └── LinkedList<T> + HashTable<ID, T*>
+        ▲
+        │ repository cụ thể được main.cpp truyền vào
 ApplicationData ── TxtPersistence ── 5 file TXT
 ```
 
@@ -144,6 +156,10 @@ ApplicationData ── TxtPersistence ── 5 file TXT
 - Service xử lý các quy tắc cần phối hợp nhiều entity.
 - Repository quản lý bản ghi và chỉ mục trên RAM.
 - `ApplicationData` điều phối nạp, kiểm tra, lưu và phục hồi dữ liệu.
+- `main.cpp` là nơi constructor injection: tạo service từ repository của
+  `ApplicationData`, sau đó truyền service vào `MainWindow`.
+- `DependencyInjectionTest` thay repository bằng implementation độc lập để
+  kiểm chứng service không phụ thuộc lớp lưu trữ cụ thể.
 - `Matrix2D<T>` được dùng để dựng sơ đồ ghế của phòng hoặc suất chiếu.
 
 ## Tài liệu

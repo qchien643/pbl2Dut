@@ -12,6 +12,7 @@ add_library(cinema_services
     src/entities/Ticket.cpp
     src/entities/EntityValidation.cpp
     src/repositories/TicketRepository.cpp
+    src/repositories/RoomStorage.cpp
     src/persistence/TxtPersistence.cpp
     src/services/CatalogService.cpp
     src/services/ScreeningService.cpp
@@ -25,7 +26,7 @@ add_library(cinema_services
 target_include_directories(cinema_services PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_features(cinema_services PUBLIC cxx_std_17)
 
-foreach(structure IN ITEMS LinkedList HashTable Matrix2D Entity Repository Service ApplicationData)
+foreach(structure IN ITEMS LinkedList HashTable Matrix2D Entity Repository Service DependencyInjection ApplicationData)
     add_executable(${structure}Test tests/${structure}Test.cpp)
     target_include_directories(${structure}Test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
     target_compile_features(${structure}Test PRIVATE cxx_std_17)
@@ -34,6 +35,7 @@ endforeach()
 target_link_libraries(EntityTest PRIVATE cinema_services)
 target_link_libraries(RepositoryTest PRIVATE cinema_services)
 target_link_libraries(ServiceTest PRIVATE cinema_services)
+target_link_libraries(DependencyInjectionTest PRIVATE cinema_services)
 target_link_libraries(ApplicationDataTest PRIVATE cinema_services)
 
 option(BUILD_GUI "Build the Qt Widgets application and UI checks" ON)

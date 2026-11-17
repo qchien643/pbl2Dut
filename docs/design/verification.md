@@ -8,7 +8,7 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-Kết quả mong đợi: **8/8 test Passed**.
+Kết quả mong đợi: **9/9 test Passed** (8 test nếu `BUILD_GUI=OFF`).
 
 ## 2. Các bộ test
 
@@ -20,7 +20,8 @@ Kết quả mong đợi: **8/8 test Passed**.
 | `EntityTest` | Constructor, getter và direct association |
 | `RepositoryTest` | ID, index, dirty và API `TicketRepository` |
 | `ServiceTest` | CRUD, lịch chiếu, bán vé, doanh thu và rollback |
-| `ApplicationDataTest` | Parser, toàn vẹn, lưu và phục hồi file |
+| `DependencyInjectionTest` | Chạy ba service với implementation interface độc lập bằng `std::list`; bảo toàn association và chặn bán trùng |
+| `ApplicationDataTest` | Ánh xạ năm model, đảo cột theo header, tham chiếu, toàn vẹn, lưu và phục hồi file |
 | `MainWindowTest` | Luồng Qt từ thao tác người dùng đến service |
 
 ## 3. Đối chiếu yêu cầu
@@ -28,12 +29,14 @@ Kết quả mong đợi: **8/8 test Passed**.
 | Yêu cầu | Bằng chứng chính |
 |---|---|
 | CRUD phim/phòng/suất | `ServiceTest`, `MainWindowTest` |
+| Quy ước xóa, cascade ghế và bảo toàn con trỏ vé | `testDeletionPolicy()` trong `ServiceTest`, `MainWindowTest`, `ApplicationDataTest` |
 | Trùng lịch và thời gian nghỉ | `ServiceTest` |
 | Bán trùng ghế, giá chốt | `ServiceTest`, `EntityTest` |
 | Vé và doanh thu theo ngày | `ServiceTest`, `MainWindowTest` |
 | Nạp dữ liệu sai | `ApplicationDataTest` |
 | Lưu lỗi và phục hồi | `ApplicationDataTest` |
 | Cấu trúc dữ liệu tự cài | Ba test DSA |
+| DI/DIP tại ranh giới service–repository | `DependencyInjectionTest` |
 
 ## 4. Kiểm tra bộ nhớ
 

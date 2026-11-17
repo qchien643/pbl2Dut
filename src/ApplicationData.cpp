@@ -1,4 +1,5 @@
 #include "ApplicationData.h"
+#include "persistence/ModelMappings.h"
 #include "persistence/TxtPersistence.h"
 #include "services/ScreeningValidation.h"
 
@@ -70,7 +71,7 @@ void cleanOwnedStage(const fs::path& stage) {
 }
 
 ApplicationData::ApplicationData(fs::path directory)
-    : directory_(fs::absolute(directory).lexically_normal()) {}
+    : roomStorage(rooms, seats, tickets), directory_(fs::absolute(directory).lexically_normal()) {}
 
 bool ApplicationData::isReady() const {
     return ready_;
@@ -126,34 +127,13 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
         }
     }
     ApplicationData staged(directory_);
-    txt_persistence::load(directory_ / files[0], staged.films);
-    txt_persistence::load(directory_ / files[1], staged.rooms);
-    txt_persistence::load(directory_ / files[2], staged.seats, [&](const std::string* fields) {
-        const Auditorium* room = staged.rooms.findById(txt_persistence::number(fields[1]));
-        if (room == nullptr) {
-            throw std::invalid_argument("Seat references a missing room");
-        }
-        return Seat(txt_persistence::number(fields[0]), *room,
-                    txt_persistence::number(fields[2]), txt_persistence::number(fields[3]));
-    });
-    txt_persistence::load(directory_ / files[3], staged.screenings, [&](const std::string* fields) {
-        const Film* film = staged.films.findById(txt_persistence::number(fields[1]));
-        const Auditorium* room = staged.rooms.findById(txt_persistence::number(fields[2]));
-        if (film == nullptr || room == nullptr) {
-            throw std::invalid_argument("Screening references a missing film or room");
-        }
-        return Screening(txt_persistence::number(fields[0]), *film, *room,
-                         fields[3], txt_persistence::number(fields[4]));
-    });
-    txt_persistence::load(directory_ / files[4], staged.tickets, [&](const std::string* fields) {
-        const Screening* screening = staged.screenings.findById(txt_persistence::number(fields[1]));
-        const Seat* seat = staged.seats.findById(txt_persistence::number(fields[2]));
-        if (screening == nullptr || seat == nullptr) {
-            throw std::invalid_argument("Ticket references a missing screening or seat");
-        }
-        return Ticket(txt_persistence::number(fields[0]), *screening, *seat,
-                      fields[3], txt_persistence::number(fields[4]));
-    });
+    txt_persistence::load(directory_ / files[0], staged.films, txt_persistence::filmMapping());
+    txt_persistence::load(directory_ / files[1], staged.rooms, txt_persistence::auditoriumMapping());
+    txt_persistence::load(directory_ / files[2], staged.seats, txt_persistence::seatMapping(staged.rooms));
+    txt_persistence::load(directory_ / files[3], staged.screenings,
+                          txt_persistence::screeningMapping(staged.films, staged.rooms));
+    txt_persistence::load(directory_ / files[4], staged.tickets,
+                          txt_persistence::ticketMapping(staged.screenings, staged.seats));
     staged.validate();
     films.replaceWith(staged.films);
     rooms.replaceWith(staged.rooms);
@@ -327,15 +307,15 @@ void ApplicationData::save() {
         fs::create_directory(stage / "new");
         fs::create_directory(stage / "old");
         fileStep("write", 0);
-        txt_persistence::save(temporary[0], films);
+        txt_persistence::save(temporary[0], films, txt_persistence::filmMapping());
         fileStep("write", 1);
-        txt_persistence::save(temporary[1], rooms);
+        txt_persistence::save(temporary[1], rooms, txt_persistence::auditoriumMapping());
         fileStep("write", 2);
-        txt_persistence::save(temporary[2], seats);
+        txt_persistence::save(temporary[2], seats, txt_persistence::seatMapping(rooms));
         fileStep("write", 3);
-        txt_persistence::save(temporary[3], screenings);
+        txt_persistence::save(temporary[3], screenings, txt_persistence::screeningMapping(films, rooms));
         fileStep("write", 4);
-        txt_persistence::save(temporary[4], tickets);
+        txt_persistence::save(temporary[4], tickets, txt_persistence::ticketMapping(screenings, seats));
         if (hadFiles_) {
             for (std::size_t i = 0; i < 5; ++i) {
                 fileStep("backup", i);

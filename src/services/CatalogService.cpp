@@ -3,10 +3,10 @@
 #include <limits>
 #include <stdexcept>
 
-CatalogService::CatalogService(FilmRepository& films, AuditoriumRepository& rooms,
-                               SeatRepository& seats, const ScreeningRepository& screenings,
-                               TicketRepository& tickets)
-    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings), tickets_(tickets)
+CatalogService::CatalogService(IRepository<Film>& films, IRepository<Auditorium>& rooms,
+                               IRepository<Seat>& seats, const IRepository<Screening>& screenings,
+                               IRoomStorage& roomStorage)
+    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings), roomStorage_(roomStorage)
 {
 }
 
@@ -20,8 +20,11 @@ EntityId CatalogService::addFilm(std::string title, std::int64_t duration)
 
 bool CatalogService::filmReferenced(EntityId id) const
 {
-    for (const Screening& screening : screenings_)
+    LinkedList<const Screening*> records;
+    screenings_.list(records);
+    for (const Screening* record : records)
     {
+        const Screening& screening = *record;
         if (screening.filmId() == id)
         {
             return true;
@@ -33,8 +36,11 @@ bool CatalogService::filmReferenced(EntityId id) const
 void CatalogService::films(const std::string& titlePart, LinkedList<Film>& result) const
 {
     LinkedList<Film> matches;
-    for (const Film& film : films_)
+    LinkedList<const Film*> records;
+    films_.list(records);
+    for (const Film* record : records)
     {
+        const Film& film = *record;
         if (film.title().find(titlePart) != std::string::npos)
         {
             matches.pushBack(film);
@@ -46,8 +52,11 @@ void CatalogService::films(const std::string& titlePart, LinkedList<Film>& resul
 void CatalogService::rooms(LinkedList<Auditorium>& result) const
 {
     LinkedList<Auditorium> matches;
-    for (const Auditorium& room : rooms_)
+    LinkedList<const Auditorium*> records;
+    rooms_.list(records);
+    for (const Auditorium* record : records)
     {
+        const Auditorium& room = *record;
         matches.pushBack(room);
     }
     result.swap(matches);
@@ -106,8 +115,11 @@ void CatalogService::eraseFilm(EntityId id)
 void CatalogService::requireRoomUnused(EntityId id) const
 {
     room(id);
-    for (const Screening& screening : screenings_)
+    LinkedList<const Screening*> records;
+    screenings_.list(records);
+    for (const Screening* record : records)
     {
+        const Screening& screening = *record;
         if (screening.auditoriumId() == id)
         {
             throw std::invalid_argument("Room is referenced by screenings");
@@ -115,45 +127,20 @@ void CatalogService::requireRoomUnused(EntityId id) const
     }
 }
 
-void CatalogService::prepareSeats(SeatRepository& staged, EntityId roomId,
-                                  const Auditorium* replacement) const
+void CatalogService::prepareSeats(LinkedList<Seat>& staged, const Auditorium& replacement) const
 {
-    // ponytail: rebuild all seats for atomic room edits; use batch updates if data outgrows RAM.
-    for (const Seat& seat : seats_)
-    {
-        if (seat.auditoriumId() != roomId)
-        {
-            staged.insert(seat);
-        }
-    }
-    if (replacement == nullptr)
-    {
-        return;
-    }
     const EntityId first = seats_.nextId();
-    if (replacement->capacity() - 1 > std::numeric_limits<EntityId>::max() - first)
+    if (replacement.capacity() - 1 > std::numeric_limits<EntityId>::max() - first)
     {
         throw std::overflow_error("Seat IDs exhausted");
     }
-    for (std::int64_t offset = 0; offset < replacement->capacity(); ++offset)
+    for (std::int64_t offset = 0; offset < replacement.capacity(); ++offset)
     {
         const EntityId seatId = first + offset;
-        const std::int64_t row = offset / replacement->seatsPerRow() + 1;
-        const std::int64_t column = offset % replacement->seatsPerRow() + 1;
-        const Seat seat(seatId, *replacement, row, column);
-        staged.insert(seat);
-    }
-}
-
-void CatalogService::bindSeats(SeatRepository& staged, const Auditorium& room)
-{
-    for (const Seat& seat : staged)
-    {
-        if (seat.auditoriumId() == room.id())
-        {
-            const Seat replacement(seat.id(), room, seat.rowNumber(), seat.seatNumber());
-            staged.update(seat.id(), replacement);
-        }
+        const std::int64_t row = offset / replacement.seatsPerRow() + 1;
+        const std::int64_t column = offset % replacement.seatsPerRow() + 1;
+        const Seat seat(seatId, replacement, row, column);
+        staged.pushBack(seat);
     }
 }
 
@@ -161,12 +148,9 @@ EntityId CatalogService::addRoom(std::string name, std::int64_t rows, std::int64
 {
     const EntityId id = rooms_.nextId();
     const Auditorium candidate(id, name, rows, columns);
-    SeatRepository staged;
-    prepareSeats(staged, id, &candidate);
-    rooms_.insert(candidate);
-    bindSeats(staged, *rooms_.findById(id));
-    tickets_.relinkSeats(staged);
-    seats_.replaceWith(staged);
+    LinkedList<Seat> staged;
+    prepareSeats(staged, candidate);
+    roomStorage_.add(candidate, staged);
     return id;
 }
 
@@ -175,22 +159,25 @@ void CatalogService::updateRoom(EntityId id, std::string name,
 {
     requireRoomUnused(id);
     const Auditorium candidate(id, name, rows, columns);
-    SeatRepository staged;
-    prepareSeats(staged, id, &candidate);
-    rooms_.update(id, candidate);
-    bindSeats(staged, *rooms_.findById(id));
-    tickets_.relinkSeats(staged);
-    seats_.replaceWith(staged);
+    LinkedList<Seat> staged;
+    prepareSeats(staged, candidate);
+    roomStorage_.update(candidate, staged);
 }
 
 void CatalogService::eraseRoom(EntityId id)
 {
     requireRoomUnused(id);
-    SeatRepository staged;
-    prepareSeats(staged, id, nullptr);
+    LinkedList<const Seat*> records;
+    seats_.list(records);
+    for (const Seat* record : records)
+    {
+        const Seat& seat = *record;
+        if (seat.auditoriumId() == id)
+        {
+            seats_.erase(seat.id());
+        }
+    }
     rooms_.erase(id);
-    tickets_.relinkSeats(staged);
-    seats_.replaceWith(staged);
 }
 
 std::unique_ptr<SeatMap> CatalogService::seatMap(EntityId roomId) const

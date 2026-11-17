@@ -4,6 +4,7 @@
 #include "DataStructures/LinkedList.h"
 #include "entities/EntityId.h"
 #include "entities/EntityValidation.h"
+#include "repositories/IRepository.h"
 
 #include <cstddef>
 #include <limits>
@@ -14,12 +15,13 @@
 class TicketRepository;
 
 template <typename T>
-class Repository
+class Repository : public IRepository<T>
 {
 public:
     using value_type = T;
 
     Repository() = default;
+    ~Repository() override = default;
     Repository(const Repository&) = delete;
     Repository& operator=(const Repository&) = delete;
     Repository(Repository&&) = delete;
@@ -30,11 +32,12 @@ public:
     bool isDirty() const;
     void markSaved();
 
-    EntityId nextId() const;
-    const T* findById(EntityId id) const;
-    bool insert(const T& value);
-    bool update(EntityId id, const T& value);
-    bool erase(EntityId id);
+    EntityId nextId() const override;
+    const T* findById(EntityId id) const override;
+    bool insert(const T& value) override;
+    bool update(EntityId id, const T& value) override;
+    bool erase(EntityId id) override;
+    void list(LinkedList<const T*>& result) const override;
 
     typename LinkedList<T>::ConstIterator begin() const;
     typename LinkedList<T>::ConstIterator end() const;
@@ -174,6 +177,17 @@ bool Repository<T>::erase(EntityId id)
     this->records_.erase(record);
     this->dirty_ = true;
     return true;
+}
+
+template <typename T>
+void Repository<T>::list(LinkedList<const T*>& result) const
+{
+    LinkedList<const T*> matches;
+    for (const T& record : *this)
+    {
+        matches.pushBack(&record);
+    }
+    result.swap(matches);
 }
 
 template <typename T>

@@ -5,12 +5,15 @@
 #include <stdexcept>
 
 void service_validation::screening(const Screening& candidate,
-                                   const ScreeningRepository& screenings)
+                                   const IRepository<Screening>& screenings)
 {
     const std::int64_t start = screening_time::minutes(candidate.startTime());
     const std::int64_t end = screening_time::endMinute(candidate, 15);
-    for (const Screening& item : screenings)
+    LinkedList<const Screening*> records;
+    screenings.list(records);
+    for (const Screening* record : records)
     {
+        const Screening& item = *record;
         if (item.id() == candidate.id())
         {
             continue;

@@ -43,7 +43,8 @@ tìm đúng đối tượng trước khi gọi constructor.
 
 ## 4. Repository
 
-`Repository<T>` dùng:
+`IRepository<T>` là interface thuần ảo: `nextId`, `findById`, `insert`,
+`update`, `erase`, `list`. `Repository<T>` triển khai interface này bằng:
 
 ```text
 LinkedList<T>             sở hữu entity
@@ -55,7 +56,9 @@ dirty_                    báo dữ liệu chưa lưu
 `FilmRepository`, `AuditoriumRepository`, `SeatRepository` và
 `ScreeningRepository` kế thừa `Repository<T>` vì dùng nguyên API chung.
 
-`TicketRepository` dùng composition với `Repository<Ticket>`. Nó chỉ công khai
+`TicketRepository` triển khai `ITicketRepository` và dùng composition với
+`Repository<Ticket>`. Interface vé chỉ cho phép lấy ID, tìm, thêm và lấy danh sách;
+không có sửa/xóa. Lớp cụ thể chỉ công khai
 tra cứu, thêm và duyệt; không công khai sửa/xóa vé đã bán. Hàm `relinkSeats()`
 chỉ phục vụ nối lại `Seat*` khi kho ghế được thay.
 
@@ -66,23 +69,59 @@ Copy mặc định có thể làm index trỏ về node của repository cũ.
 
 | Service | Repository sử dụng | Nhiệm vụ |
 |---|---|---|
-| `CatalogService` | phim, phòng, ghế, suất, vé | CRUD phim/phòng, sinh ghế, chặn dữ liệu đang dùng |
+| `CatalogService` | phim, phòng, ghế, suất; `IRoomStorage` | CRUD phim/phòng, sinh ghế, chặn dữ liệu đang dùng |
 | `ScreeningService` | phim, phòng, suất, vé | Kiểm tra thời gian, trùng lịch và suất đã có vé |
 | `TicketService` | ghế, suất, vé | Xem trước, bán, tra cứu, sơ đồ ghế và doanh thu |
 
-Service giữ reference, không sở hữu repository. `main.cpp` tạo `ApplicationData`
-trước, sau đó truyền các repository vào service và truyền service vào `MainWindow`.
+Service giữ reference tới `IRepository<T>`, `ITicketRepository` và không sở hữu
+repository. `CatalogService` nhận thêm `IRoomStorage` để lưu phòng cùng bộ ghế
+như một thao tác RAM; không tự dựng repository cụ thể.
+
+Đây là **constructor injection**: `main.cpp` tạo `ApplicationData` trước, rồi
+truyền repository vào constructor của service và truyền service vào `MainWindow`.
+
+```text
+ApplicationData sở hữu FilmRepository, SeatRepository, ..., RoomStorage
+              ↓ main.cpp truyền vào constructor
+Service giữ IRepository<Film>&, IRepository<Seat>&, ITicketRepository&
+CatalogService còn giữ IRoomStorage&
+```
+
+Đây là **DIP tại ranh giới service–repository**: nghiệp vụ phụ thuộc hợp đồng,
+không phụ thuộc cách cài đặt linked list/hash table. `list()` trả danh sách con
+trỏ chỉ đọc tới entity gốc, không trả iterator của kho và không copy entity.
+Không dùng các con trỏ này sau khi bản ghi bị xóa hoặc kho bị thay.
+
+Phạm vi có chủ đích cho môn học: không thêm interface cho entity, Qt, service
+hay toàn bộ TXT. `ApplicationData` vẫn biết lớp cụ thể để quản lý vòng đời và
+nạp/lưu; `RoomStorage` biết lớp cụ thể để thay kho và nối lại con trỏ an toàn.
+Không dùng factory hoặc DI container.
 
 ## 6. Thay đổi phòng trong direct association
 
-Sửa phòng có thể tạo lại kho ghế, nên địa chỉ các `Seat` thay đổi. Luồng xử lý:
+Service kiểm tra phòng chưa có suất và sinh danh sách ghế mới; sau đó gọi
+`IRoomStorage`. `RoomStorage` thực hiện phần lưu bên dưới:
 
-1. Dựng `SeatRepository` tạm.
+1. Dựng `Repository<Seat>` tạm, gồm ghế phòng khác và bộ ghế mới.
 2. Cập nhật phòng và gắn ghế mới với đối tượng phòng thật.
 3. `TicketRepository::relinkSeats()` đổi con trỏ ghế trên các vé còn hợp lệ.
-4. `SeatRepository::replaceWith()` thay kho ghế.
+4. `Repository<Seat>::replaceWith()` thay kho ghế.
 
 Không copy toàn bộ vé; dữ liệu vé và trạng thái dirty của vé được giữ nguyên.
+Mọi cấp phát hoàn tất trước khi đổi phòng/kho chính; lỗi chuẩn bị giữ nguyên RAM.
+
+### Xóa và bảo toàn association
+
+- `CatalogService::eraseFilm()` chặn phim còn suất; `eraseRoom()` chặn phòng
+  còn suất, sau đó xóa từng ghế của phòng rồi xóa phòng.
+- Khi xóa phòng không dựng lại toàn bộ kho ghế: ghế của phòng khác giữ nguyên
+  địa chỉ, nên vé đang trỏ tới chúng không cần nối lại.
+- `ScreeningService::erase()` chặn suất đã có vé. Vé không có API xóa công khai.
+- `Repository::erase()` chỉ xóa chỉ mục và node, đánh dấu dirty; không tự kiểm
+  tra nghiệp vụ hay tự đặt con trỏ liên quan thành `nullptr`.
+
+Giao diện xác nhận rồi gọi service; `ApplicationData::save()` mới ghi trạng
+thái RAM ra TXT. Phải đi qua service để không tạo con trỏ treo.
 
 ## 7. OOP được sử dụng
 
@@ -91,8 +130,11 @@ Không copy toàn bộ vé; dữ liệu vé và trạng thái dirty của vé đ
 - **Composition:** `TicketRepository` chứa `Repository<Ticket>`.
 - **Association:** entity giữ con trỏ const đến entity liên quan.
 - **Template:** cấu trúc dữ liệu và repository dùng lại cho nhiều kiểu.
-- **Đa hình:** chỉ xuất hiện ở Qt qua lớp cơ sở như `QMainWindow`; entity không
-  cần hệ thống virtual vì không có hành vi đa hình nghiệp vụ.
+- **Đa hình:** service gọi hàm ảo qua `IRepository<T>`/`ITicketRepository`; Qt
+  cũng dùng đa hình qua các lớp cơ sở như `QMainWindow`.
+- **Dependency Injection:** `main.cpp` truyền dependency qua constructor.
+- **Dependency Inversion:** service phụ thuộc interface; repository cụ thể
+  triển khai interface đó bằng `override`.
 
-Thiết kế ưu tiên lớp nhỏ và quan hệ rõ ràng; không thêm interface, factory hoặc
-callback khi bài toán không cần.
+`DependencyInjectionTest` dùng implementation dựa trên `std::list`, không kế
+thừa `Repository<T>`, để chạy ba service mà không sửa code nghiệp vụ.

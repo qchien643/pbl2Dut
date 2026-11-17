@@ -3,6 +3,7 @@
 #endif
 
 #include "ApplicationData.h"
+#include "persistence/ModelMappings.h"
 #include "persistence/TxtPersistence.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <iterator>
 #include <new>
+#include <sstream>
 #include <type_traits>
 
 namespace fs = std::filesystem;
@@ -97,7 +99,7 @@ std::string fixedClock() { return "2020-01-01 10:00"; }
 
 void populate(ApplicationData& data) {
     assert(data.load(true) == ApplicationData::LoadResult::Loaded);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService schedule(data.films, data.rooms, data.screenings, data.tickets, fixedClock);
     TicketService sales(data.seats, data.screenings, data.tickets, fixedClock);
     assert(catalog.addFilm(u8"Phim Vi\u1ec7t", 120) == 1);
@@ -140,7 +142,7 @@ void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     assertOriginal(reloaded);
     expectError([&] { reloaded.load(); }, "fresh");
     CatalogService catalog(reloaded.films, reloaded.rooms, reloaded.seats,
-                           reloaded.screenings, reloaded.tickets);
+                           reloaded.screenings, reloaded.roomStorage);
     catalog.updateFilm(1, "New title", 120);
     catalog.eraseRoom(2);
     catalog.addFilm("New film", 90);
@@ -176,6 +178,10 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
     const BadInput cases[] = {
         {"films.txt", "", "films.txt:1"},
         {"films.txt", "wrong\n", "Incorrect header"},
+        {"films.txt", "film_id|title\n", "Incorrect header"},
+        {"films.txt", "film_id|title|duration_minutes|extra\n", "Incorrect header"},
+        {"films.txt", "film_id|title|title\n", "duplicate column"},
+        {"films.txt", "film_id|title|unknown\n", "unknown"},
         {"films.txt", "film_id|title|duration_minutes\n1|Film|120\n1|Other|90\n", "films.txt:3"},
         {"films.txt", "film_id|title|duration_minutes\n1|Film|120junk\n", "films.txt:2"},
         {"films.txt", "film_id|title|duration_minutes\n1|Film|9223372036854775808\n", "int64"},
@@ -187,6 +193,8 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
         {"films.txt", "film_id|title|duration_minutes\n1|Bad\xf4\x90\x80\x80|120\n", "UTF-8"},
         {"auditoriums.txt", "auditorium_id|name|row_count|seats_per_row\n1|Room|0|2\n", "positive"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|99|1|1\n", "seats.txt:2"},
+        {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|bad|1|1\n", "int64"},
+        {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|0|1|1\n", "positive"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|3|1\n", "out-of-range"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n2|1|1|1\n", "Duplicate room"},
         {"seats.txt", "seat_id|auditorium_id|row_number|seat_number\n1|1|1|1\n", "complete rectangular"},
@@ -220,6 +228,59 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
         expectError([&] { data.save(); }, "before saving");
         assert(read(directory.path / test.file) == test.body);
     }
+}
+
+void testColumnMappings() {
+    TemporaryDirectory directory;
+    ApplicationData original(directory.path);
+    populate(original);
+    original.save();
+    const char* names[] = {"films.txt", "auditoriums.txt", "seats.txt", "screenings.txt", "tickets.txt"};
+    std::string canonical[5];
+    for (std::size_t i = 0; i < 5; ++i) {
+        canonical[i] = read(directory.path / names[i]);
+    }
+
+    // File order is independent of mapping/constructor order for all five models.
+    write(directory.path / "films.txt",
+          u8"duration_minutes|title|film_id\n120|Phim Vi\u1ec7t|1\n");
+    write(directory.path / "auditoriums.txt",
+          u8"seats_per_row|row_count|name|auditorium_id\n"
+          u8"2|2|Ph\u00f2ng 1|1\n1|1|Room 2|2\n");
+    write(directory.path / "seats.txt",
+          "seat_number|seat_id|row_number|auditorium_id\n"
+          "1|1|1|1\n2|2|1|1\n1|3|2|1\n2|4|2|1\n1|5|1|2\n");
+    write(directory.path / "screenings.txt",
+          "ticket_price|start_time|auditorium_id|film_id|screening_id\n"
+          "80000|2020-01-02 23:00|1|1|1\n90000|2020-01-03 01:15|1|1|2\n");
+    write(directory.path / "tickets.txt",
+          "unit_price|sold_at|seat_id|screening_id|ticket_id\n"
+          "80000|2020-01-01 10:00|1|1|1\n");
+    ApplicationData reordered(directory.path);
+    reordered.load();
+    assertOriginal(reordered);
+    assert(reordered.seats.findById(2)->rowNumber() == 1);
+    assert(reordered.seats.findById(2)->seatNumber() == 2);
+    assert(reordered.screenings.findById(2)->ticketPrice() == 90000);
+    assert(reordered.screenings.findById(2)->startTime() == "2020-01-03 01:15");
+    reordered.save();
+    for (std::size_t i = 0; i < 5; ++i) {
+        assert(read(directory.path / names[i]) == canonical[i]);
+    }
+    ApplicationData reloaded(directory.path);
+    reloaded.load();
+    assertOriginal(reloaded);
+
+    // References returned by a mapping are the stored objects, not copies.
+    const auto seatMapping = txt_persistence::seatMapping(reloaded.rooms);
+    const auto positions = seatMapping.bindHeader({"seat_number", "seat_id", "auditorium_id", "row_number"});
+    const Seat seat = seatMapping.readRow({"2", "20", "1", "1"}, positions);
+    assert(seat.id() == 20 && &seat.auditorium() == reloaded.rooms.findById(1));
+    assert(seat.rowNumber() == 1 && seat.seatNumber() == 2);
+    std::ostringstream row;
+    seatMapping.writeRow(row, seat);
+    assert(row.str() == "20|1|1|2");
+    expectError([&] { seatMapping.readRow({"2", "20", "99", "1"}, positions); }, "missing");
 }
 
 void testFileSetAndEncoding() {
@@ -293,7 +354,7 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
                     }
                 }
                 CatalogService catalog(data.films, data.rooms, data.seats,
-                                       data.screenings, data.tickets);
+                                       data.screenings, data.roomStorage);
                 catalog.updateFilm(1, "Changed", 120);
                 failurePhase = phase;
                 failureIndex = index;
@@ -331,7 +392,7 @@ void testFailedRecoveryAndValidation() {
     populate(data);
     data.save();
     const auto original = read(directory.path / "films.txt");
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     catalog.updateFilm(1, "Changed", 120);
     failurePhase = "install";
     failureIndex = 2;
@@ -405,7 +466,7 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            txt_persistence::load(directory.path / "films.txt", staged);
+            txt_persistence::load(directory.path / "films.txt", staged, txt_persistence::filmMapping());
         } catch (const std::exception&) {
             failed = true;
         }
@@ -425,7 +486,8 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            txt_persistence::save(directory.path / "temporary.txt", original.films);
+            txt_persistence::save(directory.path / "temporary.txt", original.films,
+                                  txt_persistence::filmMapping());
         } catch (const std::exception&) {
             failed = true;
         }
@@ -448,8 +510,22 @@ void testDemoData() {
     const auto demo = std::filesystem::path(__FILE__).parent_path().parent_path() / "data" / "demo";
     ApplicationData data(demo);
     assert(data.load() == ApplicationData::LoadResult::Loaded);
-    assert(data.films.size() == 2 && data.rooms.size() == 2 && data.seats.size() == 18);
-    assert(data.screenings.size() == 3 && data.tickets.size() == 2 && !data.isDirty());
+    const auto recordCount = [&](const char* name) {
+        std::ifstream input(demo / name);
+        std::string line;
+        assert(std::getline(input, line)); // Header is not a record.
+        std::size_t count = 0;
+        while (std::getline(input, line)) {
+            ++count;
+        }
+        assert(input.eof());
+        return count;
+    };
+    assert(data.films.size() == recordCount("films.txt"));
+    assert(data.rooms.size() == recordCount("auditoriums.txt"));
+    assert(data.seats.size() == recordCount("seats.txt"));
+    assert(data.screenings.size() == recordCount("screenings.txt"));
+    assert(data.tickets.size() == recordCount("tickets.txt") && !data.isDirty());
 }
 
 int main() {
@@ -457,6 +533,7 @@ int main() {
     static_assert(!std::is_move_constructible_v<ApplicationData>);
     testEmptyAndRoundTrip();
     testBadInput();
+    testColumnMappings();
     testFileSetAndEncoding();
     testSaveFailures();
     testFailedRecoveryAndValidation();

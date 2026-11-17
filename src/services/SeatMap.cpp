@@ -4,7 +4,7 @@
 #include <limits>
 #include <stdexcept>
 
-std::unique_ptr<SeatMap> makeSeatMap(const Auditorium& room, const SeatRepository& seats)
+std::unique_ptr<SeatMap> makeSeatMap(const Auditorium& room, const IRepository<Seat>& seats)
 {
     const std::size_t maximum = std::numeric_limits<std::size_t>::max();
     if (static_cast<std::uint64_t>(room.rowCount()) > maximum
@@ -16,8 +16,11 @@ std::unique_ptr<SeatMap> makeSeatMap(const Auditorium& room, const SeatRepositor
     const std::size_t columns = static_cast<std::size_t>(room.seatsPerRow());
     std::unique_ptr<SeatMap> result = std::make_unique<SeatMap>(rows, columns);
     std::size_t count = 0;
-    for (const Seat& seat : seats)
+    LinkedList<const Seat*> records;
+    seats.list(records);
+    for (const Seat* record : records)
     {
+        const Seat& seat = *record;
         if (&seat.auditorium() != &room)
         {
             continue;

@@ -35,6 +35,11 @@ bool TicketRepository::insert(const Ticket& ticket)
     return this->records_.insert(ticket);
 }
 
+void TicketRepository::list(LinkedList<const Ticket*>& result) const
+{
+    this->records_.list(result);
+}
+
 LinkedList<Ticket>::ConstIterator TicketRepository::begin() const
 {
     return this->records_.begin();
@@ -45,7 +50,7 @@ LinkedList<Ticket>::ConstIterator TicketRepository::end() const
     return this->records_.end();
 }
 
-void TicketRepository::relinkSeats(const SeatRepository& seats) noexcept
+void TicketRepository::relinkSeats(const Repository<Seat>& seats) noexcept
 {
     // ponytail: services preserve seat IDs; add checked relinking if direct repository edits become supported.
     for (const Ticket& ticket : *this)

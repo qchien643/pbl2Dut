@@ -19,7 +19,7 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 | 3 | `DataStructures/LinkedList.h` | Node, ownership, iterator, thêm/xóa |
 | 4 | `HashTable.h`, `Matrix2D.h` | Va chạm, rehash, ánh xạ hai chiều |
 | 5 | `repositories/Repository.h` | Template, list/index, ID, dirty, rollback |
-| 6 | Các repository cụ thể | Kế thừa và composition của `TicketRepository` |
+| 6 | `IRepository`, `ITicketRepository`, các repository cụ thể | Interface, override, kế thừa và composition |
 | 7 | `CatalogService` | CRUD phim/phòng và tạo lại ghế |
 | 8 | `ScreeningService` | Thời gian, trùng lịch và suất có vé |
 | 9 | `TicketService` | Xem trước, bán, tra cứu và doanh thu |
@@ -38,8 +38,9 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 Con trỏ trên không sở hữu bộ nhớ. Repository sở hữu entity; vì vậy repository
 đích phải sống lâu hơn entity đang liên kết với nó.
 
-ID vẫn tồn tại trong file TXT. Khi nạp, `ApplicationData` dùng `findById()` để
-tìm đối tượng thật rồi truyền reference vào constructor.
+ID vẫn tồn tại trong file TXT. Khi nạp, `ApplicationData` chọn ánh xạ;
+`referenceColumn` dùng `findById()` để tìm đối tượng thật rồi truyền reference
+vào constructor.
 
 ## 4. Cấu trúc dữ liệu
 
@@ -80,6 +81,15 @@ có thể tạo list mới nhưng giữ con trỏ tới list cũ.
 `Repository<Ticket>` và chuyển tiếp các hàm được phép. Cách này giấu `update()`
 và `erase()` khỏi API công khai.
 
+`IRepository<T>` khai báo hàm thuần ảo (`= 0`); `Repository<T>` triển khai bằng
+`override`. Service chỉ biết interface. `ITicketRepository` không có sửa/xóa vé.
+Các lớp cụ thể được `ApplicationData` sở hữu.
+
+`list(LinkedList<const T*>& result)` trả các địa chỉ entity gốc để service duyệt;
+không copy entity, không lộ node/iterator của repository. Danh sách kết quả sở hữu
+các node chứa con trỏ, nhưng không sở hữu entity. Xóa bản ghi/thay kho sẽ làm
+con trỏ cũ mất hiệu lực. `begin/end` vẫn dùng nội bộ lớp cụ thể khi nạp/lưu.
+
 ## 6. Ba luồng service cần thuộc
 
 ### Sửa phòng
@@ -87,7 +97,8 @@ và `erase()` khỏi API công khai.
 ```text
 MainWindow -> CatalogService
            -> kiểm tra phòng chưa có suất
-           -> dựng SeatRepository tạm
+           -> sinh danh sách ghế mới
+           -> IRoomStorage -> RoomStorage dựng kho ghế tạm
            -> cập nhật phòng
            -> nối lại Seat* trên vé
            -> thay kho ghế
@@ -125,8 +136,20 @@ dùng kết quả xem trước đã cũ.
 Khi mở, `ApplicationData` nạp năm file theo thứ tự phụ thuộc, dựng direct
 association và kiểm tra toàn bộ. Dữ liệu chính chỉ được thay khi bước này thành công.
 
+Quy tắc cột nằm ở `persistence/ModelMappings.h`. `Mapping.h` dùng cùng quy tắc
+cho hai chiều: đọc theo tên header rồi gọi constructor; ghi header và getter
+theo thứ tự ánh xạ. Không cần tự viết `fields[0]` hay `writeRecord()` cho mỗi model.
+Thứ tự ánh xạ khớp constructor; cột trong file đầu vào được phép đổi vị trí.
+
 Khi lưu, chương trình ghi file tạm, sao lưu file cũ rồi đổi tên. Nếu lỗi, RAM và
 cửa sổ được giữ để thử lại.
+
+### Luồng xóa cần hiểu
+
+Giao diện xác nhận → service kiểm tra tham chiếu → repository xóa khỏi RAM và
+đánh dấu dirty → ghi lại TXT khi lưu. Phim/phòng còn suất và suất đã bán vé bị
+chặn xóa; vé không được xóa. Phòng không có suất được xóa kèm ghế, nhưng ghế
+phòng khác giữ nguyên địa chỉ. Không dùng `NULL`, bản ghi mặc định hoặc xóa mềm.
 
 ## 8. Qt và main
 
@@ -143,6 +166,33 @@ app.exec()
 Thứ tự này bảo đảm repository sống lâu hơn service và entity liên kết. Qt parent
 sở hữu widget con; các service chỉ là reference trong `MainWindow`.
 
+Đây là constructor injection vì dependency được truyền vào constructor, không
+được service tự tạo. Dependency inversion thể hiện ở kiểu thành viên:
+
+```cpp
+IRepository<Film>& films_;      // hợp đồng thuần ảo, không có cách lưu
+// Repository<Film>& films_;    // vẫn gắn với implementation, không dùng ở service
+```
+
+`main.cpp` là nơi ghép các đối tượng:
+
+```cpp
+CatalogService catalog(data.films, data.rooms, data.seats,
+                       data.screenings, data.roomStorage);
+```
+
+`data.films` là `FilmRepository`, nhưng được truyền vào tham số
+`IRepository<Film>&` qua chuỗi kế thừa
+`FilmRepository -> Repository<Film> -> IRepository<Film>`.
+
+**DI** là truyền dependency từ ngoài vào. **DIP** là để nghiệp vụ phụ thuộc
+interface thay vì cách cài đặt. Chỉ truyền `FilmRepository&` đã có DI nhưng
+chưa đạt DIP tại ranh giới này. Test `DependencyInjectionTest` thay kho bằng
+implementation `std::list` mà giữ nguyên ba service.
+
+Chỉ áp dụng DIP ở ranh giới service–repository (kèm `IRoomStorage` cho ghi
+phòng/ghế đồng bộ). Không thêm interface cho UI, entity hoặc mọi lớp TXT.
+
 ## 9. Câu hỏi tự vấn đáp
 
 1. Direct association khác lưu ID như thế nào?
@@ -157,6 +207,10 @@ sở hữu widget con; các service chỉ là reference trong `MainWindow`.
 10. Khi lưu file thứ ba thất bại, chương trình giữ dữ liệu bằng cách nào?
 11. Quy tắc nào thuộc entity, service và `ApplicationData`?
 12. Test nào chứng minh bán trùng ghế bị từ chối?
+13. Constructor injection xuất hiện ở đâu trong `main.cpp`?
+14. Vì sao service giữ `IRepository<Film>&` thay vì `Repository<Film>&`?
+15. DI khác DIP ở đâu? `virtual`, `= 0`, `override` có tác dụng gì?
+16. Vì sao cần `IRoomStorage` thay vì để service tự dựng kho ghế cụ thể?
 
 ## 10. Cách luyện
 

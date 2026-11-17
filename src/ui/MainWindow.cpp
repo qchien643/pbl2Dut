@@ -120,10 +120,10 @@ QString errorText(const std::exception& error) {
         return QStringLiteral("Phim đã có suất chiếu: chỉ được sửa tên, không đổi thời lượng.");
     }
     if (message == "Film is referenced by screenings") {
-        return QStringLiteral("Không thể xóa phim đã có suất chiếu.");
+        return QStringLiteral("Không thể xóa phim đã có suất chiếu, kể cả suất đã qua. Hãy xóa hết suất của phim trước; suất đã bán vé không được xóa.");
     }
     if (message == "Room is referenced by screenings") {
-        return QStringLiteral("Không thể sửa hoặc xóa phòng đã có suất chiếu.");
+        return QStringLiteral("Không thể sửa hoặc xóa phòng đã có suất chiếu, kể cả suất đã qua. Hãy xóa hết suất của phòng trước; suất đã bán vé không được xóa.");
     }
     if (message == "Screening overlaps another room booking") {
         return QStringLiteral("Khoảng chiếu và 15 phút nghỉ bị trùng với suất khác trong phòng.");
@@ -132,7 +132,7 @@ QString errorText(const std::exception& error) {
         return QStringLiteral("Giờ bắt đầu phải ở tương lai.");
     }
     if (message == "Screening already has tickets") {
-        return QStringLiteral("Suất đã bán vé nên không thể sửa hoặc xóa.");
+        return QStringLiteral("Suất đã bán vé nên không thể sửa hoặc xóa, kể cả khi đã chiếu xong. Dữ liệu được giữ để tra cứu và tính doanh thu; không hỗ trợ hủy hoặc hoàn tiền.");
     }
     if (message == "Screening has already started") {
         return QStringLiteral("Suất chiếu đã bắt đầu, không thể bán vé.");
@@ -639,6 +639,7 @@ void MainWindow::setupRoomTab() {
     roomEdit_->setObjectName("editRoom");
     roomRemove_ = new QPushButton(QStringLiteral("&Xóa phòng"), roomTab);
     roomRemove_->setObjectName("deleteRoom");
+    roomRemove_->setToolTip(QStringLiteral("Chỉ xóa phòng không còn suất chiếu; toàn bộ ghế của phòng sẽ bị xóa kèm."));
     roomActions->addWidget(roomAdd);
     roomActions->addWidget(roomEdit_);
     roomActions->addStretch();
@@ -732,7 +733,7 @@ void MainWindow::setupScreeningTab() {
     screeningResults_->setObjectName("screeningResults");
     screeningResults_->setWordWrap(true);
     screeningLayout->addWidget(screeningResults_);
-    QLabel* screeningRules = new QLabel(QStringLiteral("Chọn một dòng để sửa hoặc xóa. Lịch cùng phòng phải cách nhau ít nhất 15 phút."), screeningTab);
+    QLabel* screeningRules = new QLabel(QStringLiteral("Chỉ sửa hoặc xóa suất chưa bán vé. Suất đã bán vé được giữ cả sau giờ chiếu. Lịch cùng phòng phải cách nhau ít nhất 15 phút."), screeningTab);
     screeningRules->setWordWrap(true);
     screeningLayout->addWidget(screeningRules);
 
@@ -780,7 +781,7 @@ void MainWindow::setupReportTab() {
     reportForm->addRow(QStringLiteral("Doanh thu"), reportRevenue_);
     reportLayout->addLayout(reportForm);
     reportLayout->addSpacing(24);
-    QLabel* reportNote = new QLabel(QStringLiteral("Tính theo thời điểm bán và giá đã ghi trên vé, không theo ngày chiếu."), reportBox);
+    QLabel* reportNote = new QLabel(QStringLiteral("Tính theo thời điểm bán và giá đã ghi trên vé, không theo ngày chiếu. Không hỗ trợ xóa, hủy hoặc hoàn tiền vé đã bán."), reportBox);
     reportNote->setWordWrap(true);
     reportLayout->addWidget(reportNote, 1);
     queryLayout->addWidget(reportBox, 0, 0, 1, 2);
@@ -962,7 +963,7 @@ void MainWindow::deleteFilm() {
     try {
         const QString name = fromUtf8(catalog_.film(id).title());
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
-                     QStringLiteral("Xóa phim #%1 — %2?").arg(id).arg(name), QStringLiteral("Xóa phim"))) {
+                     QStringLiteral("Xóa phim #%1 — %2?\nKhông xóa kèm suất chiếu hoặc vé.").arg(id).arg(name), QStringLiteral("Xóa phim"))) {
             return;
         }
         catalog_.eraseFilm(id);
@@ -972,7 +973,7 @@ void MainWindow::deleteFilm() {
         refreshSaleScreenings();
         updateStatus();
     } catch (const std::exception& error) {
-        filmResults_->setText(errorText(error));
+        reportError(filmResults_, errorText(error), filmRemove_);
     }
 }
 
@@ -1072,9 +1073,10 @@ void MainWindow::deleteRoom() {
         return;
     }
     try {
-        const QString name = fromUtf8(catalog_.room(id).name());
+        const Auditorium& room = catalog_.room(id);
+        const QString name = fromUtf8(room.name());
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
-                     QStringLiteral("Xóa phòng #%1 — %2 và toàn bộ ghế của phòng?").arg(id).arg(name),
+                     QStringLiteral("Xóa phòng #%1 — %2 và toàn bộ %3 ghế của phòng?\nGhế và vé của phòng khác không bị ảnh hưởng.").arg(id).arg(name).arg(room.capacity()),
                      QStringLiteral("Xóa phòng"))) {
             return;
         }
@@ -1085,7 +1087,7 @@ void MainWindow::deleteRoom() {
         refreshSaleScreenings();
         updateStatus();
     } catch (const std::exception& error) {
-        roomResults_->setText(errorText(error));
+        reportError(roomResults_, errorText(error), roomRemove_);
     }
 }
 
@@ -1167,7 +1169,7 @@ void MainWindow::deleteScreening() {
     }
     try {
         if (!confirm(this, QStringLiteral("Xác nhận xóa"),
-                     QStringLiteral("Xóa suất chiếu #%1?").arg(id), QStringLiteral("Xóa suất"))) {
+                     QStringLiteral("Xóa suất chiếu #%1?\nChỉ xóa suất chưa bán vé; phim, phòng và ghế vẫn được giữ.").arg(id), QStringLiteral("Xóa suất"))) {
             return;
         }
         screenings_.erase(id);
@@ -1175,7 +1177,7 @@ void MainWindow::deleteScreening() {
         refreshSaleScreenings();
         updateStatus();
     } catch (const std::exception& error) {
-        screeningResults_->setText(errorText(error));
+        reportError(screeningResults_, errorText(error), screeningRemove_);
     }
 }
 

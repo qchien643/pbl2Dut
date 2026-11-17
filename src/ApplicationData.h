@@ -5,6 +5,7 @@
 #include "repositories/ScreeningRepository.h"
 #include "repositories/SeatRepository.h"
 #include "repositories/TicketRepository.h"
+#include "repositories/RoomStorage.h"
 
 #include <filesystem>
 
@@ -23,6 +24,7 @@ public:
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
+    RoomStorage roomStorage;
 
     LoadResult load(bool confirmEmpty = false);
     void validate() const;

@@ -2,6 +2,11 @@
 #undef NDEBUG
 #endif
 
+#include "repositories/AuditoriumRepository.h"
+#include "repositories/FilmRepository.h"
+#include "repositories/ScreeningRepository.h"
+#include "repositories/SeatRepository.h"
+#include "repositories/RoomStorage.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
@@ -55,7 +60,8 @@ struct Fixture {
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
-    CatalogService catalog{films, rooms, seats, screenings, tickets};
+    RoomStorage roomStorage{rooms, seats, tickets};
+    CatalogService catalog{films, rooms, seats, screenings, roomStorage};
     ScreeningService schedule{films, rooms, screenings, tickets, fakeClock};
     TicketService sales{seats, screenings, tickets, fakeClock};
 
@@ -135,6 +141,85 @@ void testCatalog() { // FR-FILM-*, FR-ROOM-*, SAT-01, SAT-13.
     assert(!f.films.isDirty() && !f.rooms.isDirty() && !f.seats.isDirty());
     f.catalog.updateFilm(1, "Allowed rename", 90);
     assert(f.catalog.film(1).title() == "Allowed rename");
+}
+
+void testDeletionPolicy() {
+    Fixture f;
+    f.catalog.addRoom("Third room", 1, 1);
+    const EntityId firstShow = f.schedule.add(1, 1, "2026-11-01 18:00", 80000);
+    const EntityId thirdRoomShow = f.schedule.add(1, 3, "2026-11-01 18:00", 90000);
+    f.sales.sell(firstShow, 1, true);
+    f.sales.sell(thirdRoomShow, 15, true);
+    const Film* film = f.films.findById(1);
+    const Auditorium* room = f.rooms.findById(1);
+    const Screening* show = f.screenings.findById(firstShow);
+    const Ticket* ticket = f.tickets.findById(1);
+    const Seat* originalSeats[15];
+    for (EntityId id = 1; id <= 15; ++id) {
+        originalSeats[id - 1] = f.seats.findById(id);
+    }
+    f.markSaved();
+
+    // History remains protected, not just future screenings.
+    currentTime = "2026-11-02 10:00";
+    expectThrow([&] { f.catalog.eraseFilm(1); });
+    expectThrow([&] { f.catalog.eraseRoom(1); });
+    expectThrow([&] { f.schedule.erase(firstShow); });
+    for (EntityId id : {EntityId(0), EntityId(-1)}) {
+        expectThrow([&] { f.catalog.eraseFilm(id); });
+        expectThrow([&] { f.catalog.eraseRoom(id); });
+        expectThrow([&] { f.schedule.erase(id); });
+    }
+    expectThrow<std::out_of_range>([&] { f.catalog.eraseFilm(999); });
+    expectThrow<std::out_of_range>([&] { f.catalog.eraseRoom(999); });
+    expectThrow<std::out_of_range>([&] { f.schedule.erase(999); });
+    assert(f.films.findById(1) == film && f.rooms.findById(1) == room);
+    assert(f.screenings.findById(firstShow) == show && f.tickets.findById(1) == ticket);
+    assert(f.films.size() == 1 && f.rooms.size() == 3 && f.seats.size() == 15);
+    assert(f.screenings.size() == 2 && f.tickets.size() == 2);
+    assert(!f.films.isDirty() && !f.rooms.isDirty() && !f.seats.isDirty());
+    assert(!f.screenings.isDirty() && !f.tickets.isDirty());
+
+    // Collect pointers before mutation: allocation failure must not delete anything.
+    allocationsBeforeFailure = 0;
+    expectThrow<std::bad_alloc>([&] { f.catalog.eraseRoom(2); });
+    allocationsBeforeFailure = -1;
+    assert(f.rooms.findById(2) && f.seats.findById(13) && f.seats.findById(14));
+    assert(!f.rooms.isDirty() && !f.seats.isDirty());
+    // Delete the middle room without rebuilding unrelated seats.
+    f.catalog.eraseRoom(2);
+    assert(f.rooms.findById(2) == nullptr);
+    assert(f.seats.findById(13) == nullptr && f.seats.findById(14) == nullptr);
+    assert(f.rooms.size() == 2 && f.seats.size() == 13 && f.seats.nextId() == 16);
+    assert(f.rooms.isDirty() && f.seats.isDirty());
+    assert(!f.films.isDirty() && !f.screenings.isDirty() && !f.tickets.isDirty());
+    for (EntityId id = 1; id <= 15; ++id) {
+        if (id != 13 && id != 14) {
+            assert(f.seats.findById(id) == originalSeats[id - 1]);
+        }
+    }
+    for (const Ticket& stored : f.tickets) {
+        assert(&stored.seat() == f.seats.findById(stored.seatId()));
+        assert(&stored.screening() == f.screenings.findById(stored.screeningId()));
+    }
+    assert(f.sales.revenue("2026-10-19").amount == 170000);
+
+    Fixture unsold;
+    const EntityId unsoldShow = unsold.schedule.add(1, 1, "2026-11-01 18:00", 80000);
+    unsold.markSaved();
+    expectThrow([&] { unsold.catalog.eraseFilm(1); });
+    expectThrow([&] { unsold.catalog.eraseRoom(1); });
+    assert(!unsold.films.isDirty() && !unsold.rooms.isDirty() && !unsold.seats.isDirty());
+    currentTime = "2026-11-02 10:00";
+    unsold.schedule.erase(unsoldShow); // An unsold historical screening may be deleted.
+    assert(unsold.screenings.empty() && unsold.screenings.isDirty());
+    assert(unsold.films.findById(1) && unsold.rooms.findById(1) && unsold.seats.size() == 14);
+    unsold.catalog.eraseFilm(1);
+    unsold.catalog.eraseRoom(1); // Delete head nodes; keep the other room and its seats.
+    assert(unsold.films.empty() && unsold.rooms.size() == 1 && unsold.seats.size() == 2);
+    assert(unsold.rooms.findById(2) && unsold.seats.findById(13) && unsold.seats.findById(14));
+    unsold.catalog.eraseRoom(2); // Delete the remaining tail nodes.
+    assert(unsold.rooms.empty() && unsold.seats.empty());
 }
 
 void testScheduling() { // FR-SHOW-*, SAT-02, SAT-03.
@@ -445,7 +530,8 @@ void testPerformanceBaseline() { // NFR-02.
     SeatRepository seats;
     ScreeningRepository screenings;
     TicketRepository tickets;
-    CatalogService catalog(films, rooms, seats, screenings, tickets);
+    RoomStorage roomStorage(rooms, seats, tickets);
+    CatalogService catalog(films, rooms, seats, screenings, roomStorage);
     for (int index = 1; index <= 100; ++index) {
         catalog.addFilm("Film " + std::to_string(index), 90);
     }
@@ -495,6 +581,7 @@ void testPerformanceBaseline() { // NFR-02.
 
 int main() {
     testCatalog();
+    testDeletionPolicy();
     testScheduling();
     testLookupValidation();
     testQueryResultOwnership();

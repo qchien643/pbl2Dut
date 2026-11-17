@@ -46,34 +46,17 @@ std::int64_t number(const std::string& field) {
     return result;
 }
 
-const char* header(const Film*) { return "film_id|title|duration_minutes"; }
-const char* header(const Auditorium*) { return "auditorium_id|name|row_count|seats_per_row"; }
-const char* header(const Seat*) { return "seat_id|auditorium_id|row_number|seat_number"; }
-const char* header(const Screening*) { return "screening_id|film_id|auditorium_id|start_time|ticket_price"; }
-const char* header(const Ticket*) { return "ticket_id|screening_id|seat_id|sold_at|unit_price"; }
-
-Film parse(const std::string* f, const Film*) {
-    return Film(number(f[0]), f[1], number(f[2]));
-}
-Auditorium parse(const std::string* f, const Auditorium*) {
-    return Auditorium(number(f[0]), f[1], number(f[2]), number(f[3]));
-}
-void writeRecord(std::ostream& out, const Film& value) {
-    out << value.id() << '|' << value.title() << '|' << value.durationMinutes();
-}
-void writeRecord(std::ostream& out, const Auditorium& value) {
-    out << value.id() << '|' << value.name() << '|' << value.rowCount() << '|' << value.seatsPerRow();
-}
-void writeRecord(std::ostream& out, const Seat& value) {
-    out << value.id() << '|' << value.auditoriumId() << '|' << value.rowNumber() << '|' << value.seatNumber();
-}
-void writeRecord(std::ostream& out, const Screening& value) {
-    out << value.id() << '|' << value.filmId() << '|' << value.auditoriumId()
-        << '|' << value.startTime() << '|' << value.ticketPrice();
-}
-void writeRecord(std::ostream& out, const Ticket& value) {
-    out << value.id() << '|' << value.screeningId() << '|' << value.seatId()
-        << '|' << value.soldAt() << '|' << value.unitPrice();
+std::vector<std::string> splitFields(const std::string& line) {
+    std::vector<std::string> fields;
+    std::size_t start = 0;
+    while (true) {
+        const std::size_t end = line.find('|', start);
+        fields.push_back(line.substr(start, end == std::string::npos ? end : end - start));
+        if (end == std::string::npos) {
+            return fields;
+        }
+        start = end + 1;
+    }
 }
 
 }

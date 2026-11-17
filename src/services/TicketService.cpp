@@ -6,9 +6,9 @@
 #include <limits>
 #include <stdexcept>
 
-TicketService::TicketService(const SeatRepository& seats,
-                             const ScreeningRepository& screenings,
-                             TicketRepository& tickets, ServiceClock clock)
+TicketService::TicketService(const IRepository<Seat>& seats,
+                             const IRepository<Screening>& screenings,
+                             ITicketRepository& tickets, ServiceClock clock)
     : seats_(seats), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)
@@ -57,8 +57,11 @@ void TicketService::requireAvailable(const SaleDetails& sale, const std::string&
     {
         throw std::invalid_argument("Screening has already started");
     }
-    for (const Ticket& ticket : tickets_)
+    LinkedList<const Ticket*> records;
+    tickets_.list(records);
+    for (const Ticket* record : records)
     {
+        const Ticket& ticket = *record;
         if (ticket.screeningId() == sale.screening.id() && ticket.seatId() == sale.seat.id())
         {
             throw std::invalid_argument("Seat is already sold");
@@ -125,8 +128,11 @@ std::unique_ptr<SeatMap> TicketService::seatMap(EntityId screeningId) const
     }
     const Auditorium& room = screening->auditorium();
     std::unique_ptr<SeatMap> result = makeSeatMap(room, seats_);
-    for (const Ticket& ticket : tickets_)
+    LinkedList<const Ticket*> records;
+    tickets_.list(records);
+    for (const Ticket* record : records)
     {
+        const Ticket& ticket = *record;
         if (&ticket.screening() != screening)
         {
             continue;
@@ -157,8 +163,11 @@ DailyRevenue TicketService::revenue(const std::string& saleDate) const
 {
     validateSaleDate(saleDate);
     DailyRevenue result;
-    for (const Ticket& ticket : tickets_)
+    LinkedList<const Ticket*> records;
+    tickets_.list(records);
+    for (const Ticket* record : records)
     {
+        const Ticket& ticket = *record;
         if (ticket.soldAt().compare(0, 10, saleDate) != 0)
         {
             continue;
@@ -179,8 +188,11 @@ void TicketService::listBySaleDate(const std::string& saleDate,
 {
     validateSaleDate(saleDate);
     LinkedList<TicketDetails> matches;
-    for (const Ticket& ticket : tickets_)
+    LinkedList<const Ticket*> records;
+    tickets_.list(records);
+    for (const Ticket* record : records)
     {
+        const Ticket& ticket = *record;
         if (ticket.soldAt().compare(0, 10, saleDate) == 0)
         {
             const TicketDetails ticketDetails = find(ticket.id());

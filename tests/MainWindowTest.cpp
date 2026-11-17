@@ -129,7 +129,7 @@ void testFilmsAndClose() {
     assert(directory.isValid());
     ApplicationData data(path(directory));
     data.load(true);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
     TicketService tickets(data.seats, data.screenings, data.tickets);
     MainWindow window(data, catalog, screenings, tickets);
@@ -226,6 +226,8 @@ void testFilmsAndClose() {
     remove->click();
     assert(data.films.findById(1));
     assert(child<QLabel>(window, "filmResults")->text().contains(QString::fromUtf8(u8"Không thể xóa")));
+    assert(child<QLabel>(window, "filmResults")->text().contains(QString::fromUtf8(u8"Hãy xóa hết suất")));
+    assert(remove->accessibleDescription() == child<QLabel>(window, "filmResults")->text());
     search->setText("2");
     table->selectRow(0);
     answerConfirmation(false);
@@ -267,7 +269,7 @@ void testFilmsAndClose() {
     reopened.load();
     assert(reopened.films.size() == 1 && reopened.films.findById(1)->title() == "Scheduled rename");
     CatalogService nextCatalog(reopened.films, reopened.rooms, reopened.seats,
-                               reopened.screenings, reopened.tickets);
+                               reopened.screenings, reopened.roomStorage);
     ScreeningService nextScreenings(reopened.films, reopened.rooms, reopened.screenings, reopened.tickets);
     TicketService nextTickets(reopened.seats, reopened.screenings, reopened.tickets);
     MainWindow next(reopened, nextCatalog, nextScreenings, nextTickets);
@@ -282,7 +284,7 @@ void testCompleteWorkflow() {
     assert(directory.isValid());
     ApplicationData data(path(directory));
     data.load(true);
-    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.tickets);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets, uiClock);
     TicketService tickets(data.seats, data.screenings, data.tickets, uiClock);
     assert(catalog.addFilm("Film", 120) == 1);
@@ -314,9 +316,19 @@ void testCompleteWorkflow() {
     child<QPushButton>(window, "addRoom")->click();
     assert(data.rooms.size() == 2 && data.seats.size() == 5);
     roomTable->selectRow(rowForId(roomTable, 2));
-    answerConfirmation(true);
+    const Seat* keptSeat = data.seats.findById(1);
+    answerConfirmation(false);
+    child<QPushButton>(window, "deleteRoom")->click();
+    assert(data.rooms.size() == 2 && data.seats.size() == 5);
+    QTimer::singleShot(0, [] {
+        auto* box = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+        assert(box && box->text().contains(QString::fromUtf8(u8"toàn bộ 1 ghế")));
+        assert(box->defaultButton() == child<QPushButton>(*box, "confirmCancel"));
+        child<QPushButton>(*box, "confirmYes")->click();
+    });
     child<QPushButton>(window, "deleteRoom")->click();
     assert(data.rooms.size() == 1 && data.seats.size() == 4);
+    assert(data.seats.findById(1) == keptSeat);
 
     tabs->setCurrentWidget(child<QWidget>(window, "screeningTab"));
     fillScreeningDialog(QDateTime(QDate(2099, 1, 1), QTime(18, 0)), "80000");
@@ -332,6 +344,9 @@ void testCompleteWorkflow() {
     child<QPushButton>(window, "addScreening")->click();
     assert(data.screenings.size() == 2);
     screeningTable->selectRow(rowForId(screeningTable, 2));
+    answerConfirmation(false);
+    child<QPushButton>(window, "deleteScreening")->click();
+    assert(data.screenings.size() == 2);
     answerConfirmation(true);
     child<QPushButton>(window, "deleteScreening")->click();
     assert(data.screenings.size() == 1);
@@ -385,12 +400,14 @@ void testCompleteWorkflow() {
     child<QPushButton>(window, "deleteScreening")->click();
     assert(data.screenings.size() == 1);
     assert(child<QLabel>(window, "screeningResults")->text().contains(QString::fromUtf8(u8"đã bán vé")));
+    assert(child<QLabel>(window, "screeningResults")->text().contains(QString::fromUtf8(u8"không hỗ trợ hủy")));
     tabs->setCurrentWidget(child<QWidget>(window, "roomTab"));
     roomTable->selectRow(rowForId(roomTable, 1));
     answerConfirmation(true);
     child<QPushButton>(window, "deleteRoom")->click();
     assert(data.rooms.size() == 1);
     assert(child<QLabel>(window, "roomResults")->text().contains(QString::fromUtf8(u8"đã có suất")));
+    assert(child<QLabel>(window, "roomResults")->text().contains(QString::fromUtf8(u8"Hãy xóa hết suất")));
 
     if (const auto screenshot = qEnvironmentVariable("PBL2_COMPLETE_UI_SCREENSHOT"); !screenshot.isEmpty()) {
         const char* tabNames[] = {"saleTab", "filmTab", "roomTab", "screeningTab", "queryTab"};

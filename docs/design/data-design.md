@@ -38,6 +38,11 @@ Quan hệ:
 Phòng hợp lệ phải có đủ `row_count × seats_per_row` ghế. Số hàng, cột, thời
 lượng, giá và ID đều phải dương.
 
+Xóa áp dụng `RESTRICT` cho phim/phòng đang có suất và suất đã có vé; xóa phòng
+hợp lệ thì `CASCADE` ghế thuộc phòng. Không dùng `SET NULL` hoặc `SET DEFAULT`
+vì các association đều bắt buộc. Đây là chính sách do service thực thi, không
+phải ràng buộc tự động của TXT; xem [quy ước xóa](../requirements/srs.md#quy-ước-xóa-dữ-liệu).
+
 ## 4. Phụ thuộc hàm và chuẩn hóa
 
 ```text

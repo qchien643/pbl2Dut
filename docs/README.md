@@ -1,6 +1,6 @@
 # Tài liệu đồ án PBL2
 
-Cập nhật ngày **27/10/2026**. Dự án là ứng dụng C++17/Qt chạy offline, lưu dữ
+Cập nhật ngày **18/11/2026**. Dự án là ứng dụng C++17/Qt chạy offline, lưu dữ
 liệu bằng năm file TXT. Phần database được thể hiện qua mô hình quan hệ, khóa và
 ràng buộc; dự án không dùng DBMS hay SQL.
 
@@ -11,7 +11,7 @@ ràng buộc; dự án không dùng DBMS hay SQL.
 | [README dự án](../README.md) | Cài đặt, build, chạy và cấu trúc thư mục |
 | [SRS](requirements/srs.md) | Phạm vi và yêu cầu sản phẩm |
 | [Thiết kế dữ liệu](design/data-design.md) | ERD, khóa, ràng buộc và chuẩn hóa |
-| [Thiết kế lớp](design/class-design.md) | OOP, direct association, repository và service |
+| [Thiết kế lớp](design/class-design.md) | OOP, direct association, DI/DIP ở ranh giới service–repository |
 | [Định dạng TXT](design/txt-format.md) | Nạp, lưu và phục hồi dữ liệu |
 | [Kiểm thử](design/verification.md) | Lệnh chạy test và phạm vi kiểm chứng |
 | [Sơ đồ Archify](diagrams/README.md) | Luồng hệ thống, class, kiến trúc và ERD |

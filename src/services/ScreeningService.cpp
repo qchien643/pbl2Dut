@@ -5,10 +5,10 @@
 
 #include <stdexcept>
 
-ScreeningService::ScreeningService(const FilmRepository& films,
-                                   const AuditoriumRepository& rooms,
-                                   ScreeningRepository& screenings,
-                                   const TicketRepository& tickets, ServiceClock clock)
+ScreeningService::ScreeningService(const IRepository<Film>& films,
+                                   const IRepository<Auditorium>& rooms,
+                                   IRepository<Screening>& screenings,
+                                   const ITicketRepository& tickets, ServiceClock clock)
     : films_(films), rooms_(rooms), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)
@@ -73,8 +73,11 @@ EntityId ScreeningService::add(EntityId filmId, EntityId roomId,
 void ScreeningService::requireNoTickets(EntityId id) const
 {
     const Screening& screening = find(id);
-    for (const Ticket& ticket : tickets_)
+    LinkedList<const Ticket*> records;
+    tickets_.list(records);
+    for (const Ticket* record : records)
     {
+        const Ticket& ticket = *record;
         if (&ticket.screening() == &screening)
         {
             throw std::invalid_argument("Screening already has tickets");
@@ -93,8 +96,11 @@ void ScreeningService::list(const std::string& date, EntityId filmId, EntityId r
         entity_detail::dateTime(now);
     }
     LinkedList<Screening> matches;
-    for (const Screening& screening : screenings_)
+    LinkedList<const Screening*> records;
+    screenings_.list(records);
+    for (const Screening* record : records)
     {
+        const Screening& screening = *record;
         if (!date.empty() && screening.startTime().compare(0, 10, date) != 0)
         {
             continue;

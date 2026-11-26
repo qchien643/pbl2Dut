@@ -1,12 +1,11 @@
 #pragma once
 
-#include "entities/EntityValidation.h"
 #include "entities/Auditorium.h"
 #include "entities/Film.h"
 #include "entities/Screening.h"
 #include "entities/Ticket.h"
 #include "repositories/IRepository.h"
-#include "services/ServiceClock.h"
+#include "helper/DateTimeHelper.h"
 
 #include <cstdint>
 #include <string>
@@ -16,7 +15,7 @@ class ScreeningService
 public:
     ScreeningService(const IRepository<Film>& films, const IRepository<Auditorium>& rooms,
                      IRepository<Screening>& screenings, const IRepository<Ticket>& tickets,
-                     ServiceClock clock = localMinuteNow);
+                     date_time::Clock clock = date_time::localMinuteNow);
 
     EntityId add(EntityId filmId, EntityId roomId, std::string startTime, std::int64_t price);
     void update(EntityId id, EntityId filmId, EntityId roomId,
@@ -39,5 +38,5 @@ private:
     const IRepository<Auditorium>& rooms_;
     IRepository<Screening>& screenings_;
     const IRepository<Ticket>& tickets_;
-    ServiceClock clock_;
+    date_time::Clock clock_;
 };

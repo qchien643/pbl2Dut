@@ -1,16 +1,17 @@
 #include "entities/Screening.h"
 #include "entities/Auditorium.h"
-#include "entities/EntityValidation.h"
+#include "helper/FieldValidation.h"
 #include "entities/Film.h"
+#include "helper/DateTimeHelper.h"
 
 Screening::Screening(EntityId id, const Film& film, const Auditorium& auditorium,
                      std::string startTime, std::int64_t ticketPrice)
 {
-    this->id_ = entity_detail::positive(id, "Screening ID");
+    this->id_ = field_validation::requirePositiveNumber(id, "Screening ID");
     this->film_ = &film;
     this->auditorium_ = &auditorium;
-    this->startTime_ = entity_detail::dateTime(startTime);
-    this->ticketPrice_ = entity_detail::positive(ticketPrice, "Ticket price");
+    this->startTime_ = date_time::validateDateTime(startTime);
+    this->ticketPrice_ = field_validation::requirePositiveNumber(ticketPrice, "Ticket price");
 }
 
 EntityId Screening::id() const

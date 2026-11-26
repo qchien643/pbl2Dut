@@ -9,7 +9,8 @@ ràng buộc; dự án không dùng DBMS hay SQL.
 | Tài liệu | Nội dung chính |
 |---|---|
 | [README dự án](../README.md) | Cài đặt, build, chạy và cấu trúc thư mục |
-| [SRS](requirements/srs.md) | Phạm vi và yêu cầu sản phẩm |
+| [SRS](requirements/srs.md) | Phạm vi, yêu cầu chức năng và tiêu chí nghiệm thu |
+| [Quy tắc nghiệp vụ](requirements/business-rules.md) | Danh mục BR đã có trong code, nơi thực hiện và phân biệt với CRUD/tra cứu |
 | [Thiết kế dữ liệu](design/data-design.md) | ERD, khóa, ràng buộc và chuẩn hóa |
 | [Thiết kế lớp](design/class-design.md) | OOP, direct association, DI/DIP ở ranh giới service–repository |
 | [Định dạng TXT](design/txt-format.md) | Nạp, lưu và phục hồi dữ liệu |
@@ -19,7 +20,7 @@ ràng buộc; dự án không dùng DBMS hay SQL.
 
 ## Thứ tự nên đọc
 
-1. SRS để hiểu bài toán.
+1. SRS để hiểu bài toán, sau đó đọc danh mục quy tắc nghiệp vụ.
 2. Thiết kế dữ liệu và sơ đồ ERD.
 3. Thiết kế lớp và sơ đồ class.
 4. Lần theo ba service trong hướng dẫn vấn đáp.

@@ -41,7 +41,7 @@ lượng, giá và ID đều phải dương.
 Xóa áp dụng `RESTRICT` cho phim/phòng đang có suất và suất đã có vé; xóa phòng
 hợp lệ thì `CASCADE` ghế thuộc phòng. Không dùng `SET NULL` hoặc `SET DEFAULT`
 vì các association đều bắt buộc. Đây là chính sách do service thực thi, không
-phải ràng buộc tự động của TXT; xem [quy ước xóa](../requirements/srs.md#quy-ước-xóa-dữ-liệu).
+phải ràng buộc tự động của TXT; xem [quy ước xóa](../requirements/business-rules.md#4-quy-ước-xóa-dữ-liệu).
 
 ## 4. Phụ thuộc hàm và chuẩn hóa
 
@@ -76,8 +76,8 @@ Không lưu riêng:
 | Kiểm tra giá trị một entity | Constructor trong `src/entities/` |
 | ID, lưu bản ghi, chỉ mục | `Repository<T>` |
 | Quan hệ và quy tắc nhiều entity | Các lớp trong `src/services/` |
-| Kiểm tra toàn bộ tập dữ liệu | `ApplicationData::validate()` |
-| Đọc/ghi định dạng | `TxtPersistence` |
+| Kiểm tra toàn bộ tập dữ liệu | `CinemaDatabase::validate()` |
+| Đọc/ghi định dạng | `TextFile` |
 
 `HashTable<EntityId, T*>` giúp tìm theo ID trung bình O(1). Các truy vấn lọc,
 trùng lịch, ghế đã bán và doanh thu duyệt tuyến tính vì dữ liệu môn học nhỏ.

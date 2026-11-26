@@ -1,5 +1,5 @@
 #include "entities/Auditorium.h"
-#include "entities/EntityValidation.h"
+#include "helper/FieldValidation.h"
 
 #include <limits>
 #include <stdexcept>
@@ -7,10 +7,10 @@
 Auditorium::Auditorium(EntityId id, std::string name,
                        std::int64_t rowCount, std::int64_t seatsPerRow)
 {
-    this->id_ = entity_detail::positive(id, "Auditorium ID");
-    this->name_ = entity_detail::name(name);
-    this->rowCount_ = entity_detail::positive(rowCount, "Row count");
-    this->seatsPerRow_ = entity_detail::positive(seatsPerRow, "Seats per row");
+    this->id_ = field_validation::requirePositiveNumber(id, "Auditorium ID");
+    this->name_ = field_validation::validateAndTrimName(name);
+    this->rowCount_ = field_validation::requirePositiveNumber(rowCount, "Row count");
+    this->seatsPerRow_ = field_validation::requirePositiveNumber(seatsPerRow, "Seats per row");
 
     const std::int64_t maximum = std::numeric_limits<std::int64_t>::max();
     if (this->rowCount_ > maximum / this->seatsPerRow_)

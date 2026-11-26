@@ -23,8 +23,8 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 | 7 | `CatalogService` | CRUD phim/phòng và tạo lại ghế |
 | 8 | `ScreeningService` | Thời gian, trùng lịch và suất có vé |
 | 9 | `TicketService` | Xem trước, bán, tra cứu và doanh thu |
-| 10 | `TxtPersistence`, `ApplicationData` | Nạp, validate, save và recovery |
-| 11 | `main.cpp`, `MainWindow` | Thứ tự sống, signal/slot và luồng Qt |
+| 10 | `TextFile`, `EntityFile`, `CinemaDatabase` | Đọc Row, tạo model, validate, ghi và recovery |
+| 11 | `main.cpp`, `CinemaWindow` | Thứ tự sống, signal/slot và luồng Qt |
 | 12 | `tests/` | Cách kiểm chứng hành vi và lỗi |
 
 ## 3. Entity và association
@@ -38,9 +38,9 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 Con trỏ trên không sở hữu bộ nhớ. Repository sở hữu entity; vì vậy repository
 đích phải sống lâu hơn entity đang liên kết với nó.
 
-ID vẫn tồn tại trong file TXT. Khi nạp, `ApplicationData` chọn ánh xạ;
-`referenceColumn` dùng `findById()` để tìm đối tượng thật rồi truyền reference
-vào constructor.
+ID vẫn tồn tại trong file TXT. Khi nạp, `CinemaDatabase` chọn ánh xạ;
+`readSeat`, `readScreening`, `readTicket` dùng `findById()` để tìm đối tượng
+thật rồi truyền reference vào constructor.
 
 ## 4. Cấu trúc dữ liệu
 
@@ -84,7 +84,7 @@ service không cung cấp hai thao tác đó, còn repository vẫn có CRUD chu
 
 `IRepository<T>` khai báo hàm thuần ảo (`= 0`); `Repository<T>` triển khai bằng
 `override`. Service chỉ biết interface chung, kể cả `IRepository<Ticket>`.
-Các lớp cụ thể được `ApplicationData` sở hữu.
+Các lớp cụ thể được `CinemaDatabase` sở hữu.
 
 `list(LinkedList<const T*>& result)` trả các địa chỉ entity gốc để service duyệt;
 không copy entity, không lộ node/iterator của repository. Danh sách kết quả sở hữu
@@ -96,7 +96,7 @@ con trỏ cũ mất hiệu lực. `begin/end` vẫn dùng nội bộ lớp cụ 
 ### Sửa phòng
 
 ```text
-MainWindow -> CatalogService
+CinemaWindow -> CatalogService
            -> kiểm tra phòng chưa có suất
            -> sinh danh sách ghế mới
            -> IRoomStorage -> RoomStorage dựng kho ghế tạm
@@ -108,7 +108,7 @@ MainWindow -> CatalogService
 ### Tạo suất
 
 ```text
-MainWindow -> ScreeningService
+CinemaWindow -> ScreeningService
            -> tìm Film và Auditorium
            -> tạo Screening candidate
            -> kiểm tra tương lai và trùng lịch
@@ -118,10 +118,15 @@ MainWindow -> ScreeningService
 Khoảng sử dụng phòng là `[bắt đầu, kết thúc + 15 phút)`. Hai suất đúng ranh
 giới được phép; hai khoảng giao nhau thì bị từ chối.
 
+`ScreeningService::validate()` giữ toàn bộ quy tắc lịch chiếu. `DateTimeHelper`
+chỉ xử lý lịch và số phút, không nhận entity. `TicketService` dùng chung helper
+để tính giờ kết thúc và kiểm tra ngày. Service nhận `date_time::Clock` qua
+constructor: mặc định dùng `date_time::localMinuteNow()`, test truyền đồng hồ giả.
+
 ### Bán vé
 
 ```text
-MainWindow -> TicketService::preview()
+CinemaWindow -> TicketService::preview()
            -> xác nhận đã nhận tiền
            -> TicketService::sell()
            -> kiểm tra lại suất và ghế
@@ -134,13 +139,14 @@ dùng kết quả xem trước đã cũ.
 
 ## 7. Nạp và lưu
 
-Khi mở, `ApplicationData` nạp năm file theo thứ tự phụ thuộc, dựng direct
+Khi mở, `CinemaDatabase` nạp năm file theo thứ tự phụ thuộc, dựng direct
 association và kiểm tra toàn bộ. Dữ liệu chính chỉ được thay khi bước này thành công.
 
-Quy tắc cột nằm ở `persistence/ModelMappings.h`. `Mapping.h` dùng cùng quy tắc
-cho hai chiều: đọc theo tên header rồi gọi constructor; ghi header và getter
-theo thứ tự ánh xạ. Không cần tự viết `fields[0]` hay `writeRecord()` cho mỗi model.
-Thứ tự ánh xạ khớp constructor; cột trong file đầu vào được phép đổi vị trí.
+`fileio::readTable()` trong `TextFile.cpp` tạo các `Row` (map tên cột → chuỗi).
+`EntityFile.cpp` viết rõ cách chuyển từng model: `readSeat` lấy số từ các trường,
+tìm phòng rồi gọi constructor; `writeSeat` gọi getter và ghi một dòng TXT.
+`CinemaDatabase` duyệt các Row để `insert`, khi lưu duyệt repository để ghi.
+Không còn mapping template; cột trong file đầu vào vẫn được phép đổi vị trí.
 
 Khi lưu, chương trình ghi file tạm, sao lưu file cũ rồi đổi tên. Nếu lỗi, RAM và
 cửa sổ được giữ để thử lại.
@@ -158,14 +164,14 @@ Thứ tự tạo trong `main.cpp`:
 
 ```text
 QApplication
-ApplicationData
+CinemaDatabase
 CatalogService / ScreeningService / TicketService
-MainWindow
+CinemaWindow
 app.exec()
 ```
 
 Thứ tự này bảo đảm repository sống lâu hơn service và entity liên kết. Qt parent
-sở hữu widget con; các service chỉ là reference trong `MainWindow`.
+sở hữu widget con; các service chỉ là reference trong `CinemaWindow`.
 
 Đây là constructor injection vì dependency được truyền vào constructor, không
 được service tự tạo. Dependency inversion thể hiện ở kiểu thành viên:
@@ -206,7 +212,7 @@ phòng/ghế đồng bộ). Không thêm interface cho UI, entity hoặc mọi l
 8. Vì sao doanh thu dùng `Ticket::unitPrice()`?
 9. Vì sao `preview()` chưa đủ để bán vé?
 10. Khi lưu file thứ ba thất bại, chương trình giữ dữ liệu bằng cách nào?
-11. Quy tắc nào thuộc entity, service và `ApplicationData`?
+11. Quy tắc nào thuộc entity, service và `CinemaDatabase`?
 12. Test nào chứng minh bán trùng ghế bị từ chối?
 13. Constructor injection xuất hiện ở đâu trong `main.cpp`?
 14. Vì sao service giữ `IRepository<Film>&` thay vì `Repository<Film>&`?

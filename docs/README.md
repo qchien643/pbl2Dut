@@ -1,6 +1,6 @@
 # Tài liệu đồ án PBL2
 
-Cập nhật ngày **18/11/2026**. Dự án là ứng dụng C++17/Qt chạy offline, lưu dữ
+Cập nhật ngày **26/11/2026**. Dự án là ứng dụng C++17/Qt chạy offline, lưu dữ
 liệu bằng năm file TXT. Phần database được thể hiện qua mô hình quan hệ, khóa và
 ràng buộc; dự án không dùng DBMS hay SQL.
 

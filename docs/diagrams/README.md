@@ -11,7 +11,8 @@ Mở trực tiếp các file HTML bằng trình duyệt; không cần chạy ứ
 
 Hai sơ đồ trên được đối chiếu với commit `3395a7e` trên `main`. Mỗi node có thể
 mở phần nguồn tương ứng. Bản HTML đã qua validate, artifact check và browser check.
-Chúng chưa phản ánh đợt cập nhật DI/DIP và ánh xạ TXT ngày 18/11/2026;
+Chúng chưa phản ánh DI/DIP, ánh xạ TXT và việc thống nhất năm repository qua
+`IRepository<T>` ngày 26/11/2026 (vé không còn dùng composition);
 đọc [thiết kế lớp](../design/class-design.md) và [định dạng TXT](../design/txt-format.md)
 để đối chiếu code hiện tại.
 

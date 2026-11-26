@@ -8,7 +8,7 @@
 ScreeningService::ScreeningService(const IRepository<Film>& films,
                                    const IRepository<Auditorium>& rooms,
                                    IRepository<Screening>& screenings,
-                                   const ITicketRepository& tickets, ServiceClock clock)
+                                   const IRepository<Ticket>& tickets, ServiceClock clock)
     : films_(films), rooms_(rooms), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)

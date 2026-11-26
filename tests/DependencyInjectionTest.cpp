@@ -79,18 +79,6 @@ private:
     EntityId highestId_ = 0;
 };
 
-class TestTickets : public ITicketRepository
-{
-public:
-    EntityId nextId() const override { return records_.nextId(); }
-    const Ticket* findById(EntityId id) const override { return records_.findById(id); }
-    bool insert(const Ticket& ticket) override { return records_.insert(ticket); }
-    void list(LinkedList<const Ticket*>& result) const override { records_.list(result); }
-
-private:
-    TestRepository<Ticket> records_;
-};
-
 // This test seeds rooms directly; fail explicitly if a room write is requested.
 class UnusedRoomStorage : public IRoomStorage
 {
@@ -109,7 +97,7 @@ int main()
     TestRepository<Auditorium> rooms;
     TestRepository<Seat> seats;
     TestRepository<Screening> screenings;
-    TestTickets tickets;
+    TestRepository<Ticket> tickets;
     UnusedRoomStorage roomStorage;
     CatalogService catalog(films, rooms, seats, screenings, roomStorage);
     ScreeningService schedule(films, rooms, screenings, tickets, testClock);

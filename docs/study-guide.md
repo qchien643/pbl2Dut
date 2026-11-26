@@ -19,7 +19,7 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 | 3 | `DataStructures/LinkedList.h` | Node, ownership, iterator, thêm/xóa |
 | 4 | `HashTable.h`, `Matrix2D.h` | Va chạm, rehash, ánh xạ hai chiều |
 | 5 | `repositories/Repository.h` | Template, list/index, ID, dirty, rollback |
-| 6 | `IRepository`, `ITicketRepository`, các repository cụ thể | Interface, override, kế thừa và composition |
+| 6 | `IRepository`, các repository cụ thể | Interface, override và kế thừa chung cho năm entity |
 | 7 | `CatalogService` | CRUD phim/phòng và tạo lại ghế |
 | 8 | `ScreeningService` | Thời gian, trùng lịch và suất có vé |
 | 9 | `TicketService` | Xem trước, bán, tra cứu và doanh thu |
@@ -77,12 +77,13 @@ Dữ liệu nằm trong một mảng một chiều; ô `(row, column)` có chỉ
 Copy/move bị cấm vì index chứa địa chỉ node của chính repository. Copy mặc định
 có thể tạo list mới nhưng giữ con trỏ tới list cũ.
 
-`TicketRepository` không override `Repository`; nó **chứa** một
-`Repository<Ticket>` và chuyển tiếp các hàm được phép. Cách này giấu `update()`
-và `erase()` khỏi API công khai.
+`TicketRepository` kế thừa `Repository<Ticket>` giống bốn repository còn lại;
+không viết lại hàm chuyển tiếp. Nó chỉ bổ sung `relinkSeats()` private để giữ
+liên kết khi đổi kho ghế. Quy định không sửa/xóa vé nằm ở `TicketService`:
+service không cung cấp hai thao tác đó, còn repository vẫn có CRUD chung.
 
 `IRepository<T>` khai báo hàm thuần ảo (`= 0`); `Repository<T>` triển khai bằng
-`override`. Service chỉ biết interface. `ITicketRepository` không có sửa/xóa vé.
+`override`. Service chỉ biết interface chung, kể cả `IRepository<Ticket>`.
 Các lớp cụ thể được `ApplicationData` sở hữu.
 
 `list(LinkedList<const T*>& result)` trả các địa chỉ entity gốc để service duyệt;
@@ -200,7 +201,7 @@ phòng/ghế đồng bộ). Không thêm interface cho UI, entity hoặc mọi l
 3. Vì sao `Repository` cấm copy/move?
 4. Vì sao `findById()` gặp kiểu `T* const*`?
 5. `dirty_` có ý nghĩa gì?
-6. Vì sao `TicketRepository` dùng composition?
+6. Vì sao `TicketRepository` có CRUD nhưng ứng dụng không cho sửa/xóa vé?
 7. Vì sao sửa phòng phải nối lại con trỏ ghế trên vé?
 8. Vì sao doanh thu dùng `Ticket::unitPrice()`?
 9. Vì sao `preview()` chưa đủ để bán vé?

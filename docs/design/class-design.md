@@ -1,6 +1,7 @@
 # Thiết kế lớp và OOP
 
-Xem sơ đồ đầy đủ tại [Class, Service và Repository](../diagrams/classes/index.html).
+Sơ đồ [Class, Service và Repository](../diagrams/classes/index.html) là snapshot
+cũ; mô tả bên dưới phản ánh code hiện tại.
 
 ## 1. Các tầng chính
 
@@ -53,14 +54,15 @@ highestId_                sinh ID tiếp theo
 dirty_                    báo dữ liệu chưa lưu
 ```
 
-`FilmRepository`, `AuditoriumRepository`, `SeatRepository` và
-`ScreeningRepository` kế thừa `Repository<T>` vì dùng nguyên API chung.
+`FilmRepository`, `AuditoriumRepository`, `SeatRepository`, `ScreeningRepository`
+và `TicketRepository` đều kế thừa `Repository<T>`, dùng cùng CRUD và cùng
+interface `IRepository<T>`. Không cần interface riêng cho vé.
 
-`TicketRepository` triển khai `ITicketRepository` và dùng composition với
-`Repository<Ticket>`. Interface vé chỉ cho phép lấy ID, tìm, thêm và lấy danh sách;
-không có sửa/xóa. Lớp cụ thể chỉ công khai
-tra cứu, thêm và duyệt; không công khai sửa/xóa vé đã bán. Hàm `relinkSeats()`
-chỉ phục vụ nối lại `Seat*` khi kho ghế được thay.
+Repository quản lý dữ liệu, ID và chỉ mục; không quyết định được phép sửa/xóa
+vé hay không. `TicketService` không cung cấp hàm sửa/xóa vé, UI chỉ gọi service.
+Gọi CRUD trực tiếp trên repository không thay thế kiểm tra nghiệp vụ.
+`TicketRepository` chỉ bổ sung hàm private `relinkSeats()` để nối lại `Seat*`
+khi kho ghế được thay; đây là xử lý kỹ thuật, không đổi nội dung vé hay dirty.
 
 Repository bị cấm copy/move vì bảng băm giữ địa chỉ node trong linked list.
 Copy mặc định có thể làm index trỏ về node của repository cũ.
@@ -73,7 +75,7 @@ Copy mặc định có thể làm index trỏ về node của repository cũ.
 | `ScreeningService` | phim, phòng, suất, vé | Kiểm tra thời gian, trùng lịch và suất đã có vé |
 | `TicketService` | ghế, suất, vé | Xem trước, bán, tra cứu, sơ đồ ghế và doanh thu |
 
-Service giữ reference tới `IRepository<T>`, `ITicketRepository` và không sở hữu
+Service giữ reference tới `IRepository<T>` và không sở hữu
 repository. `CatalogService` nhận thêm `IRoomStorage` để lưu phòng cùng bộ ghế
 như một thao tác RAM; không tự dựng repository cụ thể.
 
@@ -83,7 +85,7 @@ truyền repository vào constructor của service và truyền service vào `Ma
 ```text
 ApplicationData sở hữu FilmRepository, SeatRepository, ..., RoomStorage
               ↓ main.cpp truyền vào constructor
-Service giữ IRepository<Film>&, IRepository<Seat>&, ITicketRepository&
+Service giữ IRepository<Film>&, IRepository<Seat>&, IRepository<Ticket>&, ...
 CatalogService còn giữ IRoomStorage&
 ```
 
@@ -116,7 +118,8 @@ Mọi cấp phát hoàn tất trước khi đổi phòng/kho chính; lỗi chu�
   còn suất, sau đó xóa từng ghế của phòng rồi xóa phòng.
 - Khi xóa phòng không dựng lại toàn bộ kho ghế: ghế của phòng khác giữ nguyên
   địa chỉ, nên vé đang trỏ tới chúng không cần nối lại.
-- `ScreeningService::erase()` chặn suất đã có vé. Vé không có API xóa công khai.
+- `ScreeningService::erase()` chặn suất đã có vé. `TicketService` không có API
+  sửa/xóa vé, dù repository vẫn hỗ trợ CRUD chung.
 - `Repository::erase()` chỉ xóa chỉ mục và node, đánh dấu dirty; không tự kiểm
   tra nghiệp vụ hay tự đặt con trỏ liên quan thành `nullptr`.
 
@@ -127,10 +130,10 @@ thái RAM ra TXT. Phải đi qua service để không tạo con trỏ treo.
 
 - **Đóng gói:** thuộc tính private, thao tác qua phương thức.
 - **Kế thừa:** repository cụ thể kế thừa `Repository<T>`.
-- **Composition:** `TicketRepository` chứa `Repository<Ticket>`.
+- **Composition:** `Repository<T>` chứa linked list và hash table.
 - **Association:** entity giữ con trỏ const đến entity liên quan.
 - **Template:** cấu trúc dữ liệu và repository dùng lại cho nhiều kiểu.
-- **Đa hình:** service gọi hàm ảo qua `IRepository<T>`/`ITicketRepository`; Qt
+- **Đa hình:** service gọi hàm ảo qua `IRepository<T>`; Qt
   cũng dùng đa hình qua các lớp cơ sở như `QMainWindow`.
 - **Dependency Injection:** `main.cpp` truyền dependency qua constructor.
 - **Dependency Inversion:** service phụ thuộc interface; repository cụ thể
@@ -138,3 +141,4 @@ thái RAM ra TXT. Phải đi qua service để không tạo con trỏ treo.
 
 `DependencyInjectionTest` dùng implementation dựa trên `std::list`, không kế
 thừa `Repository<T>`, để chạy ba service mà không sửa code nghiệp vụ.
+Kho vé trong test cũng dùng đúng template này, không cần implementation riêng.

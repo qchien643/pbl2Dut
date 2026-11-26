@@ -139,7 +139,7 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     rooms.replaceWith(staged.rooms);
     seats.replaceWith(staged.seats);
     screenings.replaceWith(staged.screenings);
-    tickets.records_.replaceWith(staged.tickets.records_);
+    tickets.replaceWith(staged.tickets);
     markSaved();
     ready_ = true;
     hadFiles_ = true;

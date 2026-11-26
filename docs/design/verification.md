@@ -18,9 +18,9 @@ Kết quả mong đợi: **9/9 test Passed** (8 test nếu `BUILD_GUI=OFF`).
 | `HashTableTest` | Va chạm, rehash, insert/find/erase |
 | `Matrix2DTest` | Kích thước, truy cập biên và ánh xạ ô |
 | `EntityTest` | Constructor, getter và direct association |
-| `RepositoryTest` | ID, index, dirty và API `TicketRepository` |
+| `RepositoryTest` | ID, index, dirty và CRUD vé qua `IRepository<Ticket>`; update giữ địa chỉ |
 | `ServiceTest` | CRUD, lịch chiếu, bán vé, doanh thu và rollback |
-| `DependencyInjectionTest` | Chạy ba service với implementation interface độc lập bằng `std::list`; bảo toàn association và chặn bán trùng |
+| `DependencyInjectionTest` | Chạy ba service với cùng template repository độc lập bằng `std::list` cho cả năm entity; bảo toàn association và chặn bán trùng |
 | `ApplicationDataTest` | Ánh xạ năm model, đảo cột theo header, tham chiếu, toàn vẹn, lưu và phục hồi file |
 | `MainWindowTest` | Luồng Qt từ thao tác người dùng đến service |
 

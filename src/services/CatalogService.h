@@ -12,8 +12,6 @@
 #include <memory>
 #include <string>
 
-class ITicketRepository;
-
 class CatalogService
 {
 public:
@@ -44,7 +42,6 @@ private:
     bool filmReferenced(EntityId id) const;
     void requireRoomUnused(EntityId id) const;
     void prepareSeats(LinkedList<Seat>& staged, const Auditorium& replacement) const;
-    void prepareTickets(ITicketRepository& staged, const IRepository<Seat>& seats) const;
 
     IRepository<Film>& films_;
     IRepository<Auditorium>& rooms_;

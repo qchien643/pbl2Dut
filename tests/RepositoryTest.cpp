@@ -137,6 +137,20 @@ void testAllEntityRepositories() {
     assert(revenue == 160000);
     tickets.markSaved();
     assert(!tickets.isDirty());
+
+    // Storage supports the same CRUD contract for tickets; business limits live in services.
+    IRepository<Ticket>& ticketStore = tickets;
+    const Ticket* original = ticketStore.findById(1);
+    assert(ticketStore.update(1, Ticket(1, screening, *seats.findById(1),
+                                        "2026-10-31 10:00", 90000)));
+    assert(ticketStore.findById(1) == original && original->unitPrice() == 90000);
+    assert(tickets.isDirty());
+    tickets.markSaved();
+    assert(ticketStore.erase(2) && ticketStore.findById(2) == nullptr);
+    assert(tickets.size() == 1 && tickets.nextId() == 3 && tickets.isDirty());
+    LinkedList<const Ticket*> snapshot;
+    ticketStore.list(snapshot);
+    assert(snapshot.size() == 1 && *snapshot.begin() == original);
 }
 
 void testIdExhaustion() {
@@ -234,18 +248,6 @@ void testPreparedReplacement() {
     assert(empty.findById(2) != nullptr);
 }
 
-template <typename T, typename = void>
-struct HasErase : std::false_type {};
-
-template <typename T>
-struct HasErase<T, std::void_t<decltype(std::declval<T&>().erase(1))>> : std::true_type {};
-
-template <typename T, typename = void>
-struct HasTicketUpdate : std::false_type {};
-
-template <typename T>
-struct HasTicketUpdate<T, std::void_t<decltype(std::declval<T&>().update(1, std::declval<const Ticket&>()))>> : std::true_type {};
-
 int main() {
     static_assert(std::is_same_v<decltype(*std::declval<FilmRepository&>().begin()), const Film&>);
     static_assert(std::is_same_v<decltype(*std::declval<const FilmRepository&>().begin()), const Film&>);
@@ -255,8 +257,8 @@ int main() {
     static_assert(!std::is_move_constructible_v<FilmRepository>);
     static_assert(!std::is_move_assignable_v<FilmRepository>);
     static_assert(!std::is_copy_constructible_v<TicketRepository>);
-    static_assert(!HasErase<TicketRepository>::value);
-    static_assert(!HasTicketUpdate<TicketRepository>::value);
+    static_assert(std::is_base_of_v<Repository<Ticket>, TicketRepository>);
+    static_assert(std::is_base_of_v<IRepository<Ticket>, TicketRepository>);
     static_assert(std::is_same_v<decltype(std::declval<FilmRepository&>().findById(1)), const Film*>);
     testCrudAndIds();
     testAllEntityRepositories();

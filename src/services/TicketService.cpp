@@ -8,7 +8,7 @@
 
 TicketService::TicketService(const IRepository<Seat>& seats,
                              const IRepository<Screening>& screenings,
-                             ITicketRepository& tickets, ServiceClock clock)
+                             IRepository<Ticket>& tickets, ServiceClock clock)
     : seats_(seats), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)

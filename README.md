@@ -123,7 +123,7 @@ docs/requirements/     Đặc tả yêu cầu hiện hành
 
 Quy tắc nghiệp vụ nằm trong service, không nằm trong widget. Repository dùng cấu
 trúc dữ liệu tự cài đặt làm nơi lưu chính; Qt chỉ phục vụ giao diện. Service nhận
-dependency qua constructor (DI) và phụ thuộc `IRepository<T>`/`ITicketRepository`
+dependency qua constructor (DI) và phụ thuộc `IRepository<T>` chung cho năm entity
 (DIP), không biết cách lưu bằng linked list/hash table. `IRoomStorage` tách thao
 tác lưu đồng bộ phòng/ghế khỏi service. Không mở rộng interface ra mọi tầng.
 
@@ -142,7 +142,7 @@ MainWindow (Qt UI)
 CatalogService / ScreeningService / TicketService
         │
         ▼ phụ thuộc interface
-IRepository<T> / ITicketRepository / IRoomStorage
+IRepository<T> / IRoomStorage
         ▲ triển khai bởi
 Repository<T> / TicketRepository / RoomStorage
         │
@@ -155,6 +155,8 @@ ApplicationData ── TxtPersistence ── 5 file TXT
 - Entity đóng gói dữ liệu và kiểm tra tính hợp lệ nội tại.
 - Service xử lý các quy tắc cần phối hợp nhiều entity.
 - Repository quản lý bản ghi và chỉ mục trên RAM.
+- Cả năm repository kế thừa `Repository<T>`; quy định không sửa/xóa vé nằm ở
+  API của `TicketService`, không nằm trong repository.
 - `ApplicationData` điều phối nạp, kiểm tra, lưu và phục hồi dữ liệu.
 - `main.cpp` là nơi constructor injection: tạo service từ repository của
   `ApplicationData`, sau đó truyền service vào `MainWindow`.

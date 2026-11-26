@@ -4,8 +4,8 @@
 #include "entities/Auditorium.h"
 #include "entities/Film.h"
 #include "entities/Screening.h"
+#include "entities/Ticket.h"
 #include "repositories/IRepository.h"
-#include "repositories/ITicketRepository.h"
 #include "services/ServiceClock.h"
 
 #include <cstdint>
@@ -15,7 +15,7 @@ class ScreeningService
 {
 public:
     ScreeningService(const IRepository<Film>& films, const IRepository<Auditorium>& rooms,
-                     IRepository<Screening>& screenings, const ITicketRepository& tickets,
+                     IRepository<Screening>& screenings, const IRepository<Ticket>& tickets,
                      ServiceClock clock = localMinuteNow);
 
     EntityId add(EntityId filmId, EntityId roomId, std::string startTime, std::int64_t price);
@@ -38,6 +38,6 @@ private:
     const IRepository<Film>& films_;
     const IRepository<Auditorium>& rooms_;
     IRepository<Screening>& screenings_;
-    const ITicketRepository& tickets_;
+    const IRepository<Ticket>& tickets_;
     ServiceClock clock_;
 };

@@ -4,8 +4,8 @@
 #include "entities/Film.h"
 #include "entities/Screening.h"
 #include "entities/Seat.h"
+#include "entities/Ticket.h"
 #include "repositories/IRepository.h"
-#include "repositories/ITicketRepository.h"
 #include "services/SeatMap.h"
 #include "services/ServiceClock.h"
 
@@ -39,7 +39,9 @@ class TicketService
 {
 public:
     TicketService(const IRepository<Seat>& seats, const IRepository<Screening>& screenings,
-                  ITicketRepository& tickets, ServiceClock clock = localMinuteNow);
+                  IRepository<Ticket>& tickets, ServiceClock clock = localMinuteNow);
+
+    // Sold tickets cannot be edited/deleted through the application's service API.
 
     SaleDetails preview(EntityId screeningId, EntityId seatId) const;
     EntityId sell(EntityId screeningId, EntityId seatId, bool cashConfirmed);
@@ -56,6 +58,6 @@ private:
 
     const IRepository<Seat>& seats_;
     const IRepository<Screening>& screenings_;
-    ITicketRepository& tickets_;
+    IRepository<Ticket>& tickets_;
     ServiceClock clock_;
 };

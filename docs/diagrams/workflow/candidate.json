@@ -22,7 +22,7 @@
         "id": "operation_view",
         "label": "Một thao tác nghiệp vụ",
         "focus": ["choose_action", "selected_service", "repositories", "business_error", "show_result"],
-        "note": "MainWindow gọi đúng service; service kiểm tra quy tắc trước khi đọc hoặc sửa repository."
+        "note": "CinemaWindow gọi đúng service; service kiểm tra quy tắc trước khi đọc hoặc sửa repository."
       },
       {
         "id": "save_view",
@@ -35,7 +35,7 @@
   "lanes": [
     { "id": "user", "label": "Người dùng" },
     { "id": "qt_ui", "label": "Giao diện Qt" },
-    { "id": "application", "label": "ApplicationData" },
+    { "id": "application", "label": "CinemaDatabase" },
     { "id": "services", "label": "Service nghiệp vụ" },
     { "id": "memory", "label": "Repository trong RAM" },
     { "id": "persistence", "label": "Dữ liệu TXT" },
@@ -91,8 +91,8 @@
       "sublabel": "resolve ID thành association trực tiếp",
       "tag": "atomic load",
       "sources": [
-        { "path": "src/ApplicationData.cpp", "line": 100, "end_line": 166, "label": "load repositories" },
-        { "path": "src/ApplicationData.cpp", "line": 169, "end_line": 247, "label": "validate relations" }
+        { "path": "src/database/CinemaDatabase.cpp", "line": 100, "end_line": 166, "label": "load repositories" },
+        { "path": "src/database/CinemaDatabase.cpp", "line": 169, "end_line": 247, "label": "validate relations" }
       ]
     },
     {
@@ -103,8 +103,8 @@
       "label": "5 tệp TXT",
       "sublabel": "films · rooms · seats · screenings · tickets",
       "sources": [
-        { "path": "src/ApplicationData.cpp", "line": 9, "end_line": 12, "label": "danh sách tệp" },
-        { "path": "src/persistence/TxtPersistence.h", "line": 31, "end_line": 100, "label": "đọc và parse" }
+        { "path": "src/database/CinemaDatabase.cpp", "line": 9, "end_line": 12, "label": "danh sách tệp" },
+        { "path": "src/fileio/TextFile.h", "line": 31, "end_line": 100, "label": "đọc và parse" }
       ]
     },
     {
@@ -112,11 +112,11 @@
       "lane": "qt_ui",
       "col": 2,
       "type": "frontend",
-      "label": "MainWindow",
+      "label": "CinemaWindow",
       "sublabel": "Bán vé · Phim · Phòng · Suất · Báo cáo",
       "sources": [
-        { "path": "src/ui/MainWindow.cpp", "line": 426, "end_line": 480, "label": "dựng giao diện" },
-        { "path": "src/ui/MainWindow.h", "line": 31, "end_line": 65, "label": "các thao tác UI" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 426, "end_line": 480, "label": "dựng giao diện" },
+        { "path": "src/gui/CinemaWindow.h", "line": 31, "end_line": 65, "label": "các thao tác UI" }
       ]
     },
     {
@@ -127,8 +127,8 @@
       "label": "Chọn thao tác",
       "sublabel": "CRUD · lịch chiếu · bán/tra cứu vé",
       "sources": [
-        { "path": "src/ui/MainWindow.cpp", "line": 460, "end_line": 479, "label": "các tab chính" },
-        { "path": "src/ui/MainWindow.cpp", "line": 762, "end_line": 849, "label": "vé và doanh thu" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 460, "end_line": 479, "label": "các tab chính" },
+        { "path": "src/gui/CinemaWindow.cpp", "line": 762, "end_line": 849, "label": "vé và doanh thu" }
       ]
     },
     {
@@ -154,7 +154,7 @@
       "sublabel": "LinkedList sở hữu entity · HashTable tra ID",
       "tag": "dirty state",
       "sources": [
-        { "path": "src/ApplicationData.h", "line": 21, "end_line": 29, "label": "5 repository" },
+        { "path": "src/database/CinemaDatabase.h", "line": 21, "end_line": 29, "label": "5 repository" },
         { "path": "src/repositories/Repository.h", "line": 16, "end_line": 50, "label": "API và dữ liệu" },
         { "path": "src/repositories/Repository.h", "line": 94, "end_line": 176, "label": "tra cứu và CRUD" }
       ]
@@ -167,9 +167,9 @@
       "label": "Làm mới giao diện",
       "sublabel": "bảng, sơ đồ ghế, vé, doanh thu",
       "sources": [
-        { "path": "src/ui/MainWindow.cpp", "line": 1182, "end_line": 1273, "label": "suất và sơ đồ ghế" },
-        { "path": "src/ui/MainWindow.cpp", "line": 1339, "end_line": 1417, "label": "vé và doanh thu" },
-        { "path": "src/ui/MainWindow.cpp", "line": 1420, "end_line": 1425, "label": "trạng thái chưa lưu" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1182, "end_line": 1273, "label": "suất và sơ đồ ghế" },
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1339, "end_line": 1417, "label": "vé và doanh thu" },
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1420, "end_line": 1425, "label": "trạng thái chưa lưu" }
       ]
     },
     {
@@ -180,8 +180,8 @@
       "label": "Tiếp tục hay Lưu và thoát?",
       "sublabel": "thay đổi vẫn ở RAM trong phiên",
       "sources": [
-        { "path": "src/ui/MainWindow.cpp", "line": 447, "end_line": 472, "label": "nút lưu và thoát" },
-        { "path": "src/ui/MainWindow.cpp", "line": 1427, "end_line": 1448, "label": "xác nhận đóng" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 447, "end_line": 472, "label": "nút lưu và thoát" },
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1427, "end_line": 1448, "label": "xác nhận đóng" }
       ]
     },
     {
@@ -193,8 +193,8 @@
       "sublabel": "validate · ghi tạm · backup · cài đặt",
       "tag": "rollback khi lỗi",
       "sources": [
-        { "path": "src/ApplicationData.cpp", "line": 288, "end_line": 380, "label": "quy trình save" },
-        { "path": "src/ApplicationData.cpp", "line": 257, "end_line": 286, "label": "phục hồi" }
+        { "path": "src/database/CinemaDatabase.cpp", "line": 288, "end_line": 380, "label": "quy trình save" },
+        { "path": "src/database/CinemaDatabase.cpp", "line": 257, "end_line": 286, "label": "phục hồi" }
       ]
     },
     {
@@ -205,8 +205,8 @@
       "label": "TXT mới + bản sao lưu",
       "sublabel": "ghi toàn bộ repository sau khi hợp lệ",
       "sources": [
-        { "path": "src/persistence/TxtPersistence.h", "line": 102, "end_line": 138, "label": "serialize repository" },
-        { "path": "src/ApplicationData.cpp", "line": 329, "end_line": 352, "label": "write backup install" }
+        { "path": "src/fileio/TextFile.h", "line": 102, "end_line": 138, "label": "serialize repository" },
+        { "path": "src/database/CinemaDatabase.cpp", "line": 329, "end_line": 352, "label": "write backup install" }
       ]
     },
     {
@@ -217,8 +217,8 @@
       "label": "Không mở chế độ chỉnh sửa",
       "sublabel": "TXT thiếu, sai hoặc association không hợp lệ",
       "sources": [
-        { "path": "src/ui/MainWindow.cpp", "line": 403, "end_line": 423, "label": "báo lỗi nạp" },
-        { "path": "src/ApplicationData.cpp", "line": 121, "end_line": 157, "label": "chặn dữ liệu sai" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 403, "end_line": 423, "label": "báo lỗi nạp" },
+        { "path": "src/database/CinemaDatabase.cpp", "line": 121, "end_line": 157, "label": "chặn dữ liệu sai" }
       ]
     },
     {
@@ -231,7 +231,7 @@
       "sources": [
         { "path": "src/services/ScreeningService.cpp", "line": 41, "end_line": 70, "label": "kiểm tra suất" },
         { "path": "src/services/TicketService.cpp", "line": 53, "end_line": 96, "label": "kiểm tra bán vé" },
-        { "path": "src/ui/MainWindow.cpp", "line": 1310, "end_line": 1336, "label": "hiện lỗi bán vé" }
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1310, "end_line": 1336, "label": "hiện lỗi bán vé" }
       ]
     },
     {
@@ -242,14 +242,14 @@
       "label": "Lưu thất bại",
       "sublabel": "cửa sổ và dữ liệu RAM vẫn được giữ",
       "sources": [
-        { "path": "src/ApplicationData.cpp", "line": 353, "end_line": 376, "label": "rollback" },
-        { "path": "src/ui/MainWindow.cpp", "line": 1434, "end_line": 1448, "label": "giữ ứng dụng mở" }
+        { "path": "src/database/CinemaDatabase.cpp", "line": 353, "end_line": 376, "label": "rollback" },
+        { "path": "src/gui/CinemaWindow.cpp", "line": 1434, "end_line": 1448, "label": "giữ ứng dụng mở" }
       ]
     }
   ],
   "edges": [
     { "id": "launch_qt", "from": "launch", "to": "qt_boot", "variant": "default" },
-    { "id": "qt_load", "from": "qt_boot", "to": "load_session", "label": "tạo ApplicationData", "variant": "emphasis" },
+    { "id": "qt_load", "from": "qt_boot", "to": "load_session", "label": "tạo CinemaDatabase", "variant": "emphasis" },
     { "id": "read_txt", "from": "load_session", "to": "txt_input", "label": "đọc + parse", "variant": "dashed" },
     { "id": "load_ok", "from": "load_session", "to": "main_window", "label": "đã validate", "variant": "emphasis" },
     { "id": "load_failed", "from": "load_session", "to": "startup_error", "label": "không hợp lệ", "variant": "security", "role": "error" },
@@ -269,7 +269,7 @@
       "dot": "cyan",
       "title": "Đường đi chính",
       "items": [
-        "MainWindow không sửa entity trực tiếp; mọi thao tác đi qua service.",
+        "CinemaWindow không sửa entity trực tiếp; mọi thao tác đi qua service.",
         "Service kiểm tra nghiệp vụ rồi mới đọc hoặc cập nhật repository trong RAM."
       ]
     },

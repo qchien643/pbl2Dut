@@ -1,8 +1,8 @@
-#include "ApplicationData.h"
+#include "database/CinemaDatabase.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
-#include "ui/MainWindow.h"
+#include "gui/CinemaWindow.h"
 
 #include <QApplication>
 #include <QCommandLineParser>
@@ -30,14 +30,14 @@ int main(int argc, char* argv[]) {
         ? QString::fromUtf8(PBL2_DEMO_DATA_DIR)
         : arguments.first();
     try {
-        ApplicationData data(std::filesystem::u8path(directory.toUtf8().toStdString()));
-        if (!loadApplicationData(data)) {
+        CinemaDatabase data(std::filesystem::u8path(directory.toUtf8().toStdString()));
+        if (!loadCinemaDatabase(data)) {
             return 1;
         }
         CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
         ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
         TicketService tickets(data.seats, data.screenings, data.tickets);
-        MainWindow window(data, catalog, screenings, tickets);
+        CinemaWindow window(data, catalog, screenings, tickets);
         window.show();
         return app.exec();
     } catch (const std::exception& error) {

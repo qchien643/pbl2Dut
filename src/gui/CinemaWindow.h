@@ -4,7 +4,7 @@
 
 #include <QMainWindow>
 
-class ApplicationData;
+class CinemaDatabase;
 class CatalogService;
 class QCloseEvent;
 class QComboBox;
@@ -18,12 +18,12 @@ class QTabWidget;
 class ScreeningService;
 class TicketService;
 
-bool loadApplicationData(ApplicationData& data, QWidget* parent = nullptr);
+bool loadCinemaDatabase(CinemaDatabase& data, QWidget* parent = nullptr);
 
-class MainWindow : public QMainWindow {
+class CinemaWindow : public QMainWindow {
 public:
-    MainWindow(ApplicationData& data, CatalogService& catalog,
-               ScreeningService& screenings, TicketService& tickets);
+    CinemaWindow(CinemaDatabase& data, CatalogService& catalog,
+                 ScreeningService& screenings, TicketService& tickets);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -59,7 +59,7 @@ private:
     EntityId selectedScreening() const;
     EntityId selectedSaleScreening() const;
 
-    ApplicationData& data_;
+    CinemaDatabase& data_;
     CatalogService& catalog_;
     ScreeningService& screenings_;
     TicketService& tickets_;

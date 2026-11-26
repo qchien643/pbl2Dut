@@ -19,22 +19,22 @@ Kết quả mong đợi: **9/9 test Passed** (8 test nếu `BUILD_GUI=OFF`).
 | `Matrix2DTest` | Kích thước, truy cập biên và ánh xạ ô |
 | `EntityTest` | Constructor, getter và direct association |
 | `RepositoryTest` | ID, index, dirty và CRUD vé qua `IRepository<Ticket>`; update giữ địa chỉ |
-| `ServiceTest` | CRUD, lịch chiếu, bán vé, doanh thu và rollback |
+| `ServiceTest` | CRUD, lịch chiếu, bán vé, doanh thu và rollback; DateTimeHelper kiểm tra ngày, năm nhuận, chuyển đổi và cộng phút ở biên |
 | `DependencyInjectionTest` | Chạy ba service với cùng template repository độc lập bằng `std::list` cho cả năm entity; bảo toàn association và chặn bán trùng |
-| `ApplicationDataTest` | Đọc Row và chuyển đổi năm model, đảo cột, tham chiếu, toàn vẹn, lỗi ghi/đóng file và phục hồi |
-| `MainWindowTest` | Luồng Qt từ thao tác người dùng đến service |
+| `CinemaDatabaseTest` | Đọc Row và chuyển đổi năm model, đảo cột, tham chiếu, toàn vẹn, lỗi ghi/đóng file và phục hồi; service chặn trùng lịch, database không kiểm tra lại |
+| `CinemaWindowTest` | Luồng Qt từ thao tác người dùng đến service |
 
 ## 3. Đối chiếu yêu cầu
 
 | Yêu cầu | Bằng chứng chính |
 |---|---|
-| CRUD phim/phòng/suất | `ServiceTest`, `MainWindowTest` |
-| Quy ước xóa, cascade ghế và bảo toàn con trỏ vé | `testDeletionPolicy()` trong `ServiceTest`, `MainWindowTest`, `ApplicationDataTest` |
+| CRUD phim/phòng/suất | `ServiceTest`, `CinemaWindowTest` |
+| Quy ước xóa, cascade ghế và bảo toàn con trỏ vé | `testDeletionPolicy()` trong `ServiceTest`, `CinemaWindowTest`, `CinemaDatabaseTest` |
 | Trùng lịch và thời gian nghỉ | `ServiceTest` |
 | Bán trùng ghế, giá chốt | `ServiceTest`, `EntityTest` |
-| Vé và doanh thu theo ngày | `ServiceTest`, `MainWindowTest` |
-| Nạp dữ liệu sai | `ApplicationDataTest` |
-| Lưu lỗi và phục hồi | `ApplicationDataTest` |
+| Vé và doanh thu theo ngày | `ServiceTest`, `CinemaWindowTest` |
+| Nạp dữ liệu sai | `CinemaDatabaseTest` |
+| Lưu lỗi và phục hồi | `CinemaDatabaseTest` |
 | Cấu trúc dữ liệu tự cài | Ba test DSA |
 | DI/DIP tại ranh giới service–repository | `DependencyInjectionTest` |
 

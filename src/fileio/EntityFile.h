@@ -5,12 +5,12 @@
 #include "entities/Screening.h"
 #include "entities/Seat.h"
 #include "entities/Ticket.h"
-#include "persistence/TxtPersistence.h"
+#include "fileio/TextFile.h"
 #include "repositories/IRepository.h"
 
 #include <ostream>
 
-namespace txt_persistence {
+namespace fileio {
 
 extern const char* const filmHeader;
 extern const char* const auditoriumHeader;

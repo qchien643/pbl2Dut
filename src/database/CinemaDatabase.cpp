@@ -1,7 +1,6 @@
-#include "ApplicationData.h"
-#include "persistence/ModelIO.h"
-#include "persistence/TxtPersistence.h"
-#include "services/ScreeningValidation.h"
+#include "database/CinemaDatabase.h"
+#include "fileio/EntityFile.h"
+#include "fileio/TextFile.h"
 
 #include <exception>
 #include <new>
@@ -72,27 +71,27 @@ void cleanOwnedStage(const fs::path& stage) {
 }
 }
 
-ApplicationData::ApplicationData(fs::path directory)
+CinemaDatabase::CinemaDatabase(fs::path directory)
     : roomStorage(rooms, seats, tickets), directory_(fs::absolute(directory).lexically_normal()) {}
 
-bool ApplicationData::isReady() const {
+bool CinemaDatabase::isReady() const {
     return ready_;
 }
 
-bool ApplicationData::needsManualRecovery() const {
+bool CinemaDatabase::needsManualRecovery() const {
     return recoveryRequired_;
 }
 
-const fs::path& ApplicationData::directory() const {
+const fs::path& CinemaDatabase::directory() const {
     return directory_;
 }
 
-bool ApplicationData::isDirty() const {
+bool CinemaDatabase::isDirty() const {
     return films.isDirty() || rooms.isDirty() || seats.isDirty()
         || screenings.isDirty() || tickets.isDirty();
 }
 
-void ApplicationData::markSaved() {
+void CinemaDatabase::markSaved() {
     films.markSaved();
     rooms.markSaved();
     seats.markSaved();
@@ -100,10 +99,10 @@ void ApplicationData::markSaved() {
     tickets.markSaved();
 }
 
-ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
+CinemaDatabase::LoadResult CinemaDatabase::load(bool confirmEmpty) {
     if (ready_ || isDirty() || !films.empty() || !rooms.empty() || !seats.empty()
         || !screenings.empty() || !tickets.empty()) {
-        throw std::logic_error("Load requires a fresh ApplicationData instance");
+        throw std::logic_error("Load requires a fresh CinemaDatabase instance");
     }
     const int count = fileCount(directory_);
     if (fs::exists(inspectPath(directory_ / ".cms-save"))) {
@@ -128,16 +127,16 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
             }
         }
     }
-    ApplicationData staged(directory_);
+    CinemaDatabase staged(directory_);
     // Load referenced objects first. Each text table is discarded after conversion.
     {
         const fs::path path = directory_ / files[0];
-        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::filmHeader);
+        const std::vector<fileio::Row> rows = fileio::readTable(path, fileio::filmHeader);
         std::size_t line = 1;
         try {
-            for (const txt_persistence::Row& row : rows) {
+            for (const fileio::Row& row : rows) {
                 ++line;
-                const Film film = txt_persistence::readFilm(row);
+                const Film film = fileio::readFilm(row);
                 if (!staged.films.insert(film)) throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) { throw; }
@@ -147,12 +146,12 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     }
     {
         const fs::path path = directory_ / files[1];
-        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::auditoriumHeader);
+        const std::vector<fileio::Row> rows = fileio::readTable(path, fileio::auditoriumHeader);
         std::size_t line = 1;
         try {
-            for (const txt_persistence::Row& row : rows) {
+            for (const fileio::Row& row : rows) {
                 ++line;
-                const Auditorium room = txt_persistence::readAuditorium(row);
+                const Auditorium room = fileio::readAuditorium(row);
                 if (!staged.rooms.insert(room)) throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) { throw; }
@@ -162,12 +161,12 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     }
     {
         const fs::path path = directory_ / files[2];
-        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::seatHeader);
+        const std::vector<fileio::Row> rows = fileio::readTable(path, fileio::seatHeader);
         std::size_t line = 1;
         try {
-            for (const txt_persistence::Row& row : rows) {
+            for (const fileio::Row& row : rows) {
                 ++line;
-                const Seat seat = txt_persistence::readSeat(row, staged.rooms);
+                const Seat seat = fileio::readSeat(row, staged.rooms);
                 if (!staged.seats.insert(seat)) throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) { throw; }
@@ -177,12 +176,12 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     }
     {
         const fs::path path = directory_ / files[3];
-        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::screeningHeader);
+        const std::vector<fileio::Row> rows = fileio::readTable(path, fileio::screeningHeader);
         std::size_t line = 1;
         try {
-            for (const txt_persistence::Row& row : rows) {
+            for (const fileio::Row& row : rows) {
                 ++line;
-                const Screening screening = txt_persistence::readScreening(row, staged.films, staged.rooms);
+                const Screening screening = fileio::readScreening(row, staged.films, staged.rooms);
                 if (!staged.screenings.insert(screening)) throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) { throw; }
@@ -192,12 +191,12 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     }
     {
         const fs::path path = directory_ / files[4];
-        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::ticketHeader);
+        const std::vector<fileio::Row> rows = fileio::readTable(path, fileio::ticketHeader);
         std::size_t line = 1;
         try {
-            for (const txt_persistence::Row& row : rows) {
+            for (const fileio::Row& row : rows) {
                 ++line;
-                const Ticket ticket = txt_persistence::readTicket(row, staged.screenings, staged.seats);
+                const Ticket ticket = fileio::readTicket(row, staged.screenings, staged.seats);
                 if (!staged.tickets.insert(ticket)) throw std::invalid_argument("Duplicate primary key");
             }
         } catch (const std::bad_alloc&) { throw; }
@@ -217,7 +216,7 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
     return LoadResult::Loaded;
 }
 
-void ApplicationData::validate() const {
+void CinemaDatabase::validate() const {
     HashTable<std::string, bool> positions;
     HashTable<EntityId, std::size_t> seatCounts;
     HashTable<std::string, bool> soldSeats;
@@ -227,7 +226,7 @@ void ApplicationData::validate() const {
         for (const Film& film : films) {
             ++line;
             Film(film.id(), film.title(), film.durationMinutes());
-            txt_persistence::validateUtf8(film.title());
+            fileio::validateUtf8(film.title());
         }
         path = directory_ / files[2];
         line = 1;
@@ -257,7 +256,7 @@ void ApplicationData::validate() const {
         for (const Auditorium& room : rooms) {
             ++line;
             Auditorium(room.id(), room.name(), room.rowCount(), room.seatsPerRow());
-            txt_persistence::validateUtf8(room.name());
+            fileio::validateUtf8(room.name());
             const std::size_t* count = seatCounts.find(room.id());
             if (count == nullptr || *count != static_cast<std::uint64_t>(room.capacity())) {
                 throw std::invalid_argument("Room does not have its complete rectangular seat layout");
@@ -273,7 +272,6 @@ void ApplicationData::validate() const {
                 || rooms.findById(screening.auditoriumId()) != &screening.auditorium()) {
                 throw std::invalid_argument("Screening references a missing film or room");
             }
-            service_validation::screening(screening, screenings);
         }
         path = directory_ / files[4];
         line = 1;
@@ -299,13 +297,13 @@ void ApplicationData::validate() const {
     }
 }
 
-void ApplicationData::fileStep(const char* phase, std::size_t index) const {
+void CinemaDatabase::fileStep(const char* phase, std::size_t index) const {
     if (beforeFileStep_) {
         beforeFileStep_(phase, index);
     }
 }
 
-void ApplicationData::retryRecovery() {
+void CinemaDatabase::retryRecovery() {
     if (!recoveryRequired_) {
         return;
     }
@@ -336,7 +334,7 @@ void ApplicationData::retryRecovery() {
     recoveryRequired_ = false;
 }
 
-void ApplicationData::save() {
+void CinemaDatabase::save() {
     if (!ready_) {
         throw std::logic_error("Load and validate data before saving");
     }
@@ -378,33 +376,33 @@ void ApplicationData::save() {
         fs::create_directory(stage / "new");
         fs::create_directory(stage / "old");
         fileStep("write", 0);
-        std::ofstream output = txt_persistence::openOutput(temporary[0], txt_persistence::filmHeader);
+        std::ofstream output = fileio::openOutput(temporary[0], fileio::filmHeader);
         for (const Film& film : films) {
-            txt_persistence::writeFilm(output, film);
+            fileio::writeFilm(output, film);
         }
         output.close(); // Exceptions include errors flushing buffered data on close.
         fileStep("write", 1);
-        output = txt_persistence::openOutput(temporary[1], txt_persistence::auditoriumHeader);
+        output = fileio::openOutput(temporary[1], fileio::auditoriumHeader);
         for (const Auditorium& room : rooms) {
-            txt_persistence::writeAuditorium(output, room);
+            fileio::writeAuditorium(output, room);
         }
         output.close();
         fileStep("write", 2);
-        output = txt_persistence::openOutput(temporary[2], txt_persistence::seatHeader);
+        output = fileio::openOutput(temporary[2], fileio::seatHeader);
         for (const Seat& seat : seats) {
-            txt_persistence::writeSeat(output, seat);
+            fileio::writeSeat(output, seat);
         }
         output.close();
         fileStep("write", 3);
-        output = txt_persistence::openOutput(temporary[3], txt_persistence::screeningHeader);
+        output = fileio::openOutput(temporary[3], fileio::screeningHeader);
         for (const Screening& screening : screenings) {
-            txt_persistence::writeScreening(output, screening);
+            fileio::writeScreening(output, screening);
         }
         output.close();
         fileStep("write", 4);
-        output = txt_persistence::openOutput(temporary[4], txt_persistence::ticketHeader);
+        output = fileio::openOutput(temporary[4], fileio::ticketHeader);
         for (const Ticket& ticket : tickets) {
-            txt_persistence::writeTicket(output, ticket);
+            fileio::writeTicket(output, ticket);
         }
         output.close();
         if (hadFiles_) {

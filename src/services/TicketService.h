@@ -7,7 +7,7 @@
 #include "entities/Ticket.h"
 #include "repositories/IRepository.h"
 #include "services/SeatMap.h"
-#include "services/ServiceClock.h"
+#include "helper/DateTimeHelper.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -39,7 +39,7 @@ class TicketService
 {
 public:
     TicketService(const IRepository<Seat>& seats, const IRepository<Screening>& screenings,
-                  IRepository<Ticket>& tickets, ServiceClock clock = localMinuteNow);
+                  IRepository<Ticket>& tickets, date_time::Clock clock = date_time::localMinuteNow);
 
     // Sold tickets cannot be edited/deleted through the application's service API.
 
@@ -59,5 +59,5 @@ private:
     const IRepository<Seat>& seats_;
     const IRepository<Screening>& screenings_;
     IRepository<Ticket>& tickets_;
-    ServiceClock clock_;
+    date_time::Clock clock_;
 };

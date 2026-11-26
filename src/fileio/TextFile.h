@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace txt_persistence {
+namespace fileio {
 
 using Row = std::map<std::string, std::string>;
 

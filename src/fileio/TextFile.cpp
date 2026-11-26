@@ -1,4 +1,4 @@
-#include "TxtPersistence.h"
+#include "TextFile.h"
 
 #include <algorithm>
 #include <charconv>
@@ -6,7 +6,7 @@
 #include <new>
 #include <stdexcept>
 
-namespace txt_persistence {
+namespace fileio {
 
 void validateUtf8(const std::string& text) {
     for (std::size_t i = 0; i < text.size();) {

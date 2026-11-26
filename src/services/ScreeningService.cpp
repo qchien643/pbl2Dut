@@ -1,14 +1,13 @@
 #include "services/ScreeningService.h"
 
-#include "services/ScreeningTime.h"
-#include "services/ScreeningValidation.h"
+#include "helper/DateTimeHelper.h"
 
 #include <stdexcept>
 
 ScreeningService::ScreeningService(const IRepository<Film>& films,
                                    const IRepository<Auditorium>& rooms,
                                    IRepository<Screening>& screenings,
-                                   const IRepository<Ticket>& tickets, ServiceClock clock)
+                                   const IRepository<Ticket>& tickets, date_time::Clock clock)
     : films_(films), rooms_(rooms), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)
@@ -34,16 +33,36 @@ const Screening& ScreeningService::find(EntityId id) const
 std::string ScreeningService::endTime(EntityId id) const
 {
     const Screening& screening = find(id);
-    const std::int64_t end = screening_time::endMinute(screening);
-    return screening_time::formatMinute(end);
+    const std::int64_t start = date_time::toMinutes(screening.startTime());
+    const std::int64_t end = date_time::addMinutes(start, screening.film().durationMinutes());
+    return date_time::fromMinutes(end);
 }
 
 void ScreeningService::validate(const Screening& candidate) const
 {
-    service_validation::screening(candidate, screenings_);
-    const std::int64_t start = screening_time::minutes(candidate.startTime());
+    const int cleanupMinutes = 15;
+    const std::int64_t start = date_time::toMinutes(candidate.startTime());
+    const std::int64_t end = date_time::addMinutes(
+        date_time::addMinutes(start, candidate.film().durationMinutes()), cleanupMinutes);
+    LinkedList<const Screening*> records;
+    screenings_.list(records);
+    for (const Screening* record : records)
+    {
+        const Screening& item = *record;
+        if (item.id() == candidate.id() || &item.auditorium() != &candidate.auditorium())
+        {
+            continue;
+        }
+        const std::int64_t otherStart = date_time::toMinutes(item.startTime());
+        const std::int64_t otherEnd = date_time::addMinutes(
+            date_time::addMinutes(otherStart, item.film().durationMinutes()), cleanupMinutes);
+        if (start < otherEnd && otherStart < end)
+        {
+            throw std::invalid_argument("Screening overlaps another room booking");
+        }
+    }
     const std::string currentTime = clock_();
-    const std::int64_t now = screening_time::minutes(currentTime);
+    const std::int64_t now = date_time::toMinutes(currentTime);
     if (start <= now)
     {
         throw std::invalid_argument("Screening must start in the future");
@@ -93,7 +112,7 @@ void ScreeningService::list(const std::string& date, EntityId filmId, EntityId r
     if (futureOnly)
     {
         now = clock_();
-        entity_detail::dateTime(now);
+        date_time::validateDateTime(now);
     }
     LinkedList<Screening> matches;
     LinkedList<const Screening*> records;
@@ -152,7 +171,7 @@ void ScreeningService::validateFilters(const std::string& date,
 {
     if (!date.empty())
     {
-        screening_time::validateDate(date);
+        date_time::validateDate(date);
     }
     if (filmId < 0 || roomId < 0)
     {

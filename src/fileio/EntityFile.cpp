@@ -1,9 +1,9 @@
-#include "persistence/ModelIO.h"
-#include "entities/EntityValidation.h"
+#include "fileio/EntityFile.h"
+#include "helper/FieldValidation.h"
 
 #include <stdexcept>
 
-namespace txt_persistence {
+namespace fileio {
 
 const char* const filmHeader = "film_id|title|duration_minutes";
 const char* const auditoriumHeader = "auditorium_id|name|row_count|seats_per_row";
@@ -29,7 +29,7 @@ Auditorium readAuditorium(const Row& row) {
 Seat readSeat(const Row& row, const IRepository<Auditorium>& rooms) {
     const EntityId id = number(row.at("seat_id"));
     const EntityId roomId = number(row.at("auditorium_id"));
-    entity_detail::positive(roomId, "auditorium_id");
+    field_validation::requirePositiveNumber(roomId, "auditorium_id");
     const Auditorium* room = rooms.findById(roomId);
     if (room == nullptr) {
         throw std::invalid_argument("Seat references a missing room");
@@ -44,8 +44,8 @@ Screening readScreening(const Row& row, const IRepository<Film>& films,
     const EntityId id = number(row.at("screening_id"));
     const EntityId filmId = number(row.at("film_id"));
     const EntityId roomId = number(row.at("auditorium_id"));
-    entity_detail::positive(filmId, "film_id");
-    entity_detail::positive(roomId, "auditorium_id");
+    field_validation::requirePositiveNumber(filmId, "film_id");
+    field_validation::requirePositiveNumber(roomId, "auditorium_id");
     const Film* film = films.findById(filmId);
     const Auditorium* room = rooms.findById(roomId);
     if (film == nullptr || room == nullptr) {
@@ -61,8 +61,8 @@ Ticket readTicket(const Row& row, const IRepository<Screening>& screenings,
     const EntityId id = number(row.at("ticket_id"));
     const EntityId screeningId = number(row.at("screening_id"));
     const EntityId seatId = number(row.at("seat_id"));
-    entity_detail::positive(screeningId, "screening_id");
-    entity_detail::positive(seatId, "seat_id");
+    field_validation::requirePositiveNumber(screeningId, "screening_id");
+    field_validation::requirePositiveNumber(seatId, "seat_id");
     const Screening* screening = screenings.findById(screeningId);
     const Seat* seat = seats.findById(seatId);
     if (screening == nullptr || seat == nullptr) {

@@ -19,19 +19,19 @@ trí nếu header và dữ liệu đổi tương ứng; không được thiếu,
 
 ## Chuyển đổi model và TXT
 
-`TxtPersistence::readTable()` đọc một file thành `std::vector<Row>`.
+`fileio::readTable()` trong `fileio/TextFile.cpp` đọc một file thành `std::vector<Row>`.
 `Row` là `std::map<std::string, std::string>`: tên cột → chuỗi giá trị.
 Đây chỉ là dữ liệu tạm khi mở; entity trong phiên vẫn do linked list của
 repository sở hữu.
 
-`persistence/ModelIO.cpp` chứa header chuẩn và các hàm đọc/ghi tường minh cho
+`fileio/EntityFile.cpp` chứa header chuẩn và các hàm đọc/ghi tường minh cho
 năm model. Không có mapping template, `tuple`, `std::apply` hoặc reflection.
 
 ```cpp
-const std::vector<txt_persistence::Row> rows =
-    txt_persistence::readTable(path, txt_persistence::seatHeader);
-for (const txt_persistence::Row& row : rows) {
-    Seat seat = txt_persistence::readSeat(row, data.rooms);
+const std::vector<fileio::Row> rows =
+    fileio::readTable(path, fileio::seatHeader);
+for (const fileio::Row& row : rows) {
+    Seat seat = fileio::readSeat(row, data.rooms);
     if (!data.seats.insert(seat))
         throw std::invalid_argument("Duplicate primary key");
 }
@@ -41,7 +41,7 @@ for (const txt_persistence::Row& row : rows) {
 - `readSeat`: lấy từng trường bằng `row.at("tên_cột")`, chuyển số, tìm phòng
   qua `IRepository<Auditorium>`, kiểm tra tồn tại rồi gọi constructor.
 - `writeSeat`: gọi getter và ghi các cột ngăn bằng `|`, kết thúc bằng xuống dòng.
-- `ApplicationData`: nạp theo thứ tự phụ thuộc, gọi `insert`; khi lưu duyệt từng
+- `CinemaDatabase`: nạp theo thứ tự phụ thuộc, gọi `insert`; khi lưu duyệt từng
   repository và gọi hàm ghi tương ứng. Lỗi đọc báo tên file và số dòng.
 
 Thứ tự constructor và thứ tự ghi được viết rõ trong code; đổi vị trí thuộc tính
@@ -57,8 +57,9 @@ Film -> Auditorium -> Seat -> Screening -> Ticket
 ```
 
 Thứ tự này cho phép tìm đối tượng cha và tạo direct association khi đọc FK.
-Dữ liệu được nạp vào `ApplicationData` tạm, sau đó `validate()` kiểm tra khóa,
-quan hệ, sơ đồ ghế, lịch chiếu và vé. Chỉ khi toàn bộ hợp lệ, repository chính
+Dữ liệu được nạp vào `CinemaDatabase` tạm, sau đó `validate()` kiểm tra khóa,
+quan hệ, sơ đồ ghế và vé. Không kiểm tra trùng lịch: quy tắc này do service đảm
+bảo khi thêm/sửa suất. Chỉ khi các kiểm tra trên hợp lệ, repository chính
 mới được thay.
 
 Ứng dụng từ chối:
@@ -66,7 +67,7 @@ mới được thay.
 - thiếu một phần bộ file;
 - header, số trường, số nguyên hoặc UTF-8 sai;
 - ID trùng hoặc quan hệ không tồn tại;
-- dữ liệu vi phạm quy tắc nghiệp vụ.
+- giá trị model, sơ đồ ghế hoặc toàn vẹn vé không hợp lệ.
 
 Thư mục hoàn toàn rỗng được phép bắt đầu phiên mới sau khi người dùng xác nhận.
 
@@ -77,11 +78,11 @@ thay đổi chưa lưu; nó không phải trạng thái đã bán của ghế.
 
 Đọc cả file một lần lúc mở, không đọc/ghi file theo từng thao tác nghiệp vụ.
 
-Đóng ứng dụng bằng `Lưu và thoát` mới gọi `ApplicationData::save()`.
+Đóng ứng dụng bằng `Lưu và thoát` mới gọi `CinemaDatabase::save()`.
 
 ## 4. Quy trình lưu
 
-1. Kiểm tra lại toàn bộ dữ liệu.
+1. Kiểm tra lại toàn vẹn dữ liệu, không kiểm tra trùng lịch.
 2. Ghi năm file mới vào `.cms-save/new`.
 3. Sao chép file cũ vào `.cms-save/old`.
 4. Đổi tên file mới thành file chính.
@@ -101,6 +102,6 @@ dấu hiệu một lần lưu chưa hoàn tất và chương trình không tự 
 ## 5. Giới hạn
 
 - Không chạy hai phiên trên cùng thư mục dữ liệu.
-- Không sửa TXT bên ngoài khi ứng dụng đang mở.
+- TXT được tạo/cập nhật qua ứng dụng; không hỗ trợ sửa TXT thủ công.
 - Thay đổi chưa lưu có thể mất nếu tiến trình bị buộc dừng.
 - `.cms-backup-N` là bản sao phục hồi, không tự động xóa.

@@ -10,12 +10,14 @@
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
+#include "helper/DateTimeHelper.h"
 
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <new>
 #include <sstream>
 
@@ -316,6 +318,40 @@ void testQueryResultOwnership() {
     assert(!f.films.isDirty());
 }
 
+void testDateTimeHelper() {
+    const date_time::Clock clock = fakeClock;
+    assert(clock() == currentTime);
+    const std::int64_t maximum = date_time::toMinutes("9999-12-31 23:59");
+    assert(date_time::toMinutes("0001-01-01 00:00") == 0);
+    const char* dates[] = {"0001-01-01 00:00", "1900-03-01 00:00",
+                           "2000-02-29 23:59", "2026-12-31 23:59", "9999-12-31 23:59"};
+    for (const char* date : dates) {
+        assert(date_time::fromMinutes(date_time::toMinutes(date)) == date);
+    }
+    const std::int64_t leapDay = date_time::toMinutes("2000-02-28 23:59");
+    assert(date_time::fromMinutes(date_time::addMinutes(leapDay, 1)) == "2000-02-29 00:00");
+    assert(date_time::fromMinutes(date_time::addMinutes(leapDay, -1)) == "2000-02-28 23:58");
+    assert(date_time::addMinutes(0, maximum) == maximum);
+    assert(date_time::addMinutes(maximum, -maximum) == 0);
+    date_time::validateDate("2000-02-29");
+    expectThrow([] { date_time::toMinutes("bad time"); });
+    expectThrow([] { date_time::toMinutes("2026-01-01 24:00"); });
+    expectThrow([] { date_time::validateDate("1900-02-29"); });
+    expectThrow([] { date_time::validateDate("2026-01-01 00:00"); });
+    expectThrow<std::out_of_range>([] { date_time::fromMinutes(-1); });
+    expectThrow<std::out_of_range>([&] { date_time::fromMinutes(maximum + 1); });
+    expectThrow<std::out_of_range>([] { date_time::addMinutes(-1, 1); });
+    expectThrow<std::out_of_range>([&] { date_time::addMinutes(maximum + 1, -1); });
+    expectThrow<std::overflow_error>([] { date_time::addMinutes(0, -1); });
+    expectThrow<std::overflow_error>([&] { date_time::addMinutes(maximum, 1); });
+    expectThrow<std::overflow_error>([] {
+        date_time::addMinutes(1, std::numeric_limits<std::int64_t>::min());
+    });
+    expectThrow<std::overflow_error>([] {
+        date_time::addMinutes(1, std::numeric_limits<std::int64_t>::max());
+    });
+}
+
 void testCalendarAndOverflow() {
     Fixture f;
     currentTime = "0001-01-01 00:00";
@@ -342,7 +378,7 @@ void testCalendarAndOverflow() {
     expectThrow([&] {
         TicketService invalid(f.seats, f.screenings, f.tickets, nullptr);
     });
-    assert(entity_detail::dateTime(localMinuteNow()).size() == 16);
+    assert(date_time::validateDateTime(date_time::localMinuteNow()).size() == 16);
 }
 
 void testSales() { // SAT-04/05/06/07/10/11/13, FR-SALE-*, FR-QUERY-*, FR-REPORT-*.
@@ -585,6 +621,7 @@ int main() {
     testScheduling();
     testLookupValidation();
     testQueryResultOwnership();
+    testDateTimeHelper();
     testCalendarAndOverflow();
     testSales();
     testAllocationRollback();

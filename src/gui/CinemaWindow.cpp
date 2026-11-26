@@ -1,8 +1,8 @@
-#include "ApplicationData.h"
+#include "database/CinemaDatabase.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
-#include "ui/MainWindow.h"
+#include "gui/CinemaWindow.h"
 
 #include <QAbstractItemView>
 #include <QCheckBox>
@@ -400,9 +400,9 @@ public:
 };
 }
 
-bool loadApplicationData(ApplicationData& data, QWidget* parent) {
+bool loadCinemaDatabase(CinemaDatabase& data, QWidget* parent) {
     try {
-        if (data.load() == ApplicationData::LoadResult::NeedsEmptyConfirmation) {
+        if (data.load() == CinemaDatabase::LoadResult::NeedsEmptyConfirmation) {
             if (!confirm(parent, QStringLiteral("Khởi tạo dữ liệu"),
                          QStringLiteral("Thư mục chưa có bộ dữ liệu TXT:\n%1\n\n"
                                         "Bắt đầu phiên rỗng? File chỉ được tạo khi thoát và lưu thành công.")
@@ -423,11 +423,11 @@ bool loadApplicationData(ApplicationData& data, QWidget* parent) {
     }
 }
 
-MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
+CinemaWindow::CinemaWindow(CinemaDatabase& data, CatalogService& catalog,
                        ScreeningService& screenings, TicketService& tickets)
     : data_(data), catalog_(catalog), screenings_(screenings), tickets_(tickets) {
     if (!data.isReady()) {
-        throw std::logic_error("MainWindow requires loaded and validated data");
+        throw std::logic_error("CinemaWindow requires loaded and validated data");
     }
     setObjectName("mainWindow");
     resize(1100, 720);
@@ -480,7 +480,7 @@ MainWindow::MainWindow(ApplicationData& data, CatalogService& catalog,
     updateStatus();
 }
 
-void MainWindow::setupSaleTab() {
+void CinemaWindow::setupSaleTab() {
     QWidget* saleTab = new QWidget(tabs_);
     saleTab->setObjectName("saleTab");
     tabs_->addTab(saleTab, QStringLiteral("&Bán vé"));
@@ -560,12 +560,12 @@ void MainWindow::setupSaleTab() {
     });
     connect(saleFilmFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
     connect(saleRoomFilter_, &QComboBox::currentIndexChanged, this, [this] { refreshSaleScreenings(); });
-    connect(saleScreeningTable_, &QTableWidget::itemSelectionChanged, this, &MainWindow::refreshSaleSeats);
-    connect(saleSeatTable_, &QTableWidget::cellClicked, this, &MainWindow::selectSaleSeat);
-    connect(sellButton_, &QPushButton::clicked, this, &MainWindow::sellTicket);
+    connect(saleScreeningTable_, &QTableWidget::itemSelectionChanged, this, &CinemaWindow::refreshSaleSeats);
+    connect(saleSeatTable_, &QTableWidget::cellClicked, this, &CinemaWindow::selectSaleSeat);
+    connect(sellButton_, &QPushButton::clicked, this, &CinemaWindow::sellTicket);
 }
 
-void MainWindow::setupFilmTab() {
+void CinemaWindow::setupFilmTab() {
     QWidget* filmTab = new QWidget(tabs_);
     filmTab->setObjectName("filmTab");
     tabs_->addTab(filmTab, QStringLiteral("&Phim"));
@@ -616,7 +616,7 @@ void MainWindow::setupFilmTab() {
 
     connect(filmAdd, &QPushButton::clicked, this, [this] { editFilm(true); });
     connect(filmEdit_, &QPushButton::clicked, this, [this] { editFilm(false); });
-    connect(filmRemove_, &QPushButton::clicked, this, &MainWindow::deleteFilm);
+    connect(filmRemove_, &QPushButton::clicked, this, &CinemaWindow::deleteFilm);
     connect(filmSearch_, &QLineEdit::textChanged, this, [this] { refreshFilms(); });
     connect(filmSearchMode_, &QComboBox::currentIndexChanged, this, [this] { refreshFilms(); });
     connect(filmTable_, &QTableWidget::itemSelectionChanged, this, [this] {
@@ -627,7 +627,7 @@ void MainWindow::setupFilmTab() {
     connect(filmTable_, &QTableWidget::cellDoubleClicked, this, [this] { editFilm(false); });
 }
 
-void MainWindow::setupRoomTab() {
+void CinemaWindow::setupRoomTab() {
     QWidget* roomTab = new QWidget(tabs_);
     roomTab->setObjectName("roomTab");
     tabs_->addTab(roomTab, QStringLiteral("Phòng && &ghế"));
@@ -669,7 +669,7 @@ void MainWindow::setupRoomTab() {
 
     connect(roomAdd, &QPushButton::clicked, this, [this] { editRoom(true); });
     connect(roomEdit_, &QPushButton::clicked, this, [this] { editRoom(false); });
-    connect(roomRemove_, &QPushButton::clicked, this, &MainWindow::deleteRoom);
+    connect(roomRemove_, &QPushButton::clicked, this, &CinemaWindow::deleteRoom);
     connect(roomTable_, &QTableWidget::itemSelectionChanged, this, [this] {
         const bool selected = selectedRoom() != 0;
         roomEdit_->setEnabled(selected);
@@ -679,7 +679,7 @@ void MainWindow::setupRoomTab() {
     connect(roomTable_, &QTableWidget::cellDoubleClicked, this, [this] { editRoom(false); });
 }
 
-void MainWindow::setupScreeningTab() {
+void CinemaWindow::setupScreeningTab() {
     QWidget* screeningTab = new QWidget(tabs_);
     screeningTab->setObjectName("screeningTab");
     tabs_->addTab(screeningTab, QStringLiteral("&Suất chiếu"));
@@ -739,7 +739,7 @@ void MainWindow::setupScreeningTab() {
 
     connect(screeningAdd, &QPushButton::clicked, this, [this] { editScreening(true); });
     connect(screeningEdit_, &QPushButton::clicked, this, [this] { editScreening(false); });
-    connect(screeningRemove_, &QPushButton::clicked, this, &MainWindow::deleteScreening);
+    connect(screeningRemove_, &QPushButton::clicked, this, &CinemaWindow::deleteScreening);
     connect(screeningIdFilter_, &QLineEdit::textChanged, this, [this] { refreshScreenings(); });
     connect(screeningUseDate_, &QCheckBox::toggled, this, [this](bool enabled) {
         screeningDate_->setEnabled(enabled);
@@ -760,7 +760,7 @@ void MainWindow::setupScreeningTab() {
     connect(screeningTable_, &QTableWidget::cellDoubleClicked, this, [this] { editScreening(false); });
 }
 
-void MainWindow::setupReportTab() {
+void CinemaWindow::setupReportTab() {
     QWidget* queryTab = new QWidget(tabs_);
     queryTab->setObjectName("queryTab");
     tabs_->addTab(queryTab, QStringLiteral("&Vé và doanh thu"));
@@ -830,8 +830,8 @@ void MainWindow::setupReportTab() {
     queryLayout->setColumnStretch(1, 2);
     queryLayout->setRowStretch(1, 1);
 
-    connect(ticketLookup, &QPushButton::clicked, this, &MainWindow::lookupTicket);
-    connect(ticketId_, &QLineEdit::returnPressed, this, &MainWindow::lookupTicket);
+    connect(ticketLookup, &QPushButton::clicked, this, &CinemaWindow::lookupTicket);
+    connect(ticketId_, &QLineEdit::returnPressed, this, &CinemaWindow::lookupTicket);
     connect(reportDate_, &QDateEdit::dateChanged, this, [this] {
         ticketId_->clear();
         ticketResult_->setText(QStringLiteral("Chọn một vé trong danh sách hoặc nhập mã vé để xem chi tiết."));
@@ -849,7 +849,7 @@ void MainWindow::setupReportTab() {
     });
 }
 
-EntityId MainWindow::selectedFilm() const {
+EntityId CinemaWindow::selectedFilm() const {
     const QTableWidgetItem* item = filmTable_->item(filmTable_->currentRow(), 0);
     if (item == nullptr || filmTable_->selectedItems().isEmpty()) {
         return 0;
@@ -857,7 +857,7 @@ EntityId MainWindow::selectedFilm() const {
     return item->data(Qt::DisplayRole).toLongLong();
 }
 
-EntityId MainWindow::selectedRoom() const {
+EntityId CinemaWindow::selectedRoom() const {
     const QTableWidgetItem* item = roomTable_->item(roomTable_->currentRow(), 0);
     if (item == nullptr || roomTable_->selectedItems().isEmpty()) {
         return 0;
@@ -865,7 +865,7 @@ EntityId MainWindow::selectedRoom() const {
     return item->data(Qt::DisplayRole).toLongLong();
 }
 
-EntityId MainWindow::selectedScreening() const {
+EntityId CinemaWindow::selectedScreening() const {
     const QTableWidgetItem* item = screeningTable_->item(screeningTable_->currentRow(), 0);
     if (item == nullptr || screeningTable_->selectedItems().isEmpty()) {
         return 0;
@@ -873,7 +873,7 @@ EntityId MainWindow::selectedScreening() const {
     return item->data(Qt::DisplayRole).toLongLong();
 }
 
-EntityId MainWindow::selectedSaleScreening() const {
+EntityId CinemaWindow::selectedSaleScreening() const {
     const QTableWidgetItem* item = saleScreeningTable_->item(saleScreeningTable_->currentRow(), 0);
     if (item == nullptr || saleScreeningTable_->selectedItems().isEmpty()) {
         return 0;
@@ -881,14 +881,14 @@ EntityId MainWindow::selectedSaleScreening() const {
     return item->data(Qt::DisplayRole).toLongLong();
 }
 
-void MainWindow::refreshReferenceCombos() {
+void CinemaWindow::refreshReferenceCombos() {
     populateFilms(screeningFilmFilter_, catalog_, true);
     populateRooms(screeningRoomFilter_, catalog_, true);
     populateFilms(saleFilmFilter_, catalog_, true);
     populateRooms(saleRoomFilter_, catalog_, true);
 }
 
-void MainWindow::refreshFilms(EntityId selectId) {
+void CinemaWindow::refreshFilms(EntityId selectId) {
     const QSignalBlocker block(filmTable_);
     filmTable_->setSortingEnabled(false);
     filmTable_->setRowCount(0);
@@ -935,7 +935,7 @@ void MainWindow::refreshFilms(EntityId selectId) {
     }
 }
 
-void MainWindow::editFilm(bool creating) {
+void CinemaWindow::editFilm(bool creating) {
     const EntityId id = creating ? 0 : selectedFilm();
     if (!creating && id == 0) {
         return;
@@ -955,7 +955,7 @@ void MainWindow::editFilm(bool creating) {
     }
 }
 
-void MainWindow::deleteFilm() {
+void CinemaWindow::deleteFilm() {
     const EntityId id = selectedFilm();
     if (id == 0) {
         return;
@@ -977,7 +977,7 @@ void MainWindow::deleteFilm() {
     }
 }
 
-void MainWindow::refreshRooms(EntityId selectId) {
+void CinemaWindow::refreshRooms(EntityId selectId) {
     const QSignalBlocker block(roomTable_);
     roomTable_->setSortingEnabled(false);
     roomTable_->setRowCount(0);
@@ -1013,7 +1013,7 @@ void MainWindow::refreshRooms(EntityId selectId) {
     }
 }
 
-void MainWindow::refreshRoomSeats() {
+void CinemaWindow::refreshRoomSeats() {
     roomSeatTable_->clear();
     roomSeatTable_->setRowCount(0);
     roomSeatTable_->setColumnCount(0);
@@ -1048,7 +1048,7 @@ void MainWindow::refreshRoomSeats() {
     }
 }
 
-void MainWindow::editRoom(bool creating) {
+void CinemaWindow::editRoom(bool creating) {
     const EntityId id = creating ? 0 : selectedRoom();
     if (!creating && id == 0) {
         return;
@@ -1067,7 +1067,7 @@ void MainWindow::editRoom(bool creating) {
     }
 }
 
-void MainWindow::deleteRoom() {
+void CinemaWindow::deleteRoom() {
     const EntityId id = selectedRoom();
     if (id == 0) {
         return;
@@ -1091,7 +1091,7 @@ void MainWindow::deleteRoom() {
     }
 }
 
-void MainWindow::refreshScreenings(EntityId selectId) {
+void CinemaWindow::refreshScreenings(EntityId selectId) {
     const QSignalBlocker block(screeningTable_);
     screeningTable_->setSortingEnabled(false);
     screeningTable_->setRowCount(0);
@@ -1143,7 +1143,7 @@ void MainWindow::refreshScreenings(EntityId selectId) {
     }
 }
 
-void MainWindow::editScreening(bool creating) {
+void CinemaWindow::editScreening(bool creating) {
     const EntityId id = creating ? 0 : selectedScreening();
     if (!creating && id == 0) {
         return;
@@ -1162,7 +1162,7 @@ void MainWindow::editScreening(bool creating) {
     }
 }
 
-void MainWindow::deleteScreening() {
+void CinemaWindow::deleteScreening() {
     const EntityId id = selectedScreening();
     if (id == 0) {
         return;
@@ -1181,7 +1181,7 @@ void MainWindow::deleteScreening() {
     }
 }
 
-void MainWindow::refreshSaleScreenings(EntityId selectId) {
+void CinemaWindow::refreshSaleScreenings(EntityId selectId) {
     const QSignalBlocker block(saleScreeningTable_);
     saleScreeningTable_->setSortingEnabled(false);
     saleScreeningTable_->setRowCount(0);
@@ -1223,7 +1223,7 @@ void MainWindow::refreshSaleScreenings(EntityId selectId) {
     }
 }
 
-void MainWindow::refreshSaleSeats() {
+void CinemaWindow::refreshSaleSeats() {
     selectedSaleSeat_ = 0;
     sellButton_->setEnabled(false);
     saleSeatTable_->clear();
@@ -1275,7 +1275,7 @@ void MainWindow::refreshSaleSeats() {
     }
 }
 
-void MainWindow::selectSaleSeat(int row, int column) {
+void CinemaWindow::selectSaleSeat(int row, int column) {
     QTableWidgetItem* selected = saleSeatTable_->item(row, column);
     if (selected == nullptr || selected->data(Qt::UserRole + 1).toBool()) {
         return;
@@ -1309,7 +1309,7 @@ void MainWindow::selectSaleSeat(int row, int column) {
     }
 }
 
-void MainWindow::sellTicket() {
+void CinemaWindow::sellTicket() {
     const EntityId screeningId = selectedSaleScreening();
     if (screeningId == 0 || selectedSaleSeat_ == 0) {
         return;
@@ -1338,7 +1338,7 @@ void MainWindow::sellTicket() {
     }
 }
 
-void MainWindow::lookupTicket() {
+void CinemaWindow::lookupTicket() {
     std::int64_t id = 0;
     if (!positiveValue(ticketId_, id)) {
         dailyTicketTable_->clearSelection();
@@ -1360,7 +1360,7 @@ void MainWindow::lookupTicket() {
     }
 }
 
-void MainWindow::showTicketDetails(EntityId ticketId) {
+void CinemaWindow::showTicketDetails(EntityId ticketId) {
     try {
         const TicketDetails details = tickets_.find(ticketId);
         const QString seat = seatName(static_cast<std::size_t>(details.sale.seat.rowNumber() - 1),
@@ -1375,7 +1375,7 @@ void MainWindow::showTicketDetails(EntityId ticketId) {
     }
 }
 
-void MainWindow::refreshRevenue(EntityId selectTicketId) {
+void CinemaWindow::refreshRevenue(EntityId selectTicketId) {
     const QSignalBlocker block(dailyTicketTable_);
     dailyTicketTable_->setSortingEnabled(false);
     dailyTicketTable_->setRowCount(0);
@@ -1419,14 +1419,14 @@ void MainWindow::refreshRevenue(EntityId selectTicketId) {
     }
 }
 
-void MainWindow::updateStatus() {
+void CinemaWindow::updateStatus() {
     setWindowModified(data_.isDirty());
     setWindowTitle(QStringLiteral("Quản lý rạp chiếu phim[*]"));
     saveState_->setText(data_.isDirty() ? QStringLiteral("Có thay đổi chưa lưu")
                                        : QStringLiteral("Không có thay đổi chưa lưu"));
 }
 
-void MainWindow::closeEvent(QCloseEvent* event) {
+void CinemaWindow::closeEvent(QCloseEvent* event) {
     event->ignore();
     if (!confirm(this, QStringLiteral("Lưu và thoát"),
                  QStringLiteral("Ghi toàn bộ dữ liệu vào TXT rồi thoát? Nếu lưu lỗi, cửa sổ sẽ giữ nguyên."),

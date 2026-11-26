@@ -1,14 +1,14 @@
 #include "entities/Seat.h"
 #include "entities/Auditorium.h"
-#include "entities/EntityValidation.h"
+#include "helper/FieldValidation.h"
 
 Seat::Seat(EntityId id, const Auditorium& auditorium,
            std::int64_t rowNumber, std::int64_t seatNumber)
 {
-    this->id_ = entity_detail::positive(id, "Seat ID");
+    this->id_ = field_validation::requirePositiveNumber(id, "Seat ID");
     this->auditorium_ = &auditorium;
-    this->rowNumber_ = entity_detail::positive(rowNumber, "Row number");
-    this->seatNumber_ = entity_detail::positive(seatNumber, "Seat number");
+    this->rowNumber_ = field_validation::requirePositiveNumber(rowNumber, "Row number");
+    this->seatNumber_ = field_validation::requirePositiveNumber(seatNumber, "Seat number");
 }
 
 EntityId Seat::id() const

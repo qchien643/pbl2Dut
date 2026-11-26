@@ -9,15 +9,15 @@
 
 #include <filesystem>
 
-class ApplicationData {
+class CinemaDatabase {
 public:
     enum class LoadResult { Loaded, NeedsEmptyConfirmation };
 
-    explicit ApplicationData(std::filesystem::path directory);
-    ApplicationData(const ApplicationData&) = delete;
-    ApplicationData& operator=(const ApplicationData&) = delete;
-    ApplicationData(ApplicationData&&) = delete;
-    ApplicationData& operator=(ApplicationData&&) = delete;
+    explicit CinemaDatabase(std::filesystem::path directory);
+    CinemaDatabase(const CinemaDatabase&) = delete;
+    CinemaDatabase& operator=(const CinemaDatabase&) = delete;
+    CinemaDatabase(CinemaDatabase&&) = delete;
+    CinemaDatabase& operator=(CinemaDatabase&&) = delete;
 
     FilmRepository films;
     AuditoriumRepository rooms;
@@ -36,7 +36,7 @@ public:
     const std::filesystem::path& directory() const;
 
 private:
-    friend struct ApplicationDataTestAccess;
+    friend struct CinemaDatabaseTestAccess;
     // Fault injection for filesystem failure tests; unused by the application.
     void (*beforeFileStep_)(const char* phase, std::size_t index) = nullptr;
     void fileStep(const char* phase, std::size_t index) const;

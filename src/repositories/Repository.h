@@ -3,7 +3,7 @@
 #include "DataStructures/HashTable.h"
 #include "DataStructures/LinkedList.h"
 #include "entities/EntityId.h"
-#include "entities/EntityValidation.h"
+#include "helper/FieldValidation.h"
 #include "repositories/IRepository.h"
 
 #include <cstddef>
@@ -111,7 +111,7 @@ template <typename T>
 bool Repository<T>::insert(const T& value)
 {
     const EntityId id = value.id();
-    entity_detail::positive(id, "Entity ID");
+    field_validation::requirePositiveNumber(id, "Entity ID");
     if (this->index_.find(id) != nullptr)
     {
         return false;

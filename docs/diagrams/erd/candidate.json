@@ -16,7 +16,7 @@
         {"name": "title", "type": "string"},
         {"name": "duration_minutes", "type": "int64"}
       ],
-      "sources": [{"path": "src/entities/Film.h", "line": 8, "end_line": 21}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}]},
+      "sources": [{"path": "src/entities/Film.h", "line": 8, "end_line": 21}, {"path": "src/fileio/TextFile.cpp", "line": 49, "end_line": 69}]},
     {"id": "room", "label": "Auditorium", "tag": "Không gian", "row": 0, "col": 2,
       "attributes": [
         {"name": "auditorium_id", "type": "int64", "key": "pk"},
@@ -24,7 +24,7 @@
         {"name": "row_count", "type": "int64"},
         {"name": "seats_per_row", "type": "int64"}
       ],
-      "sources": [{"path": "src/entities/Auditorium.h", "line": 8, "end_line": 24}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 179, "end_line": 188}]},
+      "sources": [{"path": "src/entities/Auditorium.h", "line": 8, "end_line": 24}, {"path": "src/fileio/TextFile.cpp", "line": 49, "end_line": 69}, {"path": "src/database/CinemaDatabase.cpp", "line": 179, "end_line": 188}]},
     {"id": "seat", "label": "Seat", "tag": "Không gian", "row": 1, "col": 2,
       "attributes": [
         {"name": "seat_id", "type": "int64", "key": "pk"},
@@ -32,7 +32,7 @@
         {"name": "row_number", "type": "int64"},
         {"name": "seat_number", "type": "int64"}
       ],
-      "sources": [{"path": "src/entities/Seat.h", "line": 7, "end_line": 22}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 160, "end_line": 188}]},
+      "sources": [{"path": "src/entities/Seat.h", "line": 7, "end_line": 22}, {"path": "src/fileio/TextFile.cpp", "line": 49, "end_line": 69}, {"path": "src/database/CinemaDatabase.cpp", "line": 160, "end_line": 188}]},
     {"id": "screening", "label": "Screening", "tag": "Chiếu và bán vé", "row": 0, "col": 1,
       "attributes": [
         {"name": "screening_id", "type": "int64", "key": "pk"},
@@ -41,7 +41,7 @@
         {"name": "start_time", "type": "string"},
         {"name": "ticket_price", "type": "int64"}
       ],
-      "sources": [{"path": "src/entities/Screening.h", "line": 8, "end_line": 26}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/services/ScreeningValidation.cpp", "line": 7, "end_line": 39}]},
+      "sources": [{"path": "src/entities/Screening.h", "line": 8, "end_line": 26}, {"path": "src/fileio/TextFile.cpp", "line": 49, "end_line": 69}, {"path": "src/services/ScreeningService.cpp", "line": 41, "end_line": 70}]},
     {"id": "ticket", "label": "Ticket", "tag": "Chiếu và bán vé", "row": 1, "col": 1,
       "attributes": [
         {"name": "ticket_id", "type": "int64", "key": "pk"},
@@ -50,7 +50,7 @@
         {"name": "sold_at", "type": "string"},
         {"name": "unit_price", "type": "int64"}
       ],
-      "sources": [{"path": "src/entities/Ticket.h", "line": 8, "end_line": 26}, {"path": "src/persistence/TxtPersistence.cpp", "line": 49, "end_line": 69}, {"path": "src/ApplicationData.cpp", "line": 200, "end_line": 214}]}
+      "sources": [{"path": "src/entities/Ticket.h", "line": 8, "end_line": 26}, {"path": "src/fileio/TextFile.cpp", "line": 49, "end_line": 69}, {"path": "src/database/CinemaDatabase.cpp", "line": 200, "end_line": 214}]}
   ],
   "relationships": [
     {"id": "screening-film", "from": "screening", "to": "film", "fromCardinality": "many", "fromOptional": true, "toCardinality": "one", "toOptional": false, "identifying": false},

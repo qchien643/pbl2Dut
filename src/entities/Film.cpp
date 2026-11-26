@@ -1,11 +1,11 @@
 #include "entities/Film.h"
-#include "entities/EntityValidation.h"
+#include "helper/FieldValidation.h"
 
 Film::Film(EntityId id, std::string title, std::int64_t durationMinutes)
 {
-    this->id_ = entity_detail::positive(id, "Film ID");
-    this->title_ = entity_detail::name(title);
-    this->durationMinutes_ = entity_detail::positive(durationMinutes, "Duration");
+    this->id_ = field_validation::requirePositiveNumber(id, "Film ID");
+    this->title_ = field_validation::validateAndTrimName(title);
+    this->durationMinutes_ = field_validation::requirePositiveNumber(durationMinutes, "Duration");
 }
 
 EntityId Film::id() const

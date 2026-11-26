@@ -14,7 +14,7 @@ mạng. Phiên bản hiện tại đã hoàn thiện giao diện, nghiệp vụ 
 
 Xóa phim/phòng bị chặn khi còn suất; suất đã bán vé không được xóa. Xóa phòng
 hợp lệ sẽ xóa kèm ghế. Không hỗ trợ xóa vé, xóa mềm hoặc hủy/hoàn tiền;
-xem [quy ước xóa dữ liệu](docs/requirements/srs.md#quy-ước-xóa-dữ-liệu).
+xem [quy ước xóa dữ liệu](docs/requirements/business-rules.md#4-quy-ước-xóa-dữ-liệu).
 
 ## Cài đặt công cụ
 
@@ -107,13 +107,14 @@ phục hồi và không nên xóa khi chưa kiểm tra dữ liệu hiện tại.
 
 ```text
 src/
-├── DataStructures/   LinkedList, HashTable, Matrix2D tự cài đặt
-├── entities/         Mỗi entity có cặp .h/.cpp riêng
-├── repositories/     Mỗi repository có một header riêng
-├── persistence/      Đọc và ghi định dạng TXT
-├── services/         Mỗi service có header và implementation riêng
-├── ui/               Giao diện Qt Widgets
-├── ApplicationData.* Điều phối nạp, kiểm tra và lưu dữ liệu
+├── DataStructures/    LinkedList, HashTable, Matrix2D tự cài đặt
+├── entities/          Mỗi entity có cặp .h/.cpp riêng
+├── repositories/      Mỗi repository có một header riêng
+├── fileio/            TextFile đọc TXT; EntityFile chuyển đổi entity
+├── common/            DateTimeHelper và FieldValidation: ngày giờ, kiểm tra trường dữ liệu
+├── services/          Mỗi service có header và implementation riêng
+├── gui/               CinemaWindow: cửa sổ Qt Widgets
+├── database/          CinemaDatabase: sở hữu repository, nạp và lưu dữ liệu
 └── main.cpp           Điểm khởi động chương trình
 tests/                 Chín bộ kiểm thử tự chạy bằng CTest
 data/demo/             Bộ dữ liệu mẫu
@@ -137,7 +138,7 @@ Xem [định dạng TXT](docs/design/txt-format.md).
 ## Kiến trúc
 
 ```text
-MainWindow (Qt UI)
+CinemaWindow (Qt UI)
         │
         ▼
 CatalogService / ScreeningService / TicketService
@@ -150,7 +151,7 @@ Repository<T> / TicketRepository / RoomStorage
         └── LinkedList<T> + HashTable<ID, T*>
         ▲
         │ repository cụ thể được main.cpp truyền vào
-ApplicationData ── TxtPersistence ── 5 file TXT
+CinemaDatabase ── TextFile ── 5 file TXT
 ```
 
 - Entity đóng gói dữ liệu và kiểm tra tính hợp lệ nội tại.
@@ -158,9 +159,10 @@ ApplicationData ── TxtPersistence ── 5 file TXT
 - Repository quản lý bản ghi và chỉ mục trên RAM.
 - Cả năm repository kế thừa `Repository<T>`; quy định không sửa/xóa vé nằm ở
   API của `TicketService`, không nằm trong repository.
-- `ApplicationData` điều phối nạp, kiểm tra, lưu và phục hồi dữ liệu.
+- `CinemaDatabase` sở hữu dữ liệu trên RAM, điều phối nạp, kiểm tra, lưu và phục
+  hồi từ TXT; đây không phải SQLite hay một hệ quản trị SQL.
 - `main.cpp` là nơi constructor injection: tạo service từ repository của
-  `ApplicationData`, sau đó truyền service vào `MainWindow`.
+  `CinemaDatabase`, sau đó truyền service vào `CinemaWindow`.
 - `DependencyInjectionTest` thay repository bằng implementation độc lập để
   kiểm chứng service không phụ thuộc lớp lưu trữ cụ thể.
 - `Matrix2D<T>` được dùng để dựng sơ đồ ghế của phòng hoặc suất chiếu.

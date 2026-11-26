@@ -10,10 +10,19 @@ cũ; mô tả bên dưới phản ánh code hiện tại.
 | Entity | Giữ trạng thái và kiểm tra giá trị nội tại |
 | Repository | Sở hữu entity trên RAM và tìm theo ID |
 | Service | Kiểm tra quy tắc liên quan nhiều entity |
-| ApplicationData | Sở hữu repository, nạp, kiểm tra và lưu dữ liệu |
-| MainWindow | Nhận thao tác Qt, gọi service và hiển thị kết quả |
+| CinemaDatabase | Sở hữu repository, nạp, kiểm tra và lưu dữ liệu |
+| CinemaWindow | Nhận thao tác Qt, gọi service và hiển thị kết quả |
 
 Widget không xử lý nghiệp vụ; service không đọc/ghi TXT trực tiếp.
+
+`ScreeningService::validate()` kiểm tra trùng phòng, trùng lịch và 15 phút nghỉ.
+`common/DateTimeHelper` chỉ kiểm tra định dạng/lịch, chuyển chuỗi ↔ phút và cộng
+phút an toàn; không biết entity hay repository. Service tự lấy thời lượng phim
+để tính giờ kết thúc. Database không kiểm tra trùng lịch khi nạp/lưu.
+
+`DateTimeHelper` cũng cung cấp `localMinuteNow()` và kiểu con trỏ hàm `Clock`.
+Service nhận `date_time::Clock` qua constructor để dùng giờ thật hoặc đồng hồ giả
+trong test; đây là helper, không phải service nghiệp vụ.
 
 ## 2. Quan hệ giữa entity
 
@@ -29,7 +38,7 @@ Ví dụ `Ticket` giữ `const Screening*` và `const Seat*`. Các hàm
 `screeningId()` và `seatId()` lấy ID từ đối tượng liên kết để ghi TXT.
 
 Repository sở hữu entity; entity chỉ mượn địa chỉ. Vì vậy repository đích phải
-sống lâu hơn đối tượng đang trỏ tới nó. `ApplicationData` tạo repository theo
+sống lâu hơn đối tượng đang trỏ tới nó. `CinemaDatabase` tạo repository theo
 thứ tự và sống đến khi cửa sổ đóng.
 
 ## 3. Entity
@@ -37,6 +46,10 @@ thứ tự và sống đến khi cửa sổ đóng.
 Mỗi entity có một `.h` và `.cpp` riêng. Thuộc tính là `private`; code ngoài đọc
 qua getter. Constructor từ chối dữ liệu sai nên một entity đã tạo thành công luôn
 hợp lệ về giá trị nội tại.
+
+Constructor dùng `common/FieldValidation`: `requirePositiveNumber()` từ chối số
+không dương; `validateAndTrimName()` kiểm tra tên và bỏ khoảng trắng đầu/cuối.
+Đây là helper kiểm tra trường dữ liệu, không phải entity hay service.
 
 Entity không tự kiểm tra sự tồn tại của bản ghi liên quan. Ví dụ constructor
 `Screening` nhận `Film&` và `Auditorium&`; service hoặc bước nạp chịu trách nhiệm
@@ -69,6 +82,11 @@ Copy mặc định có thể làm index trỏ về node của repository cũ.
 
 ## 5. Service
 
+Quy tắc đã có trong code, nơi thực hiện và phần chỉ điều phối repository
+được ghi tại [Danh mục quy tắc nghiệp vụ](../requirements/business-rules.md).
+Không mặc định mọi hàm service đều có nghiệp vụ riêng; ví dụ `addFilm()` chỉ
+lấy ID, tạo entity và gọi `insert()`, còn `film()`/`room()` là tra cứu có báo lỗi.
+
 | Service | Repository sử dụng | Nhiệm vụ |
 |---|---|---|
 | `CatalogService` | phim, phòng, ghế, suất; `IRoomStorage` | CRUD phim/phòng, sinh ghế, chặn dữ liệu đang dùng |
@@ -79,11 +97,11 @@ Service giữ reference tới `IRepository<T>` và không sở hữu
 repository. `CatalogService` nhận thêm `IRoomStorage` để lưu phòng cùng bộ ghế
 như một thao tác RAM; không tự dựng repository cụ thể.
 
-Đây là **constructor injection**: `main.cpp` tạo `ApplicationData` trước, rồi
-truyền repository vào constructor của service và truyền service vào `MainWindow`.
+Đây là **constructor injection**: `main.cpp` tạo `CinemaDatabase` trước, rồi
+truyền repository vào constructor của service và truyền service vào `CinemaWindow`.
 
 ```text
-ApplicationData sở hữu FilmRepository, SeatRepository, ..., RoomStorage
+CinemaDatabase sở hữu FilmRepository, SeatRepository, ..., RoomStorage
               ↓ main.cpp truyền vào constructor
 Service giữ IRepository<Film>&, IRepository<Seat>&, IRepository<Ticket>&, ...
 CatalogService còn giữ IRoomStorage&
@@ -95,7 +113,7 @@ trỏ chỉ đọc tới entity gốc, không trả iterator của kho và khôn
 Không dùng các con trỏ này sau khi bản ghi bị xóa hoặc kho bị thay.
 
 Phạm vi có chủ đích cho môn học: không thêm interface cho entity, Qt, service
-hay toàn bộ TXT. `ApplicationData` vẫn biết lớp cụ thể để quản lý vòng đời và
+hay toàn bộ TXT. `CinemaDatabase` vẫn biết lớp cụ thể để quản lý vòng đời và
 nạp/lưu; `RoomStorage` biết lớp cụ thể để thay kho và nối lại con trỏ an toàn.
 Không dùng factory hoặc DI container.
 
@@ -123,7 +141,7 @@ Mọi cấp phát hoàn tất trước khi đổi phòng/kho chính; lỗi chu�
 - `Repository::erase()` chỉ xóa chỉ mục và node, đánh dấu dirty; không tự kiểm
   tra nghiệp vụ hay tự đặt con trỏ liên quan thành `nullptr`.
 
-Giao diện xác nhận rồi gọi service; `ApplicationData::save()` mới ghi trạng
+Giao diện xác nhận rồi gọi service; `CinemaDatabase::save()` mới ghi trạng
 thái RAM ra TXT. Phải đi qua service để không tạo con trỏ treo.
 
 ## 7. OOP được sử dụng

@@ -1,14 +1,13 @@
 #include "services/TicketService.h"
 
-#include "entities/EntityValidation.h"
-#include "services/ScreeningTime.h"
+#include "helper/DateTimeHelper.h"
 
 #include <limits>
 #include <stdexcept>
 
 TicketService::TicketService(const IRepository<Seat>& seats,
                              const IRepository<Screening>& screenings,
-                             IRepository<Ticket>& tickets, ServiceClock clock)
+                             IRepository<Ticket>& tickets, date_time::Clock clock)
     : seats_(seats), screenings_(screenings), tickets_(tickets), clock_(clock)
 {
     if (clock_ == nullptr)
@@ -44,15 +43,16 @@ SaleDetails TicketService::details(EntityId screeningId, EntityId seatId) const
         throw std::invalid_argument("Seat does not belong to screening room");
     }
 
-    const std::int64_t endMinute = screening_time::endMinute(*screening);
-    const std::string endTime = screening_time::formatMinute(endMinute);
+    const std::int64_t start = date_time::toMinutes(screening->startTime());
+    const std::int64_t endMinute = date_time::addMinutes(start, screening->film().durationMinutes());
+    const std::string endTime = date_time::fromMinutes(endMinute);
     SaleDetails result{screening->film(), room, *screening, *seat, endTime};
     return result;
 }
 
 void TicketService::requireAvailable(const SaleDetails& sale, const std::string& now) const
 {
-    entity_detail::dateTime(now);
+    date_time::validateDateTime(now);
     if (now >= sale.screening.startTime())
     {
         throw std::invalid_argument("Screening has already started");
@@ -156,7 +156,7 @@ std::unique_ptr<SeatMap> TicketService::seatMap(EntityId screeningId) const
 
 void TicketService::validateSaleDate(const std::string& saleDate)
 {
-    screening_time::validateDate(saleDate);
+    date_time::validateDate(saleDate);
 }
 
 DailyRevenue TicketService::revenue(const std::string& saleDate) const

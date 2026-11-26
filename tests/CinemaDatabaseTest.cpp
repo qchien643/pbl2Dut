@@ -2,9 +2,9 @@
 #undef NDEBUG
 #endif
 
-#include "ApplicationData.h"
-#include "persistence/ModelIO.h"
-#include "persistence/TxtPersistence.h"
+#include "database/CinemaDatabase.h"
+#include "fileio/EntityFile.h"
+#include "fileio/TextFile.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
@@ -42,8 +42,8 @@ void* operator new[](std::size_t size) { return ::operator new(size); }
 void operator delete[](void* memory) noexcept { ::operator delete(memory); }
 void operator delete[](void* memory, std::size_t) noexcept { ::operator delete(memory); }
 
-struct ApplicationDataTestAccess {
-    static void hook(ApplicationData& data, void (*callback)(const char*, std::size_t)) {
+struct CinemaDatabaseTestAccess {
+    static void hook(CinemaDatabase& data, void (*callback)(const char*, std::size_t)) {
         data.beforeFileStep_ = callback;
     }
 };
@@ -97,8 +97,8 @@ void expectError(Function action, const std::string& message) {
 
 std::string fixedClock() { return "2020-01-01 10:00"; }
 
-void populate(ApplicationData& data) {
-    assert(data.load(true) == ApplicationData::LoadResult::Loaded);
+void populate(CinemaDatabase& data) {
+    assert(data.load(true) == CinemaDatabase::LoadResult::Loaded);
     CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService schedule(data.films, data.rooms, data.screenings, data.tickets, fixedClock);
     TicketService sales(data.seats, data.screenings, data.tickets, fixedClock);
@@ -110,7 +110,7 @@ void populate(ApplicationData& data) {
     assert(sales.sell(1, 1, true) == 1);
 }
 
-void assertOriginal(const ApplicationData& data) {
+void assertOriginal(const CinemaDatabase& data) {
     assert(data.isReady() && !data.isDirty());
     assert(data.films.size() == 1 && data.films.findById(1)->title() == u8"Phim Vi\u1ec7t");
     assert(data.rooms.size() == 2 && data.seats.size() == 5);
@@ -129,15 +129,15 @@ void assertOriginal(const ApplicationData& data) {
 
 void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     TemporaryDirectory directory;
-    ApplicationData data(directory.path);
+    CinemaDatabase data(directory.path);
     expectError([&] { data.save(); }, "before saving");
-    assert(data.load() == ApplicationData::LoadResult::NeedsEmptyConfirmation);
+    assert(data.load() == CinemaDatabase::LoadResult::NeedsEmptyConfirmation);
     assert(!data.isReady() && fs::is_empty(directory.path));
     populate(data);
     assert(data.isDirty() && fs::is_empty(directory.path));
     data.save();
     assertOriginal(data);
-    ApplicationData reloaded(directory.path);
+    CinemaDatabase reloaded(directory.path);
     reloaded.load(); // Historical screenings are valid; no comparison against today's clock.
     assertOriginal(reloaded);
     expectError([&] { reloaded.load(); }, "fresh");
@@ -150,7 +150,7 @@ void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     assert(oldText.find("New title") == std::string::npos);
     reloaded.save();
     assert(read(directory.path / ".cms-backup-2" / "old" / "films.txt") == oldText);
-    ApplicationData next(directory.path);
+    CinemaDatabase next(directory.path);
     next.load();
     assert(next.films.size() == 2 && next.films.findById(1)->title() == "New title");
     assert(next.rooms.size() == 1 && next.seats.size() == 4 && !next.seats.findById(5));
@@ -161,11 +161,11 @@ void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     assert(fs::exists(directory.path / ".cms-backup-3"));
 
     TemporaryDirectory emptyDirectory;
-    ApplicationData empty(emptyDirectory.path);
+    CinemaDatabase empty(emptyDirectory.path);
     empty.load(true);
     empty.save();
-    ApplicationData emptyAgain(emptyDirectory.path);
-    assert(emptyAgain.load() == ApplicationData::LoadResult::Loaded);
+    CinemaDatabase emptyAgain(emptyDirectory.path);
+    assert(emptyAgain.load() == CinemaDatabase::LoadResult::Loaded);
     assert(emptyAgain.isReady() && emptyAgain.films.empty() && !emptyAgain.isDirty());
 }
 
@@ -203,7 +203,6 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|99|1|2020-01-02 23:00|80000\n", "screenings.txt:2"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|99|2020-01-02 23:00|80000\n", "screenings.txt:2"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-02-30 23:00|80000\n", "Day"},
-        {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-01-02 23:00|80000\n2|1|1|2020-01-03 01:14|80000\n", "overlaps"},
         {"screenings.txt", "screening_id|film_id|auditorium_id|start_time|ticket_price\n1|1|1|2020-01-02 23:00|80000\n2|1|99|2020-01-03 01:15|80000\n", "screenings.txt:3"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-02 23:00|80000\n", "before screening"},
         {"tickets.txt", "ticket_id|screening_id|seat_id|sold_at|unit_price\n1|1|1|2020-01-03 00:00|80000\n", "before screening"},
@@ -215,11 +214,11 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
     };
     for (const auto& test : cases) {
         TemporaryDirectory directory;
-        ApplicationData original(directory.path);
+        CinemaDatabase original(directory.path);
         populate(original);
         original.save();
         write(directory.path / test.file, test.body);
-        ApplicationData data(directory.path);
+        CinemaDatabase data(directory.path);
         expectError([&] { data.load(true); }, test.message);
         assert(!data.isReady() && !data.isDirty());
         assert(data.films.empty() && data.rooms.empty() && data.seats.empty());
@@ -230,9 +229,28 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
     }
 }
 
-void testNamedRowsAndModelIO() {
+void testSchedulingRulesBelongToService() {
     TemporaryDirectory directory;
-    ApplicationData original(directory.path);
+    CinemaDatabase data(directory.path);
+    populate(data);
+    data.save();
+    ScreeningService schedule(data.films, data.rooms, data.screenings, data.tickets, fixedClock);
+    expectError([&] { schedule.add(1, 1, "2020-01-03 01:14", 90000); }, "overlaps");
+    assert(data.screenings.size() == 2 && !data.isDirty());
+
+    // Deliberately bypass the service to prove persistence does not enforce scheduling rules.
+    assert(data.screenings.insert(Screening(3, *data.films.findById(1), *data.rooms.findById(1),
+                                             "2020-01-03 01:14", 90000)));
+    data.save();
+    CinemaDatabase reloaded(directory.path);
+    assert(reloaded.load() == CinemaDatabase::LoadResult::Loaded);
+    assert(reloaded.screenings.size() == 3);
+    assert(reloaded.screenings.findById(3)->startTime() == "2020-01-03 01:14");
+}
+
+void testNamedRowsAndEntityFile() {
+    TemporaryDirectory directory;
+    CinemaDatabase original(directory.path);
     populate(original);
     original.save();
     const char* names[] = {"films.txt", "auditoriums.txt", "seats.txt", "screenings.txt", "tickets.txt"};
@@ -256,7 +274,7 @@ void testNamedRowsAndModelIO() {
     write(directory.path / "tickets.txt",
           "unit_price|sold_at|seat_id|screening_id|ticket_id\n"
           "80000|2020-01-01 10:00|1|1|1\n");
-    ApplicationData reordered(directory.path);
+    CinemaDatabase reordered(directory.path);
     reordered.load();
     assertOriginal(reordered);
     assert(reordered.seats.findById(2)->rowNumber() == 1);
@@ -267,37 +285,37 @@ void testNamedRowsAndModelIO() {
     for (std::size_t i = 0; i < 5; ++i) {
         assert(read(directory.path / names[i]) == canonical[i]);
     }
-    ApplicationData reloaded(directory.path);
+    CinemaDatabase reloaded(directory.path);
     reloaded.load();
     assertOriginal(reloaded);
 
     // Conversion borrows the stored room; text rows do not own any model objects.
-    txt_persistence::Row fields{{"seat_number", "2"}, {"seat_id", "20"},
+    fileio::Row fields{{"seat_number", "2"}, {"seat_id", "20"},
                                 {"auditorium_id", "1"}, {"row_number", "1"}};
-    const Seat seat = txt_persistence::readSeat(fields, reloaded.rooms);
+    const Seat seat = fileio::readSeat(fields, reloaded.rooms);
     assert(seat.id() == 20 && &seat.auditorium() == reloaded.rooms.findById(1));
     assert(seat.rowNumber() == 1 && seat.seatNumber() == 2);
     std::ostringstream row;
-    txt_persistence::writeSeat(row, seat);
+    fileio::writeSeat(row, seat);
     assert(row.str() == "20|1|1|2\n");
     fields["auditorium_id"] = "99";
-    expectError([&] { txt_persistence::readSeat(fields, reloaded.rooms); }, "missing");
+    expectError([&] { fileio::readSeat(fields, reloaded.rooms); }, "missing");
 
-    const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(
-        directory.path / "seats.txt", txt_persistence::seatHeader);
+    const std::vector<fileio::Row> rows = fileio::readTable(
+        directory.path / "seats.txt", fileio::seatHeader);
     assert(rows.size() == 5 && rows[1].at("seat_number") == "2");
     assert(rows[1].at("auditorium_id") == "1");
     fields.erase("row_number");
     fields["auditorium_id"] = "1";
     bool missingColumn = false;
-    try { txt_persistence::readSeat(fields, reloaded.rooms); }
+    try { fileio::readSeat(fields, reloaded.rooms); }
     catch (const std::out_of_range&) { missingColumn = true; }
     assert(missingColumn);
 }
 
 void testFileSetAndEncoding() {
     TemporaryDirectory directory;
-    ApplicationData original(directory.path);
+    CinemaDatabase original(directory.path);
     populate(original);
     original.save();
     const auto films = read(directory.path / "films.txt");
@@ -307,13 +325,13 @@ void testFileSetAndEncoding() {
     }
     windows.erase(windows.size() - 2); // A final newline is optional.
     write(directory.path / "films.txt", windows);
-    ApplicationData crlf(directory.path);
+    CinemaDatabase crlf(directory.path);
     crlf.load();
     assertOriginal(crlf);
     crlf.save();
     assert(read(directory.path / "films.txt") == films);
     fs::rename(directory.path / "films.txt", directory.path / "hidden.txt");
-    ApplicationData missing(directory.path);
+    CinemaDatabase missing(directory.path);
     expectError([&] { missing.load(true); }, "Incomplete");
     fs::create_directory(directory.path / "films.txt");
     expectError([&] { missing.load(); }, "regular file");
@@ -327,9 +345,9 @@ void testFileSetAndEncoding() {
 
     TemporaryDirectory empty;
     fs::create_directory(empty.path / ".cms-backup-1");
-    ApplicationData history(empty.path);
+    CinemaDatabase history(empty.path);
     expectError([&] { history.load(true); }, "backups exist");
-    ApplicationData absent(empty.path / "absent");
+    CinemaDatabase absent(empty.path / "absent");
     expectError([&] { absent.load(true); }, "must exist");
 }
 
@@ -356,7 +374,7 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
             }
             for (std::size_t index = 0; index < (std::string(phase) == "archive" ? 1u : 5u); ++index) {
                 TemporaryDirectory directory;
-                ApplicationData data(directory.path);
+                CinemaDatabase data(directory.path);
                 populate(data);
                 std::string before[5];
                 if (!firstSave) {
@@ -370,7 +388,7 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
                 catalog.updateFilm(1, "Changed", 120);
                 failurePhase = phase;
                 failureIndex = index;
-                ApplicationDataTestAccess::hook(data, failFileStep);
+                CinemaDatabaseTestAccess::hook(data, failFileStep);
                 expectError([&] { data.save(); }, "disk state restored");
                 assert(data.isReady() && data.isDirty() && !data.needsManualRecovery());
                 assert(data.films.findById(1)->title() == "Changed" && data.tickets.size() == 1);
@@ -385,12 +403,12 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
                         }
                     }
                 }
-                ApplicationData reopening(directory.path);
+                CinemaDatabase reopening(directory.path);
                 expectError([&] { reopening.load(true); }, "Unfinished");
-                ApplicationDataTestAccess::hook(data, nullptr);
+                CinemaDatabaseTestAccess::hook(data, nullptr);
                 data.save();
                 assert(!data.isDirty() && !fs::exists(directory.path / ".cms-save"));
-                ApplicationData saved(directory.path);
+                CinemaDatabase saved(directory.path);
                 saved.load();
                 assert(saved.films.findById(1)->title() == "Changed");
             }
@@ -400,7 +418,7 @@ void testSaveFailures() { // FR-DATA-08/09, SAT-15 (storage half).
 
 void testFailedRecoveryAndValidation() {
     TemporaryDirectory directory;
-    ApplicationData data(directory.path);
+    CinemaDatabase data(directory.path);
     populate(data);
     data.save();
     const auto original = read(directory.path / "films.txt");
@@ -409,14 +427,14 @@ void testFailedRecoveryAndValidation() {
     failurePhase = "install";
     failureIndex = 2;
     failRestore = true;
-    ApplicationDataTestAccess::hook(data, failFileStep);
+    CinemaDatabaseTestAccess::hook(data, failFileStep);
     expectError([&] { data.save(); }, "ROLLBACK FAILED");
     failRestore = false;
     assert(data.isDirty() && data.needsManualRecovery());
     assert(read(directory.path / ".cms-save" / "old" / "films.txt") == original);
-    ApplicationDataTestAccess::hook(data, nullptr);
+    CinemaDatabaseTestAccess::hook(data, nullptr);
     expectError([&] { data.save(); }, "manual recovery");
-    ApplicationData reopening(directory.path);
+    CinemaDatabase reopening(directory.path);
     expectError([&] { reopening.load(); }, "Unfinished");
     data.retryRecovery();
     assert(!data.needsManualRecovery() && data.isDirty());
@@ -427,7 +445,7 @@ void testFailedRecoveryAndValidation() {
     assert(reopening.films.findById(1)->title() == "Changed");
 
     TemporaryDirectory invalidDirectory;
-    ApplicationData invalid(invalidDirectory.path);
+    CinemaDatabase invalid(invalidDirectory.path);
     populate(invalid);
     invalid.save();
     const auto tickets = read(invalidDirectory.path / "tickets.txt");
@@ -454,19 +472,19 @@ void testRealIoFailures() {
     for (auto hook : {breakRealWrite, breakRealInstall}) {
         TemporaryDirectory directory;
         injectedDirectory = directory.path;
-        ApplicationData data(directory.path);
+        CinemaDatabase data(directory.path);
         populate(data);
         data.save();
         const auto previous = read(directory.path / "films.txt");
         data.films.update(1, Film(1, "Changed", 120));
-        ApplicationDataTestAccess::hook(data, hook);
+        CinemaDatabaseTestAccess::hook(data, hook);
         expectError([&] { data.save(); }, "disk state restored");
         assert(data.isDirty() && read(directory.path / "films.txt") == previous);
     }
     // Linux's full device accepts opening but rejects writes, including buffered close.
     if (fs::exists("/dev/full")) {
         expectError([] {
-            std::ofstream output = txt_persistence::openOutput("/dev/full", txt_persistence::filmHeader);
+            std::ofstream output = fileio::openOutput("/dev/full", fileio::filmHeader);
             output.close();
         }, "");
     }
@@ -474,7 +492,7 @@ void testRealIoFailures() {
 
 void testAllocationFailures() {
     TemporaryDirectory directory;
-    ApplicationData original(directory.path);
+    CinemaDatabase original(directory.path);
     populate(original);
     original.save();
     // Exercise our codec; global allocation failure inside libstdc++'s directory
@@ -485,10 +503,10 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(
-                directory.path / "films.txt", txt_persistence::filmHeader);
-            for (const txt_persistence::Row& row : rows) {
-                assert(staged.insert(txt_persistence::readFilm(row)));
+            const std::vector<fileio::Row> rows = fileio::readTable(
+                directory.path / "films.txt", fileio::filmHeader);
+            for (const fileio::Row& row : rows) {
+                assert(staged.insert(fileio::readFilm(row)));
             }
         } catch (const std::exception&) {
             failed = true;
@@ -509,10 +527,10 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            std::ofstream output = txt_persistence::openOutput(
-                directory.path / "temporary.txt", txt_persistence::filmHeader);
+            std::ofstream output = fileio::openOutput(
+                directory.path / "temporary.txt", fileio::filmHeader);
             for (const Film& film : original.films) {
-                txt_persistence::writeFilm(output, film);
+                fileio::writeFilm(output, film);
             }
             output.close();
         } catch (const std::exception&) {
@@ -535,8 +553,8 @@ void testAllocationFailures() {
 
 void testDemoData() {
     const auto demo = std::filesystem::path(__FILE__).parent_path().parent_path() / "data" / "demo";
-    ApplicationData data(demo);
-    assert(data.load() == ApplicationData::LoadResult::Loaded);
+    CinemaDatabase data(demo);
+    assert(data.load() == CinemaDatabase::LoadResult::Loaded);
     const auto recordCount = [&](const char* name) {
         std::ifstream input(demo / name);
         std::string line;
@@ -556,16 +574,17 @@ void testDemoData() {
 }
 
 int main() {
-    static_assert(!std::is_copy_constructible_v<ApplicationData>);
-    static_assert(!std::is_move_constructible_v<ApplicationData>);
+    static_assert(!std::is_copy_constructible_v<CinemaDatabase>);
+    static_assert(!std::is_move_constructible_v<CinemaDatabase>);
     testEmptyAndRoundTrip();
     testBadInput();
-    testNamedRowsAndModelIO();
+    testSchedulingRulesBelongToService();
+    testNamedRowsAndEntityFile();
     testFileSetAndEncoding();
     testSaveFailures();
     testFailedRecoveryAndValidation();
     testRealIoFailures();
     testAllocationFailures();
     testDemoData();
-    std::cout << "ApplicationData checks passed\n";
+    std::cout << "CinemaDatabase checks passed\n";
 }

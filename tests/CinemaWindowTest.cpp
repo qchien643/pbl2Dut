@@ -2,11 +2,11 @@
 #undef NDEBUG
 #endif
 
-#include "ApplicationData.h"
+#include "database/CinemaDatabase.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
-#include "ui/MainWindow.h"
+#include "gui/CinemaWindow.h"
 
 #include <QApplication>
 #include <QComboBox>
@@ -106,19 +106,19 @@ int rowForId(QTableWidget* table, EntityId id) {
 void testStartup() {
     QTemporaryDir directory;
     assert(directory.isValid());
-    ApplicationData data(path(directory));
+    CinemaDatabase data(path(directory));
     answerConfirmation(false);
-    assert(!loadApplicationData(data));
+    assert(!loadCinemaDatabase(data));
     assert(!data.isReady() && std::filesystem::is_empty(path(directory)));
     answerConfirmation(true);
-    assert(loadApplicationData(data));
+    assert(loadCinemaDatabase(data));
     assert(data.isReady() && std::filesystem::is_empty(path(directory)));
     data.save();
 
     std::ofstream(path(directory) / "films.txt") << "broken\n";
-    ApplicationData broken(path(directory));
+    CinemaDatabase broken(path(directory));
     dismissError();
-    assert(!loadApplicationData(broken));
+    assert(!loadCinemaDatabase(broken));
     assert(!broken.isReady());
     QFile file(directory.filePath("films.txt"));
     assert(file.open(QIODevice::ReadOnly) && file.readAll() == "broken\n");
@@ -127,12 +127,12 @@ void testStartup() {
 void testFilmsAndClose() {
     QTemporaryDir directory;
     assert(directory.isValid());
-    ApplicationData data(path(directory));
+    CinemaDatabase data(path(directory));
     data.load(true);
     CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
     TicketService tickets(data.seats, data.screenings, data.tickets);
-    MainWindow window(data, catalog, screenings, tickets);
+    CinemaWindow window(data, catalog, screenings, tickets);
     window.show();
     QApplication::processEvents();
     auto* table = child<QTableWidget>(window, "filmTable");
@@ -265,14 +265,14 @@ void testFilmsAndClose() {
     answerConfirmation(true);
     assert(window.close());
     assert(!window.isVisible() && !data.isDirty());
-    ApplicationData reopened(path(directory));
+    CinemaDatabase reopened(path(directory));
     reopened.load();
     assert(reopened.films.size() == 1 && reopened.films.findById(1)->title() == "Scheduled rename");
     CatalogService nextCatalog(reopened.films, reopened.rooms, reopened.seats,
                                reopened.screenings, reopened.roomStorage);
     ScreeningService nextScreenings(reopened.films, reopened.rooms, reopened.screenings, reopened.tickets);
     TicketService nextTickets(reopened.seats, reopened.screenings, reopened.tickets);
-    MainWindow next(reopened, nextCatalog, nextScreenings, nextTickets);
+    CinemaWindow next(reopened, nextCatalog, nextScreenings, nextTickets);
     next.show();
     answerConfirmation(true);
     child<QPushButton>(next, "exitButton")->click();
@@ -282,13 +282,13 @@ void testFilmsAndClose() {
 void testCompleteWorkflow() {
     QTemporaryDir directory;
     assert(directory.isValid());
-    ApplicationData data(path(directory));
+    CinemaDatabase data(path(directory));
     data.load(true);
     CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
     ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets, uiClock);
     TicketService tickets(data.seats, data.screenings, data.tickets, uiClock);
     assert(catalog.addFilm("Film", 120) == 1);
-    MainWindow window(data, catalog, screenings, tickets);
+    CinemaWindow window(data, catalog, screenings, tickets);
     window.show();
     QApplication::processEvents();
     auto* tabs = child<QTabWidget>(window, "mainTabs");
@@ -429,7 +429,7 @@ void testCompleteWorkflow() {
 
     answerConfirmation(true);
     assert(window.close());
-    ApplicationData reopened(path(directory));
+    CinemaDatabase reopened(path(directory));
     reopened.load();
     assert(reopened.films.size() == 1 && reopened.rooms.size() == 1);
     assert(reopened.seats.size() == 4 && reopened.screenings.size() == 1 && reopened.tickets.size() == 1);
@@ -443,5 +443,5 @@ int main(int argc, char* argv[]) {
     testStartup();
     testFilmsAndClose();
     testCompleteWorkflow();
-    std::cout << "MainWindow checks passed\n";
+    std::cout << "CinemaWindow checks passed\n";
 }

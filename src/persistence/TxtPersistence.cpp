@@ -1,6 +1,10 @@
 #include "TxtPersistence.h"
 
+#include <algorithm>
 #include <charconv>
+#include <locale>
+#include <new>
+#include <stdexcept>
 
 namespace txt_persistence {
 
@@ -57,6 +61,75 @@ std::vector<std::string> splitFields(const std::string& line) {
         }
         start = end + 1;
     }
+}
+
+std::vector<Row> readTable(const std::filesystem::path& path, const std::string& expectedHeader) {
+    std::ifstream input(path, std::ios::binary);
+    if (!input) {
+        throw std::runtime_error(path.string() + ": Cannot open for reading");
+    }
+    const std::vector<std::string> expected = splitFields(expectedHeader);
+    std::vector<std::string> header;
+    // ponytail: buffer one text table during startup; stream rows if it no longer fits RAM.
+    std::vector<Row> rows;
+    std::string line;
+    std::size_t lineNumber = 0;
+    while (std::getline(input, line)) {
+        ++lineNumber;
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (lineNumber == 1 && line.compare(0, 3, "\xef\xbb\xbf") == 0) {
+            line.erase(0, 3);
+        }
+        try {
+            validateUtf8(line);
+            const std::vector<std::string> fields = splitFields(line);
+            if (lineNumber == 1) {
+                if (fields.size() != expected.size()) {
+                    throw std::invalid_argument("Incorrect header: missing or extra columns");
+                }
+                for (std::size_t i = 0; i < fields.size(); ++i) {
+                    if (std::find(expected.begin(), expected.end(), fields[i]) == expected.end()
+                        || std::find(fields.begin(), fields.begin() + i, fields[i]) != fields.begin() + i) {
+                        throw std::invalid_argument("Incorrect header: unknown or duplicate column");
+                    }
+                }
+                header = fields;
+                continue;
+            }
+            if (fields.size() != header.size()) {
+                throw std::invalid_argument("Incorrect field count");
+            }
+            Row row;
+            for (std::size_t i = 0; i < header.size(); ++i) {
+                row.emplace(header[i], fields[i]);
+            }
+            rows.push_back(row);
+        } catch (const std::bad_alloc&) {
+            throw;
+        } catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(lineNumber) + ": " + error.what());
+        }
+    }
+    if (input.bad() || !input.eof()) {
+        throw std::runtime_error(path.string() + ": Read failed");
+    }
+    if (lineNumber == 0) {
+        throw std::runtime_error(path.string() + ":1: Missing header");
+    }
+    return rows;
+}
+
+std::ofstream openOutput(const std::filesystem::path& path, const std::string& header) {
+    std::ofstream output(path, std::ios::binary | std::ios::trunc);
+    if (!output) {
+        throw std::runtime_error(path.string() + ": Cannot open for writing");
+    }
+    output.exceptions(std::ios::badbit | std::ios::failbit);
+    output.imbue(std::locale::classic());
+    output << header << '\n';
+    return output;
 }
 
 }

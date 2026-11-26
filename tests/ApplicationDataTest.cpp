@@ -3,7 +3,7 @@
 #endif
 
 #include "ApplicationData.h"
-#include "persistence/ModelMappings.h"
+#include "persistence/ModelIO.h"
 #include "persistence/TxtPersistence.h"
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
@@ -230,7 +230,7 @@ void testBadInput() { // FR-DATA-04, SAT-13/14.
     }
 }
 
-void testColumnMappings() {
+void testNamedRowsAndModelIO() {
     TemporaryDirectory directory;
     ApplicationData original(directory.path);
     populate(original);
@@ -241,7 +241,7 @@ void testColumnMappings() {
         canonical[i] = read(directory.path / names[i]);
     }
 
-    // File order is independent of mapping/constructor order for all five models.
+    // Input column order is independent of the explicit constructor calls.
     write(directory.path / "films.txt",
           u8"duration_minutes|title|film_id\n120|Phim Vi\u1ec7t|1\n");
     write(directory.path / "auditoriums.txt",
@@ -271,16 +271,28 @@ void testColumnMappings() {
     reloaded.load();
     assertOriginal(reloaded);
 
-    // References returned by a mapping are the stored objects, not copies.
-    const auto seatMapping = txt_persistence::seatMapping(reloaded.rooms);
-    const auto positions = seatMapping.bindHeader({"seat_number", "seat_id", "auditorium_id", "row_number"});
-    const Seat seat = seatMapping.readRow({"2", "20", "1", "1"}, positions);
+    // Conversion borrows the stored room; text rows do not own any model objects.
+    txt_persistence::Row fields{{"seat_number", "2"}, {"seat_id", "20"},
+                                {"auditorium_id", "1"}, {"row_number", "1"}};
+    const Seat seat = txt_persistence::readSeat(fields, reloaded.rooms);
     assert(seat.id() == 20 && &seat.auditorium() == reloaded.rooms.findById(1));
     assert(seat.rowNumber() == 1 && seat.seatNumber() == 2);
     std::ostringstream row;
-    seatMapping.writeRow(row, seat);
-    assert(row.str() == "20|1|1|2");
-    expectError([&] { seatMapping.readRow({"2", "20", "99", "1"}, positions); }, "missing");
+    txt_persistence::writeSeat(row, seat);
+    assert(row.str() == "20|1|1|2\n");
+    fields["auditorium_id"] = "99";
+    expectError([&] { txt_persistence::readSeat(fields, reloaded.rooms); }, "missing");
+
+    const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(
+        directory.path / "seats.txt", txt_persistence::seatHeader);
+    assert(rows.size() == 5 && rows[1].at("seat_number") == "2");
+    assert(rows[1].at("auditorium_id") == "1");
+    fields.erase("row_number");
+    fields["auditorium_id"] = "1";
+    bool missingColumn = false;
+    try { txt_persistence::readSeat(fields, reloaded.rooms); }
+    catch (const std::out_of_range&) { missingColumn = true; }
+    assert(missingColumn);
 }
 
 void testFileSetAndEncoding() {
@@ -451,6 +463,13 @@ void testRealIoFailures() {
         expectError([&] { data.save(); }, "disk state restored");
         assert(data.isDirty() && read(directory.path / "films.txt") == previous);
     }
+    // Linux's full device accepts opening but rejects writes, including buffered close.
+    if (fs::exists("/dev/full")) {
+        expectError([] {
+            std::ofstream output = txt_persistence::openOutput("/dev/full", txt_persistence::filmHeader);
+            output.close();
+        }, "");
+    }
 }
 
 void testAllocationFailures() {
@@ -466,7 +485,11 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            txt_persistence::load(directory.path / "films.txt", staged, txt_persistence::filmMapping());
+            const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(
+                directory.path / "films.txt", txt_persistence::filmHeader);
+            for (const txt_persistence::Row& row : rows) {
+                assert(staged.insert(txt_persistence::readFilm(row)));
+            }
         } catch (const std::exception&) {
             failed = true;
         }
@@ -486,8 +509,12 @@ void testAllocationFailures() {
         allocationsBeforeFailure = budget;
         bool failed = false;
         try {
-            txt_persistence::save(directory.path / "temporary.txt", original.films,
-                                  txt_persistence::filmMapping());
+            std::ofstream output = txt_persistence::openOutput(
+                directory.path / "temporary.txt", txt_persistence::filmHeader);
+            for (const Film& film : original.films) {
+                txt_persistence::writeFilm(output, film);
+            }
+            output.close();
         } catch (const std::exception&) {
             failed = true;
         }
@@ -533,7 +560,7 @@ int main() {
     static_assert(!std::is_move_constructible_v<ApplicationData>);
     testEmptyAndRoundTrip();
     testBadInput();
-    testColumnMappings();
+    testNamedRowsAndModelIO();
     testFileSetAndEncoding();
     testSaveFailures();
     testFailedRecoveryAndValidation();

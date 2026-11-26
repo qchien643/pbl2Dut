@@ -1,9 +1,11 @@
 #include "ApplicationData.h"
-#include "persistence/ModelMappings.h"
+#include "persistence/ModelIO.h"
 #include "persistence/TxtPersistence.h"
 #include "services/ScreeningValidation.h"
 
 #include <exception>
+#include <new>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -127,13 +129,82 @@ ApplicationData::LoadResult ApplicationData::load(bool confirmEmpty) {
         }
     }
     ApplicationData staged(directory_);
-    txt_persistence::load(directory_ / files[0], staged.films, txt_persistence::filmMapping());
-    txt_persistence::load(directory_ / files[1], staged.rooms, txt_persistence::auditoriumMapping());
-    txt_persistence::load(directory_ / files[2], staged.seats, txt_persistence::seatMapping(staged.rooms));
-    txt_persistence::load(directory_ / files[3], staged.screenings,
-                          txt_persistence::screeningMapping(staged.films, staged.rooms));
-    txt_persistence::load(directory_ / files[4], staged.tickets,
-                          txt_persistence::ticketMapping(staged.screenings, staged.seats));
+    // Load referenced objects first. Each text table is discarded after conversion.
+    {
+        const fs::path path = directory_ / files[0];
+        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::filmHeader);
+        std::size_t line = 1;
+        try {
+            for (const txt_persistence::Row& row : rows) {
+                ++line;
+                const Film film = txt_persistence::readFilm(row);
+                if (!staged.films.insert(film)) throw std::invalid_argument("Duplicate primary key");
+            }
+        } catch (const std::bad_alloc&) { throw; }
+        catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+        }
+    }
+    {
+        const fs::path path = directory_ / files[1];
+        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::auditoriumHeader);
+        std::size_t line = 1;
+        try {
+            for (const txt_persistence::Row& row : rows) {
+                ++line;
+                const Auditorium room = txt_persistence::readAuditorium(row);
+                if (!staged.rooms.insert(room)) throw std::invalid_argument("Duplicate primary key");
+            }
+        } catch (const std::bad_alloc&) { throw; }
+        catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+        }
+    }
+    {
+        const fs::path path = directory_ / files[2];
+        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::seatHeader);
+        std::size_t line = 1;
+        try {
+            for (const txt_persistence::Row& row : rows) {
+                ++line;
+                const Seat seat = txt_persistence::readSeat(row, staged.rooms);
+                if (!staged.seats.insert(seat)) throw std::invalid_argument("Duplicate primary key");
+            }
+        } catch (const std::bad_alloc&) { throw; }
+        catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+        }
+    }
+    {
+        const fs::path path = directory_ / files[3];
+        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::screeningHeader);
+        std::size_t line = 1;
+        try {
+            for (const txt_persistence::Row& row : rows) {
+                ++line;
+                const Screening screening = txt_persistence::readScreening(row, staged.films, staged.rooms);
+                if (!staged.screenings.insert(screening)) throw std::invalid_argument("Duplicate primary key");
+            }
+        } catch (const std::bad_alloc&) { throw; }
+        catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+        }
+    }
+    {
+        const fs::path path = directory_ / files[4];
+        const std::vector<txt_persistence::Row> rows = txt_persistence::readTable(path, txt_persistence::ticketHeader);
+        std::size_t line = 1;
+        try {
+            for (const txt_persistence::Row& row : rows) {
+                ++line;
+                const Ticket ticket = txt_persistence::readTicket(row, staged.screenings, staged.seats);
+                if (!staged.tickets.insert(ticket)) throw std::invalid_argument("Duplicate primary key");
+            }
+        } catch (const std::bad_alloc&) { throw; }
+        catch (const std::exception& error) {
+            throw std::runtime_error(path.string() + ":" + std::to_string(line) + ": " + error.what());
+        }
+    }
     staged.validate();
     films.replaceWith(staged.films);
     rooms.replaceWith(staged.rooms);
@@ -307,15 +378,35 @@ void ApplicationData::save() {
         fs::create_directory(stage / "new");
         fs::create_directory(stage / "old");
         fileStep("write", 0);
-        txt_persistence::save(temporary[0], films, txt_persistence::filmMapping());
+        std::ofstream output = txt_persistence::openOutput(temporary[0], txt_persistence::filmHeader);
+        for (const Film& film : films) {
+            txt_persistence::writeFilm(output, film);
+        }
+        output.close(); // Exceptions include errors flushing buffered data on close.
         fileStep("write", 1);
-        txt_persistence::save(temporary[1], rooms, txt_persistence::auditoriumMapping());
+        output = txt_persistence::openOutput(temporary[1], txt_persistence::auditoriumHeader);
+        for (const Auditorium& room : rooms) {
+            txt_persistence::writeAuditorium(output, room);
+        }
+        output.close();
         fileStep("write", 2);
-        txt_persistence::save(temporary[2], seats, txt_persistence::seatMapping(rooms));
+        output = txt_persistence::openOutput(temporary[2], txt_persistence::seatHeader);
+        for (const Seat& seat : seats) {
+            txt_persistence::writeSeat(output, seat);
+        }
+        output.close();
         fileStep("write", 3);
-        txt_persistence::save(temporary[3], screenings, txt_persistence::screeningMapping(films, rooms));
+        output = txt_persistence::openOutput(temporary[3], txt_persistence::screeningHeader);
+        for (const Screening& screening : screenings) {
+            txt_persistence::writeScreening(output, screening);
+        }
+        output.close();
         fileStep("write", 4);
-        txt_persistence::save(temporary[4], tickets, txt_persistence::ticketMapping(screenings, seats));
+        output = txt_persistence::openOutput(temporary[4], txt_persistence::ticketHeader);
+        for (const Ticket& ticket : tickets) {
+            txt_persistence::writeTicket(output, ticket);
+        }
+        output.close();
         if (hadFiles_) {
             for (std::size_t i = 0; i < 5; ++i) {
                 fileStep("backup", i);

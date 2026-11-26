@@ -23,7 +23,7 @@ Khi thầy chỉ vào một dòng, trả lời theo năm ý:
 | 7 | `CatalogService` | CRUD phim/phòng và tạo lại ghế |
 | 8 | `ScreeningService` | Thời gian, trùng lịch và suất có vé |
 | 9 | `TicketService` | Xem trước, bán, tra cứu và doanh thu |
-| 10 | `TxtPersistence`, `ApplicationData` | Nạp, validate, save và recovery |
+| 10 | `TxtPersistence`, `ModelIO`, `ApplicationData` | Đọc Row, tạo model, validate, ghi và recovery |
 | 11 | `main.cpp`, `MainWindow` | Thứ tự sống, signal/slot và luồng Qt |
 | 12 | `tests/` | Cách kiểm chứng hành vi và lỗi |
 
@@ -39,8 +39,8 @@ Con trỏ trên không sở hữu bộ nhớ. Repository sở hữu entity; vì 
 đích phải sống lâu hơn entity đang liên kết với nó.
 
 ID vẫn tồn tại trong file TXT. Khi nạp, `ApplicationData` chọn ánh xạ;
-`referenceColumn` dùng `findById()` để tìm đối tượng thật rồi truyền reference
-vào constructor.
+`readSeat`, `readScreening`, `readTicket` dùng `findById()` để tìm đối tượng
+thật rồi truyền reference vào constructor.
 
 ## 4. Cấu trúc dữ liệu
 
@@ -137,10 +137,11 @@ dùng kết quả xem trước đã cũ.
 Khi mở, `ApplicationData` nạp năm file theo thứ tự phụ thuộc, dựng direct
 association và kiểm tra toàn bộ. Dữ liệu chính chỉ được thay khi bước này thành công.
 
-Quy tắc cột nằm ở `persistence/ModelMappings.h`. `Mapping.h` dùng cùng quy tắc
-cho hai chiều: đọc theo tên header rồi gọi constructor; ghi header và getter
-theo thứ tự ánh xạ. Không cần tự viết `fields[0]` hay `writeRecord()` cho mỗi model.
-Thứ tự ánh xạ khớp constructor; cột trong file đầu vào được phép đổi vị trí.
+`TxtPersistence::readTable()` tạo các `Row` (map tên cột → chuỗi).
+`ModelIO.cpp` viết rõ cách chuyển từng model: `readSeat` lấy số từ các trường,
+tìm phòng rồi gọi constructor; `writeSeat` gọi getter và ghi một dòng TXT.
+`ApplicationData` duyệt các Row để `insert`, khi lưu duyệt repository để ghi.
+Không còn mapping template; cột trong file đầu vào vẫn được phép đổi vị trí.
 
 Khi lưu, chương trình ghi file tạm, sao lưu file cũ rồi đổi tên. Nếu lỗi, RAM và
 cửa sổ được giữ để thử lại.

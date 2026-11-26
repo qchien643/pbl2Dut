@@ -21,7 +21,7 @@ Kết quả mong đợi: **9/9 test Passed** (8 test nếu `BUILD_GUI=OFF`).
 | `RepositoryTest` | ID, index, dirty và CRUD vé qua `IRepository<Ticket>`; update giữ địa chỉ |
 | `ServiceTest` | CRUD, lịch chiếu, bán vé, doanh thu và rollback |
 | `DependencyInjectionTest` | Chạy ba service với cùng template repository độc lập bằng `std::list` cho cả năm entity; bảo toàn association và chặn bán trùng |
-| `ApplicationDataTest` | Ánh xạ năm model, đảo cột theo header, tham chiếu, toàn vẹn, lưu và phục hồi file |
+| `ApplicationDataTest` | Đọc Row và chuyển đổi năm model, đảo cột, tham chiếu, toàn vẹn, lỗi ghi/đóng file và phục hồi |
 | `MainWindowTest` | Luồng Qt từ thao tác người dùng đến service |
 
 ## 3. Đối chiếu yêu cầu

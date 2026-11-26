@@ -14,6 +14,7 @@ add_library(cinema_services
     src/repositories/TicketRepository.cpp
     src/repositories/RoomStorage.cpp
     src/persistence/TxtPersistence.cpp
+    src/persistence/ModelIO.cpp
     src/services/CatalogService.cpp
     src/services/ScreeningService.cpp
     src/services/TicketService.cpp

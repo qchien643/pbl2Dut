@@ -130,8 +130,9 @@ tác lưu đồng bộ phòng/ghế khỏi service. Không mở rộng interface
 Cách trình bày tham khảo `docs/ref/oop`: lớp thường tách `.h/.cpp`, template khai
 báo trước và định nghĩa bên dưới trong header; dùng kiểu tường minh và vòng lặp
 thay callback duyệt dữ liệu nghiệp vụ. Giữ `Repository<T>` dùng chung. Phần TXT
-dùng `std::tuple`/`std::apply` để tái sử dụng một ánh xạ cho cả đọc và ghi;
-xem [định dạng TXT](docs/design/txt-format.md).
+đọc thành `Row` theo tên cột, gọi hàm `readFilm`/`readSeat`... để tạo entity và
+ghi bằng `writeFilm`/`writeSeat`...; không dùng mapping template.
+Xem [định dạng TXT](docs/design/txt-format.md).
 
 ## Kiến trúc
 

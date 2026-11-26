@@ -17,30 +17,36 @@ chứa `|`, xuống dòng hoặc ký tự điều khiển. Thời gian có dạn
 Header ở bảng trên là thứ tự chuẩn khi ghi. Khi đọc, các cột được phép đổi vị
 trí nếu header và dữ liệu đổi tương ứng; không được thiếu, thêm hoặc trùng tên cột.
 
-## Ánh xạ model và TXT
+## Chuyển đổi model và TXT
 
-`persistence/ModelMappings.h` khai báo một ánh xạ cho mỗi model. Mỗi cột gồm tên,
-getter khi ghi và quy tắc đọc: `integerColumn`, `textColumn` hoặc `referenceColumn`.
-Thứ tự khai báo ánh xạ phải khớp tham số constructor, không phụ thuộc thứ tự
-thuộc tính trong `.h` hay thứ tự cột của file đầu vào.
+`TxtPersistence::readTable()` đọc một file thành `std::vector<Row>`.
+`Row` là `std::map<std::string, std::string>`: tên cột → chuỗi giá trị.
+Đây chỉ là dữ liệu tạm khi mở; entity trong phiên vẫn do linked list của
+repository sở hữu.
+
+`persistence/ModelIO.cpp` chứa header chuẩn và các hàm đọc/ghi tường minh cho
+năm model. Không có mapping template, `tuple`, `std::apply` hoặc reflection.
 
 ```cpp
-const auto columns = txt_persistence::seatMapping(data.rooms);
-txt_persistence::load(path, data.seats, columns);
-txt_persistence::save(path, data.seats, columns);
+const std::vector<txt_persistence::Row> rows =
+    txt_persistence::readTable(path, txt_persistence::seatHeader);
+for (const txt_persistence::Row& row : rows) {
+    Seat seat = txt_persistence::readSeat(row, data.rooms);
+    if (!data.seats.insert(seat))
+        throw std::invalid_argument("Duplicate primary key");
+}
 ```
 
-- `Mapping.h`: ghép tên cột với vị trí trong header, chuyển kiểu và gọi constructor.
-- `TxtPersistence::load()`: đọc dòng, kiểm tra dữ liệu và thêm model vào repository.
-- `TxtPersistence::save()`: sinh header và ghi giá trị qua getter từ cùng ánh xạ.
-- `referenceColumn`: khi đọc dùng `findById()` rồi trả reference tới đối tượng
-  trong `IRepository<T>` được truyền vào; khi ghi gọi getter lấy ID, không lưu
-  địa chỉ con trỏ.
+- `readTable`: kiểm tra UTF-8, header, số trường và ghép tên cột với giá trị.
+- `readSeat`: lấy từng trường bằng `row.at("tên_cột")`, chuyển số, tìm phòng
+  qua `IRepository<Auditorium>`, kiểm tra tồn tại rồi gọi constructor.
+- `writeSeat`: gọi getter và ghi các cột ngăn bằng `|`, kết thúc bằng xuống dòng.
+- `ApplicationData`: nạp theo thứ tự phụ thuộc, gọi `insert`; khi lưu duyệt từng
+  repository và gọi hàm ghi tương ứng. Lỗi đọc báo tên file và số dòng.
 
-Ánh xạ chỉ mượn repository; repository phải còn sống khi đọc. Không còn hàm
-`parse()` hay `writeRecord()` riêng cho từng model. C++17 dùng `std::tuple`,
-`std::apply` và parameter pack để truyền các kết quả đọc đúng kiểu vào constructor;
-validation và thuộc tính private của model được giữ nguyên.
+Thứ tự constructor và thứ tự ghi được viết rõ trong code; đổi vị trí thuộc tính
+private trong `.h` không ảnh hưởng. Đổi định dạng thì sửa header, hàm đọc và hàm
+ghi tương ứng. Chấp nhận vài dòng lặp cho năm model để dễ đọc và vấn đáp.
 
 ## 2. Nạp dữ liệu
 
@@ -69,6 +75,8 @@ Thư mục hoàn toàn rỗng được phép bắt đầu phiên mới sau khi n
 Mọi thao tác chỉ thay đổi repository trên RAM. `dirty_` cho biết repository có
 thay đổi chưa lưu; nó không phải trạng thái đã bán của ghế.
 
+Đọc cả file một lần lúc mở, không đọc/ghi file theo từng thao tác nghiệp vụ.
+
 Đóng ứng dụng bằng `Lưu và thoát` mới gọi `ApplicationData::save()`.
 
 ## 4. Quy trình lưu
@@ -79,6 +87,9 @@ thay đổi chưa lưu; nó không phải trạng thái đã bán của ghế.
 4. Đổi tên file mới thành file chính.
 5. Chuyển thư mục staging thành `.cms-backup-N`.
 6. Đánh dấu repository đã lưu.
+
+`openOutput()` bật exception khi ghi lỗi; gọi `close()` tường minh để phát hiện
+cả lỗi đẩy dữ liệu đệm ra file. Chỉ thay file chính sau khi đã đóng đủ năm file mới.
 
 Nếu lỗi xảy ra, chương trình cố phục hồi file cũ. Cửa sổ và dữ liệu RAM vẫn
 được giữ để người dùng sửa nguyên nhân và thử lại.

@@ -5,6 +5,7 @@
 #include "entities/Screening.h"
 #include "entities/Ticket.h"
 #include "repositories/IRepository.h"
+#include "repositories/IFilmRepository.h"
 #include "helper/DateTimeHelper.h"
 
 #include <cstdint>
@@ -13,7 +14,7 @@
 class ScreeningService
 {
 public:
-    ScreeningService(const IRepository<Film>& films, const IRepository<Auditorium>& rooms,
+    ScreeningService(const IFilmRepository& films, const IRepository<Auditorium>& rooms,
                      IRepository<Screening>& screenings, const IRepository<Ticket>& tickets,
                      date_time::Clock clock = date_time::localMinuteNow);
 
@@ -34,7 +35,7 @@ private:
     void requireNoTickets(EntityId id) const;
     static void validateFilters(const std::string& date, EntityId filmId, EntityId roomId);
 
-    const IRepository<Film>& films_;
+    const IFilmRepository& films_;
     const IRepository<Auditorium>& rooms_;
     IRepository<Screening>& screenings_;
     const IRepository<Ticket>& tickets_;

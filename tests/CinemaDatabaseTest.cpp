@@ -153,6 +153,9 @@ void testEmptyAndRoundTrip() { // FR-DATA-07/10, SAT-08/16.
     CinemaDatabase next(directory.path);
     next.load();
     assert(next.films.size() == 2 && next.films.findById(1)->title() == "New title");
+    LinkedList<const Film*> indexedFilms;
+    next.films.searchTitle("new title", indexedFilms);
+    assert(indexedFilms.size() == 1 && (*indexedFilms.begin())->id() == 1);
     assert(next.rooms.size() == 1 && next.seats.size() == 4 && !next.seats.findById(5));
     assert(next.films.nextId() == 3 && next.seats.nextId() == 5);
     const auto unchanged = read(directory.path / "tickets.txt");

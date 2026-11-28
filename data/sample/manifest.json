@@ -1,0 +1,16 @@
+{
+  "generator": "tools/generate_sample_data.py",
+  "deterministic": true,
+  "counts": {
+    "films.txt": 1000,
+    "auditoriums.txt": 20,
+    "seats.txt": 2000,
+    "screenings.txt": 2000,
+    "tickets.txt": 5000
+  },
+  "fixture_users": 1000,
+  "fixture_ticket_users": 5000,
+  "note": "users are synthetic fixtures only, not an application entity or login accounts",
+  "sale_date": "2026-11-28",
+  "first_screening": "2026-11-29 09:00"
+}

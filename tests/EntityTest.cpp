@@ -30,8 +30,12 @@ void expectThrow(Function function) {
 void testValidEntities() {
     const Film film(1, "  Film one  ", 120);
     assert(film.id() == 1 && film.title() == "Film one" && film.durationMinutes() == 120);
+    assert(film.normalizedTitle() == U"film one");
     const Film vietnamese(2, u8"Phim Vi\u1ec7t", 90);
     assert(vietnamese.title() == u8"Phim Vi\u1ec7t");
+    assert(vietnamese.normalizedTitle() == U"phim viet");
+    const Film copy = vietnamese;
+    assert(copy.normalizedTitle() == U"phim viet" && copy.title() == vietnamese.title());
     const Auditorium room(3, " Room 3 ", 6, 8);
     assert(room.id() == 3 && room.name() == "Room 3");
     assert(room.rowCount() == 6 && room.seatsPerRow() == 8 && room.capacity() == 48);

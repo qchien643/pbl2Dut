@@ -12,10 +12,12 @@ public:
 
     EntityId id() const;
     const std::string& title() const;
+    const std::u32string& normalizedTitle() const;
     std::int64_t durationMinutes() const;
 
 private:
     EntityId id_;
     std::string title_;
+    std::u32string normalizedTitle_;
     std::int64_t durationMinutes_;
 };

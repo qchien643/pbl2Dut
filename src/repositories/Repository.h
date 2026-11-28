@@ -14,8 +14,9 @@
 
 class TicketRepository;
 
+// Share one CRUD interface when an entity-specific interface also extends it.
 template <typename T>
-class Repository : public IRepository<T>
+class Repository : public virtual IRepository<T>
 {
 public:
     using value_type = T;

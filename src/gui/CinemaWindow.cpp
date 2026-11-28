@@ -116,6 +116,15 @@ void reportError(QLabel* error, const QString& text, QWidget* focus) {
 
 QString errorText(const std::exception& error) {
     const std::string message = error.what();
+    if (message == "Enter at least 3 characters per search word") {
+        return QStringLiteral("Mỗi từ tìm tên phim cần ít nhất 3 ký tự. Để trống để xem tất cả.");
+    }
+    if (message == "Film title already exists") {
+        return QStringLiteral("Tên phim đã tồn tại. Hãy sửa phim hiện có hoặc chọn tên khác.");
+    }
+    if (message == "Room name already exists") {
+        return QStringLiteral("Tên phòng đã tồn tại. Hãy chọn tên khác.");
+    }
     if (message == "Cannot change duration of a scheduled film") {
         return QStringLiteral("Phim đã có suất chiếu: chỉ được sửa tên, không đổi thời lượng.");
     }
@@ -578,6 +587,7 @@ void CinemaWindow::setupFilmTab() {
     filmSearch_ = new QLineEdit(filmTab);
     filmSearch_->setObjectName("filmSearch");
     filmSearch_->setClearButtonEnabled(true);
+    filmSearch_->setToolTip(QStringLiteral("Tìm không dấu, không phân biệt hoa/thường hoặc thứ tự từ. Mỗi từ ít nhất 3 ký tự; hỗ trợ lỗi gõ còn trigram chung."));
     QLabel* filmSearchLabel = new QLabel(QStringLiteral("&Tìm:"), filmTab);
     filmSearchLabel->setBuddy(filmSearch_);
     filmSearchRow->addWidget(filmSearchLabel);

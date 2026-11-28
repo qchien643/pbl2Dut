@@ -5,6 +5,7 @@
 #include "services/CatalogService.h"
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
+#include "helper/TextNormalization.h"
 
 #include <cassert>
 #include <limits>
@@ -13,7 +14,7 @@
 
 // Independent implementation: no Repository<T>, hash table or storage iterator.
 template <typename T>
-class TestRepository : public IRepository<T>
+class TestRepository : public virtual IRepository<T>
 {
 public:
     EntityId nextId() const override
@@ -79,6 +80,22 @@ private:
     EntityId highestId_ = 0;
 };
 
+class TestFilmRepository : public TestRepository<Film>, public IFilmRepository
+{
+public:
+    void searchTitle(const std::string& text, LinkedList<const Film*>& result) const override
+    {
+        // ponytail: DI-only substring fake; full search behavior is checked in FilmSearchTest.
+        const auto query = text_normalization::normalize(text);
+        LinkedList<const Film*> records;
+        list(records);
+        LinkedList<const Film*> matches;
+        for (const Film* film : records)
+            if (film->normalizedTitle().find(query) != std::u32string::npos) matches.pushBack(film);
+        result.swap(matches);
+    }
+};
+
 // This test seeds rooms directly; fail explicitly if a room write is requested.
 class UnusedRoomStorage : public IRoomStorage
 {
@@ -93,7 +110,7 @@ std::string testClock() { return "2026-11-18 09:00"; }
 
 int main()
 {
-    TestRepository<Film> films;
+    TestFilmRepository films;
     TestRepository<Auditorium> rooms;
     TestRepository<Seat> seats;
     TestRepository<Screening> screenings;
@@ -104,6 +121,9 @@ int main()
     TicketService sales(seats, screenings, tickets, testClock);
 
     const EntityId filmId = catalog.addFilm("DIP", 90);
+    LinkedList<Film> found;
+    catalog.films("dip", found);
+    assert(found.size() == 1 && (*found.begin()).id() == filmId);
     assert(rooms.insert(Auditorium(1, "Room", 1, 1)));
     assert(seats.insert(Seat(1, *rooms.findById(1), 1, 1)));
     const EntityId screeningId = schedule.add(filmId, 1, "2026-11-18 10:00", 50000);
@@ -117,6 +137,12 @@ int main()
     assert(*snapshot.begin() == original);
     catalog.updateFilm(filmId, "Renamed", 90);
     assert(films.findById(filmId) == original && original->title() == "Renamed");
+    catalog.films("dip", found);
+    assert(found.empty());
+    catalog.films("renamed", found);
+    assert(found.size() == 1 && (*found.begin()).id() == filmId);
+    catalog.films("", found);
+    assert(found.size() == 1 && (*found.begin()).id() == filmId);
     assert(sales.find(ticketId).ticket.unitPrice() == 50000);
     assert(sales.revenue("2026-11-18").ticketCount == 1);
     assert(sales.seatMap(screeningId)->at(0, 0).sold);

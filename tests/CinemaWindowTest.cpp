@@ -179,6 +179,18 @@ void testFilmsAndClose() {
     assert(table->rowCount() == 1 && data.films.findById(1)->title() == u8"Phim Việt");
     assert(data.isDirty() && window.isWindowModified());
     assert(std::filesystem::is_empty(path(directory)));
+    QTimer::singleShot(0, [] {
+        auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        assert(dialog);
+        child<QLineEdit>(*dialog, "filmTitle")->setText(QString::fromUtf8(u8" Phim Việt "));
+        child<QLineEdit>(*dialog, "filmDuration")->setText("90");
+        child<QPushButton>(*dialog, "filmSubmit")->click();
+        assert(dialog->isVisible());
+        assert(child<QLabel>(*dialog, "filmError")->text().contains(QString::fromUtf8(u8"Tên phim đã tồn tại")));
+        dialog->reject();
+    });
+    add->click();
+    assert(data.films.size() == 1 && data.films.nextId() == 2);
     fillDialog("Cancelled", "100", false);
     add->click();
     assert(data.films.size() == 1);
@@ -187,6 +199,13 @@ void testFilmsAndClose() {
     assert(data.films.size() == 2);
     search->setText(QString::fromUtf8(u8"Việt"));
     assert(table->rowCount() == 1 && table->item(0, 0)->text() == "1");
+    for (const QString text : {QStringLiteral("VIET"), QStringLiteral("viet phim"),
+                               QStringLiteral("viett phim")}) {
+        search->setText(text);
+        assert(table->rowCount() == 1 && table->item(0, 0)->text() == "1");
+    }
+    search->setText("vi");
+    assert(table->rowCount() == 0 && child<QLabel>(window, "filmResults")->text().contains(QStringLiteral("3")));
     mode->setCurrentIndex(1);
     search->setText("invalid");
     assert(table->rowCount() == 0);
@@ -298,6 +317,19 @@ void testCompleteWorkflow() {
     child<QPushButton>(window, "addRoom")->click();
     auto* roomTable = child<QTableWidget>(window, "roomTable");
     assert(roomTable->rowCount() == 1 && data.rooms.size() == 1 && data.seats.size() == 6);
+    QTimer::singleShot(0, [] {
+        auto* dialog = qobject_cast<QDialog*>(QApplication::activeModalWidget());
+        assert(dialog);
+        child<QLineEdit>(*dialog, "roomName")->setText(" Room ");
+        child<QLineEdit>(*dialog, "roomRows")->setText("1");
+        child<QLineEdit>(*dialog, "roomColumns")->setText("1");
+        child<QPushButton>(*dialog, "roomSubmit")->click();
+        assert(dialog->isVisible());
+        assert(child<QLabel>(*dialog, "roomError")->text().contains(QString::fromUtf8(u8"Tên phòng đã tồn tại")));
+        dialog->reject();
+    });
+    child<QPushButton>(window, "addRoom")->click();
+    assert(data.rooms.size() == 1 && data.seats.size() == 6 && data.rooms.nextId() == 2);
     roomTable->selectRow(rowForId(roomTable, 1));
     auto* roomSeats = child<QTableWidget>(window, "roomSeatTable");
     assert(roomSeats->rowCount() == 2 && roomSeats->columnCount() == 3);
@@ -435,6 +467,44 @@ void testCompleteWorkflow() {
     assert(reopened.seats.size() == 4 && reopened.screenings.size() == 1 && reopened.tickets.size() == 1);
 }
 
+void testLargeSampleSearch() {
+    const auto sample = std::filesystem::path(__FILE__).parent_path().parent_path() / "data" / "sample";
+    QTemporaryDir directory;
+    assert(directory.isValid());
+    for (const char* file : {"films.txt", "auditoriums.txt", "seats.txt", "screenings.txt", "tickets.txt"})
+        std::filesystem::copy_file(sample / file, path(directory) / file);
+    CinemaDatabase data(path(directory));
+    assert(data.load() == CinemaDatabase::LoadResult::Loaded && data.films.size() == 1000);
+    CatalogService catalog(data.films, data.rooms, data.seats, data.screenings, data.roomStorage);
+    ScreeningService screenings(data.films, data.rooms, data.screenings, data.tickets);
+    TicketService tickets(data.seats, data.screenings, data.tickets);
+    CinemaWindow window(data, catalog, screenings, tickets);
+    child<QTabWidget>(window, "mainTabs")->setCurrentWidget(child<QWidget>(window, "filmTab"));
+    auto* table = child<QTableWidget>(window, "filmTable");
+    auto* search = child<QLineEdit>(window, "filmSearch");
+    assert(table->rowCount() == 1000);
+    for (const char* query : {"nguyen trai", "trai nguyen", "nguy", "guy", "nguyn trai"}) {
+        search->setText(query);
+        assert(table->rowCount() == 50 && rowForId(table, 1) >= 0);
+    }
+    table->selectRow(rowForId(table, 1));
+    const Film* address = data.films.findById(1);
+    fillDialog(QString::fromUtf8(u8"Huyền Thoại Mới"), "90");
+    child<QPushButton>(window, "editFilm")->click();
+    assert(data.films.findById(1) == address);
+    search->setText("nguyen trai");
+    assert(table->rowCount() == 49 && rowForId(table, 1) < 0);
+    search->setText("huyen thoai moi");
+    assert(rowForId(table, 1) >= 0);
+    answerConfirmation(true);
+    assert(window.close());
+    CinemaDatabase reopened(path(directory));
+    assert(reopened.load() == CinemaDatabase::LoadResult::Loaded);
+    LinkedList<const Film*> result;
+    reopened.films.searchTitle("huyen thoai moi", result);
+    assert(result.size() == 1 && (*result.begin())->id() == 1);
+}
+
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
     QApplication::setStyle("Fusion");
@@ -443,5 +513,6 @@ int main(int argc, char* argv[]) {
     testStartup();
     testFilmsAndClose();
     testCompleteWorkflow();
+    testLargeSampleSearch();
     std::cout << "CinemaWindow checks passed\n";
 }

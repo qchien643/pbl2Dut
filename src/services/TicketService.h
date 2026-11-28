@@ -6,7 +6,7 @@
 #include "entities/Seat.h"
 #include "entities/Ticket.h"
 #include "repositories/IRepository.h"
-#include "services/SeatMap.h"
+#include "helper/SeatMap.h"
 #include "helper/DateTimeHelper.h"
 
 #include <cstddef>

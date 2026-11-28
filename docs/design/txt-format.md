@@ -1,14 +1,21 @@
 # Định dạng TXT và vòng đời dữ liệu
 
+Tài liệu chịu trách nhiệm định dạng vật lý, luồng đọc/ghi và an toàn lưu trữ;
+không định nghĩa chính sách vận hành rạp. Lược đồ logic xem
+[thiết kế dữ liệu](data-design.md).
+
+Xem [vòng đời TXT → RAM → TXT](../diagrams/txt-lifecycle/README.md) để theo thứ tự
+nạp, thao tác trên kho và lưu toàn bộ khi thoát.
+
 ## 1. Bộ file
 
 | File | Header |
 |---|---|
-| `films.txt` | `film_id|title|duration_minutes` |
-| `auditoriums.txt` | `auditorium_id|name|row_count|seats_per_row` |
-| `seats.txt` | `seat_id|auditorium_id|row_number|seat_number` |
-| `screenings.txt` | `screening_id|film_id|auditorium_id|start_time|ticket_price` |
-| `tickets.txt` | `ticket_id|screening_id|seat_id|sold_at|unit_price` |
+| `films.txt` | `film_id\|title\|duration_minutes` |
+| `auditoriums.txt` | `auditorium_id\|name\|row_count\|seats_per_row` |
+| `seats.txt` | `seat_id\|auditorium_id\|row_number\|seat_number` |
+| `screenings.txt` | `screening_id\|film_id\|auditorium_id\|start_time\|ticket_price` |
+| `tickets.txt` | `ticket_id\|screening_id\|seat_id\|sold_at\|unit_price` |
 
 File dùng UTF-8, mỗi bản ghi một dòng, phân cách bằng `|`. Chuỗi không được
 chứa `|`, xuống dòng hoặc ký tự điều khiển. Thời gian có dạng
@@ -17,7 +24,10 @@ chứa `|`, xuống dòng hoặc ký tự điều khiển. Thời gian có dạn
 Header ở bảng trên là thứ tự chuẩn khi ghi. Khi đọc, các cột được phép đổi vị
 trí nếu header và dữ liệu đổi tương ứng; không được thiếu, thêm hoặc trùng tên cột.
 
-## Chuyển đổi model và TXT
+`Film::normalizedTitle_` chỉ nằm trên RAM, constructor tính từ `title` khi đọc.
+Không thêm cột chuẩn hóa hoặc con trỏ index vào TXT; khi ghi vẫn dùng tên gốc.
+
+### 1.1. Chuyển đổi model và TXT
 
 `fileio::readTable()` trong `fileio/TextFile.cpp` đọc một file thành `std::vector<Row>`.
 `Row` là `std::map<std::string, std::string>`: tên cột → chuỗi giá trị.
@@ -58,8 +68,7 @@ Film -> Auditorium -> Seat -> Screening -> Ticket
 
 Thứ tự này cho phép tìm đối tượng cha và tạo direct association khi đọc FK.
 Dữ liệu được nạp vào `CinemaDatabase` tạm, sau đó `validate()` kiểm tra khóa,
-quan hệ, sơ đồ ghế và vé. Không kiểm tra trùng lịch: quy tắc này do service đảm
-bảo khi thêm/sửa suất. Chỉ khi các kiểm tra trên hợp lệ, repository chính
+quan hệ, sơ đồ ghế và vé. Chỉ khi các kiểm tra trên hợp lệ, repository chính
 mới được thay.
 
 Ứng dụng từ chối:
@@ -70,6 +79,17 @@ mới được thay.
 - giá trị model, sơ đồ ghế hoặc toàn vẹn vé không hợp lệ.
 
 Thư mục hoàn toàn rỗng được phép bắt đầu phiên mới sau khi người dùng xác nhận.
+
+### 2.1. Ranh giới kiểm tra dữ liệu cũ
+
+Bước nạp/lưu kiểm tra giá trị entity, PK/FK, sơ đồ ghế, cặp suất/ghế duy nhất
+và thời điểm bán trước giờ bắt đầu. Nó không gọi lại service, không kiểm tra
+trùng lịch hoặc tên phim/phòng duy nhất, cũng không bắt suất lịch sử nằm ở
+tương lai. Dữ liệu cũ không bị tự đổi tên, sửa giá hoặc xóa theo chính sách mới.
+
+Các BR về tạo/sửa tên và lịch được service áp dụng khi người dùng thao tác;
+đọc [thiết kế service](service-design.md). Vì thế không được mô tả bước load
+là kiểm tra lại mọi quy tắc nghiệp vụ. Không hỗ trợ sửa TXT thủ công.
 
 ## 3. Dữ liệu trong phiên
 
@@ -82,7 +102,7 @@ thay đổi chưa lưu; nó không phải trạng thái đã bán của ghế.
 
 ## 4. Quy trình lưu
 
-1. Kiểm tra lại toàn vẹn dữ liệu, không kiểm tra trùng lịch.
+1. Kiểm tra toàn vẹn theo phạm vi ở mục 2.1.
 2. Ghi năm file mới vào `.cms-save/new`.
 3. Sao chép file cũ vào `.cms-save/old`.
 4. Đổi tên file mới thành file chính.

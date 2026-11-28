@@ -3,10 +3,12 @@
 #include <limits>
 #include <stdexcept>
 
-CatalogService::CatalogService(IRepository<Film>& films, IRepository<Auditorium>& rooms,
+CatalogService::CatalogService(IFilmRepository& films,
+                               IRepository<Auditorium>& rooms,
                                IRepository<Seat>& seats, const IRepository<Screening>& screenings,
                                IRoomStorage& roomStorage)
-    : films_(films), rooms_(rooms), seats_(seats), screenings_(screenings), roomStorage_(roomStorage)
+    : films_(films), rooms_(rooms), seats_(seats),
+      screenings_(screenings), roomStorage_(roomStorage)
 {
 }
 
@@ -14,8 +16,36 @@ EntityId CatalogService::addFilm(std::string title, std::int64_t duration)
 {
     const EntityId id = films_.nextId();
     const Film candidate(id, title, duration);
+    requireUniqueFilmTitle(candidate);
     films_.insert(candidate);
     return id;
+}
+
+// ponytail: compare names exactly; add Unicode normalization if case-insensitive names are required.
+void CatalogService::requireUniqueFilmTitle(const Film& candidate) const
+{
+    LinkedList<const Film*> records;
+    films_.list(records);
+    for (const Film* film : records)
+    {
+        if (film->id() != candidate.id() && film->title() == candidate.title())
+        {
+            throw std::invalid_argument("Film title already exists");
+        }
+    }
+}
+
+void CatalogService::requireUniqueRoomName(const Auditorium& candidate) const
+{
+    LinkedList<const Auditorium*> records;
+    rooms_.list(records);
+    for (const Auditorium* room : records)
+    {
+        if (room->id() != candidate.id() && room->name() == candidate.name())
+        {
+            throw std::invalid_argument("Room name already exists");
+        }
+    }
 }
 
 bool CatalogService::filmReferenced(EntityId id) const
@@ -37,14 +67,11 @@ void CatalogService::films(const std::string& titlePart, LinkedList<Film>& resul
 {
     LinkedList<Film> matches;
     LinkedList<const Film*> records;
-    films_.list(records);
+    if (titlePart.empty()) films_.list(records);
+    else films_.searchTitle(titlePart, records);
     for (const Film* record : records)
     {
-        const Film& film = *record;
-        if (film.title().find(titlePart) != std::string::npos)
-        {
-            matches.pushBack(film);
-        }
+        matches.pushBack(*record);
     }
     result.swap(matches);
 }
@@ -99,6 +126,7 @@ void CatalogService::updateFilm(EntityId id, std::string title, std::int64_t dur
     {
         throw std::invalid_argument("Cannot change duration of a scheduled film");
     }
+    requireUniqueFilmTitle(candidate);
     films_.update(id, candidate);
 }
 
@@ -148,6 +176,7 @@ EntityId CatalogService::addRoom(std::string name, std::int64_t rows, std::int64
 {
     const EntityId id = rooms_.nextId();
     const Auditorium candidate(id, name, rows, columns);
+    requireUniqueRoomName(candidate);
     LinkedList<Seat> staged;
     prepareSeats(staged, candidate);
     roomStorage_.add(candidate, staged);
@@ -159,6 +188,7 @@ void CatalogService::updateRoom(EntityId id, std::string name,
 {
     requireRoomUnused(id);
     const Auditorium candidate(id, name, rows, columns);
+    requireUniqueRoomName(candidate);
     LinkedList<Seat> staged;
     prepareSeats(staged, candidate);
     roomStorage_.update(candidate, staged);
@@ -183,5 +213,25 @@ void CatalogService::eraseRoom(EntityId id)
 std::unique_ptr<SeatMap> CatalogService::seatMap(EntityId roomId) const
 {
     const Auditorium& auditorium = room(roomId);
-    return makeSeatMap(auditorium, seats_);
+    return makeRoomSeatMap(auditorium, seats_);
+}
+
+std::unique_ptr<SeatMap> CatalogService::makeRoomSeatMap(const Auditorium& room,
+                                                       const IRepository<Seat>& seats)
+{
+    LinkedList<const Seat*> records;
+    seats.list(records);
+    LinkedList<const Seat*> roomSeats;
+    for (const Seat* seat : records)
+    {
+        if (&seat->auditorium() == &room)
+        {
+            roomSeats.pushBack(seat);
+        }
+    }
+    if (roomSeats.size() != static_cast<std::uint64_t>(room.capacity()))
+    {
+        throw std::invalid_argument("Incomplete room seats");
+    }
+    return makeSeatMap(room.rowCount(), room.seatsPerRow(), roomSeats);
 }

@@ -1,0 +1,15 @@
+# films=10000,rooms=20,seats=2000,screenings=2000,tickets=5000,repetitions=200
+# full_load_ms=238.091,film_load_with_title_index_ms=192.486,film_load_id_only_ms=3.55657,sizeof_film=80
+query,matches,index_us,seq_scan_us,speedup
+nguyen trai,500,86.614,914.322,10.556
+trai nguyen,500,89.664,921.379,10.276
+nguy,500,60.959,1147.131,18.818
+guy,500,27.991,1195.020,42.693
+nguyn trai,500,50.562,943.743,18.665
+mat biec,500,41.176,1136.722,27.606
+Chuyến Tàu Hoàng Hôn,500,314.349,1069.476,3.402
+chuong,9982,2510.655,2342.172,0.933
+ngu,1000,61.815,1652.824,26.738
+000777,38,166.598,1047.754,6.289
+000777 nguyen,0,88.522,1558.496,17.606
+zzzzzz,0,0.276,1014.970,3674.566

@@ -1,13 +1,13 @@
 # Thiết kế dữ liệu
 
-## 1. Phạm vi
+Tài liệu mô tả dữ liệu logic, khóa, quan hệ và chuẩn hóa. Định dạng vật lý nằm
+trong [thiết kế TXT](txt-format.md); cách biểu diễn con trỏ trên RAM nằm trong
+[thiết kế lớp](class-design.md).
 
-Dự án mô hình hóa dữ liệu theo quan hệ nhưng lưu bằng TXT, không dùng DBMS.
-Khóa ngoại và ràng buộc được kiểm tra bằng C++ khi nạp hoặc thao tác.
+## 1. Lược đồ quan hệ
 
-Xem sơ đồ tương tác tại [ERD Archify](../diagrams/erd/index.html).
-
-## 2. Lược đồ quan hệ
+[ERD năm bảng](../diagrams/data-erd/README.md) thể hiện đủ cột, khóa và bội số;
+không phải sơ đồ con trỏ của entity trên RAM.
 
 ```text
 Film(film_id PK, title, duration_minutes)
@@ -18,30 +18,44 @@ Screening(screening_id PK, film_id FK, auditorium_id FK,
 Ticket(ticket_id PK, screening_id FK, seat_id FK, sold_at, unit_price)
 ```
 
-Quan hệ:
+## 2. Thuộc tính
 
-- Một `Film` có nhiều `Screening`.
-- Một `Auditorium` có nhiều `Seat` và `Screening`.
-- Một `Screening` có nhiều `Ticket`.
-- Một `Seat` có thể xuất hiện trên nhiều vé của các suất khác nhau.
+ID và số nguyên dùng miền `int64_t`; tiền là VND nguyên. Thời điểm có độ chính
+xác tới phút. Tên là chuỗi UTF-8; ràng buộc ký tự và cách mã hóa xem thiết kế TXT.
 
-## 3. Khóa và ràng buộc
+Riêng trên RAM, Film có thêm `normalizedTitle_` dẫn xuất để tìm kiếm; không phải
+cột lưu trữ của lược đồ bên dưới. Xem [thiết kế index tên](film-name-search.md).
 
-| Dữ liệu | Ràng buộc |
+| Bảng | Thuộc tính ngoài khóa chính | Ý nghĩa |
+|---|---|---|
+| Film | `title`, `duration_minutes` | Tên và thời lượng tính bằng phút |
+| Auditorium | `name`, `row_count`, `seats_per_row` | Tên, số hàng và số ghế mỗi hàng |
+| Seat | `auditorium_id`, `row_number`, `seat_number` | Phòng và vị trí ghế, đánh số từ 1 |
+| Screening | `film_id`, `auditorium_id`, `start_time`, `ticket_price` | Phim, phòng, giờ bắt đầu và giá suất |
+| Ticket | `screening_id`, `seat_id`, `sold_at`, `unit_price` | Suất, ghế, thời điểm bán và giá đã bán |
+
+## 3. Quan hệ và toàn vẹn
+
+- Film → Screening, Auditorium → Seat/Screening, Screening → Ticket,
+  Seat → Ticket đều là quan hệ một-nhiều; phía cha có thể chưa có bản ghi con.
+- Mỗi Seat thuộc đúng một Auditorium; mỗi Screening có đúng một Film và
+  Auditorium; mỗi Ticket có đúng một Screening và Seat. FK đều bắt buộc.
+- Một Seat có thể xuất hiện trên vé của nhiều suất khác nhau.
+
+| Dữ liệu | Ràng buộc cấu trúc |
 |---|---|
-| Mọi entity | ID dương, duy nhất và không đổi |
-| `Seat` | `(auditorium_id, row_number, seat_number)` duy nhất |
-| `Screening` | Phim/phòng phải tồn tại; lịch cùng phòng không chồng lấn |
-| `Ticket` | Suất/ghế phải tồn tại; ghế thuộc phòng của suất |
-| `Ticket` | `(screening_id, seat_id)` duy nhất |
+| Mọi bảng | PK dương, duy nhất; không đổi ID khi cập nhật |
+| Giá trị số | Số hàng/cột, thời lượng, giá và vị trí ghế dương; phép tính không tràn miền số |
+| Seat | Tổ hợp `(auditorium_id, row_number, seat_number)` duy nhất và trong kích thước phòng |
+| Auditorium | Có đủ `row_count × seats_per_row` ghế |
+| Screening | Phim và phòng được tham chiếu phải tồn tại |
+| Ticket | Suất và ghế phải tồn tại; phòng của ghế khớp phòng của suất |
+| Ticket | Tổ hợp `(screening_id, seat_id)` duy nhất |
 
-Phòng hợp lệ phải có đủ `row_count × seats_per_row` ghế. Số hàng, cột, thời
-lượng, giá và ID đều phải dương.
-
-Xóa áp dụng `RESTRICT` cho phim/phòng đang có suất và suất đã có vé; xóa phòng
-hợp lệ thì `CASCADE` ghế thuộc phòng. Không dùng `SET NULL` hoặc `SET DEFAULT`
-vì các association đều bắt buộc. Đây là chính sách do service thực thi, không
-phải ràng buộc tự động của TXT; xem [quy ước xóa](../requirements/business-rules.md#4-quy-ước-xóa-dữ-liệu).
+Tên không thay thế PK/FK. Chính sách tên duy nhất, xếp lịch và xóa nằm trong
+[Business Rules Catalog](../requirements/business-rules.md). Hiệu ứng xóa tương
+ứng RESTRICT/CASCADE do ứng dụng thực hiện, không phải constraint của DBMS.
+TXT không tự có `FOREIGN KEY`, `UNIQUE` hoặc transaction.
 
 ## 4. Phụ thuộc hàm và chuẩn hóa
 
@@ -53,40 +67,17 @@ screening_id  -> film_id, auditorium_id, start_time, ticket_price
 ticket_id     -> screening_id, seat_id, sold_at, unit_price
 ```
 
-Mỗi bảng chỉ lưu thuộc tính phụ thuộc vào khóa của chính nó, nên lược đồ đạt
-3NF trong phạm vi bài. Tên phim/phòng không lặp trong `Ticket`; khi tra cứu sẽ
-đi qua `Screening` và `Seat`.
+Các thuộc tính mô tả trực tiếp bản ghi; lược đồ được thiết kế theo 3NF trong
+phạm vi đồ án. Những khóa ứng viên theo vị trí ghế hoặc cặp suất/ghế không làm
+thay đổi việc dùng ID làm khóa chính. Tên phim/phòng không lặp trong Ticket.
 
-`unit_price` được lưu riêng có chủ đích để giữ giá đã bán, kể cả khi giá suất
-thay đổi. `Seat` được lưu vì vé cần một mã ghế ổn định giữa các lần chạy.
+`unit_price` là dữ liệu lịch sử, không suy ra từ giá suất hiện tại. Seat có PK
+riêng để vé tham chiếu một vị trí ổn định giữa các lần chạy.
 
-## 5. Dữ liệu tính toán
+## 5. Dữ liệu suy ra
 
-Không lưu riêng:
+Không lưu riêng sức chứa phòng, giờ kết thúc, trạng thái ghế theo suất hoặc
+doanh thu ngày. Công thức nghiệp vụ xem BR-S04, BR-T03 và BR-T06; các cấu trúc
+kết quả trên RAM xem [thiết kế service](service-design.md).
 
-- `capacity = row_count × seats_per_row`;
-- giờ kết thúc = giờ bắt đầu + thời lượng phim;
-- trạng thái ghế = có/không có vé của suất và ghế đó;
-- doanh thu ngày = tổng `unit_price` của vé bán trong ngày.
-
-## 6. Thực thi trong code
-
-| Trách nhiệm | Vị trí |
-|---|---|
-| Kiểm tra giá trị một entity | Constructor trong `src/entities/` |
-| ID, lưu bản ghi, chỉ mục | `Repository<T>` |
-| Quan hệ và quy tắc nhiều entity | Các lớp trong `src/services/` |
-| Kiểm tra toàn bộ tập dữ liệu | `CinemaDatabase::validate()` |
-| Đọc/ghi định dạng | `TextFile` |
-
-`HashTable<EntityId, T*>` giúp tìm theo ID trung bình O(1). Các truy vấn lọc,
-trùng lịch, ghế đã bán và doanh thu duyệt tuyến tính vì dữ liệu môn học nhỏ.
-
-## 7. Tính nhất quán
-
-- Nạp vào repository tạm, kiểm tra xong mới thay dữ liệu chính.
-- Thao tác service chuẩn bị dữ liệu trước khi cập nhật repository.
-- Lưu cả năm file theo một quy trình có bản sao phục hồi.
-
-Đây là cách mô phỏng khóa ngoại và giao dịch ở tầng ứng dụng; TXT tự nó không
-có `FOREIGN KEY`, `UNIQUE` hay transaction.
+Nguồn và phạm vi rút gọn của hình xem [mục lục sơ đồ](../diagrams/README.md).

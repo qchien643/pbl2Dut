@@ -164,7 +164,7 @@ void testIdExhaustion() {
 
 void testInsertionRollback() {
     bool reachedSuccess = false;
-    for (int budget = 0; budget < 40; ++budget) {
+    for (int budget = 0; budget < 600; ++budget) {
         FilmRepository films;
         for (EntityId id = 1; id <= 8; ++id) {
             films.insert(Film(id, "Existing", 90));
@@ -194,6 +194,11 @@ void testInsertionRollback() {
             ++visited;
         }
         assert(visited == films.size());
+        LinkedList<const Film*> matches;
+        films.searchTitle("allocate", matches);
+        assert(matches.size() == (failed ? 0 : 1));
+        films.searchTitle("existing", matches);
+        assert(matches.size() == 8);
         if (reachedSuccess) {
             break;
         }
@@ -202,22 +207,40 @@ void testInsertionRollback() {
 }
 
 void testUpdateRollback() {
-    FilmRepository films;
-    films.insert(Film(1, "Original", 90));
-    films.markSaved();
-    const Film replacement(1, "Replacement title long enough to allocate a string", 120);
-    const Film* original = films.findById(1);
-    allocationsBeforeFailure = 0;
-    bool failed = false;
-    try {
-        films.update(1, replacement);
-    } catch (const std::bad_alloc&) {
-        failed = true;
+    bool reachedSuccess = false;
+    for (int budget = 0; budget < 600; ++budget) {
+        FilmRepository films;
+        films.insert(Film(1, "Original", 90));
+        films.markSaved();
+        const Film replacement(1, "Replacement title long enough to allocate a string", 120);
+        const Film* original = films.findById(1);
+        allocationsBeforeFailure = budget;
+        bool failed = false;
+        try { films.update(1, replacement); }
+        catch (const std::bad_alloc&) { failed = true; }
+        allocationsBeforeFailure = -1;
+        assert(films.findById(1) == original && films.size() == 1);
+        assert(original->title() == (failed ? "Original" : replacement.title()));
+        assert(original->normalizedTitle() == (failed ? U"original" : replacement.normalizedTitle()));
+        assert(original->durationMinutes() == (failed ? 90 : 120));
+        assert(films.isDirty() == !failed);
+        LinkedList<const Film*> matches;
+        films.searchTitle("replacement", matches);
+        assert(matches.size() == (failed ? 0 : 1));
+        films.searchTitle("original", matches);
+        assert(matches.size() == (failed ? 1 : 0));
+        if (!failed) { reachedSuccess = true; break; }
     }
+    assert(reachedSuccess);
+
+    FilmRepository films;
+    films.insert(Film(1, "Erase without allocation", 90));
+    allocationsBeforeFailure = 0;
+    assert(films.erase(1));
     allocationsBeforeFailure = -1;
-    assert(failed && !films.isDirty());
-    assert(films.findById(1) == original && original->title() == "Original");
-    assert(original->durationMinutes() == 90 && films.size() == 1);
+    LinkedList<const Film*> matches;
+    films.searchTitle("allocation", matches);
+    assert(matches.empty());
 }
 
 void testPreparedReplacement() {
@@ -248,6 +271,36 @@ void testPreparedReplacement() {
     assert(empty.findById(2) != nullptr);
 }
 
+void testCombinedFilmContract() {
+    FilmRepository repository;
+    IFilmRepository& films = repository;
+    Repository<Film>& storage = repository;
+    IRepository<Film>& crud = films;
+    assert(&crud == static_cast<IRepository<Film>*>(&storage));
+
+    assert(films.insert(Film(1, u8"Nguyễn Trãi", 90)));
+    assert(!crud.insert(Film(1, "Duplicate ID", 90)));
+    assert(films.nextId() == 2 && crud.findById(1) == repository.findById(1));
+    LinkedList<const Film*> result;
+    const IFilmRepository& query = films;
+    query.searchTitle("nguyen trai", result);
+    assert(result.size() == 1 && *result.begin() == crud.findById(1));
+
+    // Writes through the generic contract still dispatch to FilmRepository's index updates.
+    const Film* original = crud.findById(1);
+    assert(crud.update(1, Film(1, u8"Mắt Biếc", 100)));
+    assert(crud.findById(1) == original);
+    query.searchTitle("nguyen trai", result);
+    assert(result.empty());
+    query.searchTitle("mat biec", result);
+    assert(result.size() == 1 && *result.begin() == original);
+    films.list(result);
+    assert(result.size() == 1 && *result.begin() == original);
+    assert(crud.erase(1));
+    query.searchTitle("mat biec", result);
+    assert(result.empty() && crud.findById(1) == nullptr);
+}
+
 int main() {
     static_assert(std::is_same_v<decltype(*std::declval<FilmRepository&>().begin()), const Film&>);
     static_assert(std::is_same_v<decltype(*std::declval<const FilmRepository&>().begin()), const Film&>);
@@ -259,6 +312,9 @@ int main() {
     static_assert(!std::is_copy_constructible_v<TicketRepository>);
     static_assert(std::is_base_of_v<Repository<Ticket>, TicketRepository>);
     static_assert(std::is_base_of_v<IRepository<Ticket>, TicketRepository>);
+    static_assert(std::is_base_of_v<IRepository<Film>, IFilmRepository>);
+    static_assert(std::is_convertible_v<FilmRepository*, IFilmRepository*>);
+    static_assert(std::is_convertible_v<FilmRepository*, IRepository<Film>*>);
     static_assert(std::is_same_v<decltype(std::declval<FilmRepository&>().findById(1)), const Film*>);
     testCrudAndIds();
     testAllEntityRepositories();
@@ -266,5 +322,6 @@ int main() {
     testInsertionRollback();
     testUpdateRollback();
     testPreparedReplacement();
+    testCombinedFilmContract();
     std::cout << "Repository checks passed\n";
 }

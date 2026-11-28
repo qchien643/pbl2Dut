@@ -1,4 +1,5 @@
 #include "services/TicketService.h"
+#include "services/CatalogService.h"
 
 #include "helper/DateTimeHelper.h"
 
@@ -127,7 +128,7 @@ std::unique_ptr<SeatMap> TicketService::seatMap(EntityId screeningId) const
         throw std::out_of_range("Record not found");
     }
     const Auditorium& room = screening->auditorium();
-    std::unique_ptr<SeatMap> result = makeSeatMap(room, seats_);
+    std::unique_ptr<SeatMap> result = CatalogService::makeRoomSeatMap(room, seats_);
     LinkedList<const Ticket*> records;
     tickets_.list(records);
     for (const Ticket* record : records)
@@ -142,9 +143,7 @@ std::unique_ptr<SeatMap> TicketService::seatMap(EntityId screeningId) const
         {
             throw std::invalid_argument("Ticket seat belongs to another room");
         }
-        const std::size_t row = static_cast<std::size_t>(seat.rowNumber() - 1);
-        const std::size_t column = static_cast<std::size_t>(seat.seatNumber() - 1);
-        SeatStatus& cell = result->at(row, column);
+        SeatStatus& cell = seatMapCell(*result, seat);
         if (cell.sold)
         {
             throw std::invalid_argument("Duplicate screening-seat ticket");

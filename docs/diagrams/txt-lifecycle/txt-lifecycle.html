@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBL2 · Dữ liệu đi từ TXT vào RAM và trở lại</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; }
+:root { --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif; }
+body { background: #f5f5f5; color: #2d3142; font: 16px/1.7 var(--sans); padding: 40px 24px; }
+main { max-width: 1280px; min-width: 0; margin: auto; }
+h1 { font: 400 40px/1.2 var(--serif); margin: 12px 0 16px; }
+h2 { font-size: 24px; line-height: 1.35; font-weight: 600; margin-bottom: 12px; }
+h3 { font-size: 18px; margin: 24px 0 8px; }
+.eyebrow { color: #4f5d75; font: 500 12px var(--mono); letter-spacing: .12em; }
+.intro { max-width: 960px; color: #4f5d75; }
+nav { display: flex; flex-wrap: wrap; gap: 12px 24px; border-block: 1px solid #bfc0c0; padding: 16px 0; margin-top: 24px; }
+section { margin-top: 48px; scroll-margin-top: 24px; }
+section > p { max-width: 1040px; }
+p + p { margin-top: 12px; }
+.diagram-container { width: 100%; overflow-x: auto; }
+.diagram-container:focus-visible { outline: 2px solid #bf4520; outline-offset: 4px; }
+svg { width: 100%; min-width: 1280px; display: block; }
+.name { font: 600 16px var(--sans); fill: #2d3142; }
+.body { font: 400 16px var(--sans); fill: #4f5d75; }
+.member, .number { font: 400 12px var(--mono); fill: #4f5d75; }
+.number { fill: #2d3142; }
+.edge { fill: none; stroke: #4f5d75; stroke-width: 1.4; }
+code, pre { font: .875em/1.7 var(--mono); }
+code { overflow-wrap: anywhere; }
+pre { overflow-x: auto; background: #fff; border-left: 3px solid #bf4520; padding: 16px; margin: 16px 0; }
+pre code { overflow-wrap: normal; }
+a { color: #2e5aa8; text-underline-offset: 3px; }
+table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+caption { text-align: left; font-weight: 600; padding-bottom: 8px; }
+th, td { text-align: left; vertical-align: top; padding: 12px 16px 12px 0; border-bottom: 1px solid #bfc0c0; }
+th { font-weight: 600; }
+th:first-child { width: 24%; }
+.notice { border-left: 3px solid #bf4520; padding-left: 16px; margin-top: 20px; }
+footer { color: #4f5d75; border-top: 1px solid #bfc0c0; padding-top: 20px; margin-top: 48px; font-size: 14px; }
+@media (max-width: 600px) { body { padding: 24px 16px; } h1 { font-size: 32px; } th, td { padding-right: 8px; } }
+@media print { body { padding: 0; } nav { display: none; } .diagram-container { overflow-x: visible; } svg { min-width: 0; } h2 { break-after: avoid; } }
+</style>
+</head>
+<body><main>
+<header>
+<p class="eyebrow">PBL2 / TXT → RAM → TXT / ĐỌC THEO CODE</p>
+<h1>Dữ liệu đi từ TXT vào RAM và trở lại như thế nào?</h1>
+<p class="intro">Ứng dụng nạp dữ liệu một lần khi khởi động. Trong phiên, các thao tác chỉ thay đổi đối tượng trên RAM. Khi chọn lưu và thoát, ứng dụng ghi lại toàn bộ năm bảng ra TXT.</p>
+<nav aria-label="Các phần trong trang">
+<a href="#load">1. Nạp toàn bộ dữ liệu</a>
+<a href="#seat">2. Theo dõi một dòng ghế</a>
+<a href="#ram">3. Dữ liệu nằm ở đâu trên RAM?</a>
+<a href="#save">4. Lưu và xử lý lỗi</a>
+</nav>
+</header>
+<section id="load">
+<h2>1. Khởi động: nạp an toàn vào kho tạm trước</h2>
+<p>“Kho” là repository chứa các đối tượng của một loại. Database chính có năm kho: phim, phòng, ghế, suất chiếu và vé. Kho tạm cũng có năm kho tương ứng, nhưng chỉ dùng trong quá trình nạp.</p>
+<p class="notice"><strong>Nguyên tắc: bảng được tham chiếu phải nạp xong trước bảng giữ tham chiếu.</strong> Khi tạo một ghế, phòng của ghế phải tồn tại trên RAM để tìm theo ID và lấy địa chỉ. Vì vậy không thể tạo ghế trước rồi trỏ tới một phòng chưa được nạp trong cách đọc hiện tại.</p>
+<p><strong>Thứ tự thực tế trong code: Phim → Phòng → Ghế → Suất chiếu → Vé.</strong> Phim và phòng không tham chiếu bảng nào; ghế cần phòng; suất chiếu cần phim và phòng; vé cần cả suất chiếu và ghế. Mỗi bảng được tạo entity và thêm vào repository tạm đầy đủ trước khi đọc bảng kế tiếp.</p>
+<div class="diagram-container" tabindex="0" role="region" aria-label="Nạp năm bảng trước khi mở giao diện — cuộn ngang khi màn hình hẹp">
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="txt-lifecycle-load-title txt-lifecycle-load-desc">
+<title id="txt-lifecycle-load-title">Nạp năm bảng trước khi mở giao diện</title>
+<desc id="txt-lifecycle-load-desc">Ứng dụng kiểm tra bộ file, nạp lần lượt vào database tạm, kiểm tra toàn vẹn rồi chuyển dữ liệu sang kho chính và mở cửa sổ.</desc>
+<defs><marker id="txt-lifecycle-load-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker><marker id="txt-lifecycle-load-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker><marker id="txt-lifecycle-load-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e5aa8"/></marker></defs>
+<rect width="1280" height="720" fill="#f5f5f5"/>
+<text x="80" y="64" class="body">Đọc theo số: hàng trên từ trái sang phải, xuống hàng dưới rồi đi từ phải sang trái.</text>
+<line class="edge" x1="320" y1="200" x2="368" y2="200" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="608" y1="200" x2="656" y2="200" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="896" y1="200" x2="944" y2="200" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="1064" y1="288" x2="1064" y2="384" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="944" y1="472" x2="896" y2="472" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="656" y1="472" x2="608" y2="472" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<line class="edge" x1="368" y1="472" x2="320" y2="472" marker-end="url(#txt-lifecycle-load-arrow)"/>
+<g>
+<rect x="80" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="140" class="number">01</text>
+<text x="96" y="168" class="name">Tạo các kho rỗng</text>
+<text x="96" y="196" class="body">Khởi tạo database chính.</text>
+<text x="96" y="220" class="body">Chưa có entity nào</text>
+<text x="96" y="244" class="body">trong các repository.</text>
+<text x="96" y="268" class="member">main → CinemaDatabase</text>
+</g>
+<g>
+<rect x="368" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="140" class="number">02</text>
+<text x="384" y="168" class="name">Kiểm tra bộ file</text>
+<text x="384" y="196" class="body">Thư mục phải đọc được.</text>
+<text x="384" y="220" class="body">Đủ năm file; không có</text>
+<text x="384" y="244" class="body">phiên lưu còn dang dở.</text>
+<text x="384" y="268" class="member">load → fileCount</text>
+</g>
+<g>
+<rect x="656" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="672" y="140" class="number">03</text>
+<text x="672" y="168" class="name">Tạo kho nạp tạm</text>
+<text x="672" y="196" class="body">Tạo database thứ hai</text>
+<text x="672" y="220" class="body">để giữ dữ liệu đang đọc.</text>
+<text x="672" y="244" class="body">Chưa đổi kho chính.</text>
+<text x="672" y="268" class="member">CinemaDatabase staged</text>
+</g>
+<g>
+<rect x="944" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="960" y="140" class="number">04</text>
+<text x="960" y="168" class="name">Nạp từng bảng</text>
+<text x="960" y="196" class="body">Phim → Phòng → Ghế,</text>
+<text x="960" y="220" class="body">rồi Suất chiếu → Vé.</text>
+<text x="960" y="244" class="body">Đích tham chiếu nạp trước.</text>
+<text x="960" y="268" class="member">readTable → read… → insert</text>
+</g>
+<g>
+<rect x="944" y="384" width="240" height="176" rx="6" fill="#faede8" stroke="#bf4520"/>
+<text x="960" y="412" class="number">05</text>
+<text x="960" y="440" class="name">Kiểm tra toàn vẹn</text>
+<text x="960" y="468" class="body">Kiểm tra các liên kết,</text>
+<text x="960" y="492" class="body">vị trí ghế và dữ liệu vé</text>
+<text x="960" y="516" class="body">trên toàn bộ kho tạm.</text>
+<text x="960" y="540" class="member">staged.validate()</text>
+</g>
+<g>
+<rect x="656" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="672" y="412" class="number">06</text>
+<text x="672" y="440" class="name">Chuyển sang kho chính</text>
+<text x="672" y="468" class="body">Chuyển node và chỉ mục.</text>
+<text x="672" y="492" class="body">Địa chỉ entity giữ nguyên;</text>
+<text x="672" y="516" class="body">các con trỏ vẫn đúng.</text>
+<text x="672" y="540" class="member">replaceWith</text>
+</g>
+<g>
+<rect x="368" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="412" class="number">07</text>
+<text x="384" y="440" class="name">Đánh dấu đã nạp</text>
+<text x="384" y="468" class="body">Xóa cờ chưa lưu ở kho.</text>
+<text x="384" y="492" class="body">Database sẵn sàng dùng;</text>
+<text x="384" y="516" class="body">ghi nhận đã có bộ file.</text>
+<text x="384" y="540" class="member">markSaved; ready_ = true</text>
+</g>
+<g>
+<rect x="80" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="412" class="number">08</text>
+<text x="96" y="440" class="name">Mở giao diện</text>
+<text x="96" y="468" class="body">Truyền kho vào service.</text>
+<text x="96" y="492" class="body">Tạo và mở cửa sổ Qt.</text>
+<text x="96" y="516" class="body">Bắt đầu phiên thao tác.</text>
+<text x="96" y="540" class="member">main → window.show()</text>
+</g>
+<line x1="40" y1="644" x2="1240" y2="644" stroke="#bfc0c0"/>
+<text x="64" y="680" class="body">Điểm quan trọng: bước 04 được mở rộng ở hình tiếp theo; chưa nạp xong thì chưa cho chỉnh sửa.</text>
+</svg></div>
+<table>
+<caption>Trong bước 04, mỗi bảng được nạp xong trước khi chuyển sang bảng kế tiếp</caption>
+<thead><tr><th>Thứ tự / file</th><th>Đối tượng được tạo</th><th>Phải tìm đối tượng nào đã nạp?</th></tr></thead>
+<tbody>
+<tr><td>1. <code>films.txt</code></td><td>Phim — <code>Film</code></td><td>Không có tham chiếu.</td></tr>
+<tr><td>2. <code>auditoriums.txt</code></td><td>Phòng — <code>Auditorium</code></td><td>Không có tham chiếu.</td></tr>
+<tr><td>3. <code>seats.txt</code></td><td>Ghế — <code>Seat</code></td><td>Tìm phòng theo <code>auditorium_id</code>.</td></tr>
+<tr><td>4. <code>screenings.txt</code></td><td>Suất chiếu — <code>Screening</code></td><td>Tìm phim và phòng theo hai ID tham chiếu.</td></tr>
+<tr><td>5. <code>tickets.txt</code></td><td>Vé — <code>Ticket</code></td><td>Tìm suất chiếu và ghế theo hai ID tham chiếu.</td></tr>
+</tbody></table>
+<p>Đây là thứ tự được viết rõ trong <code>CinemaDatabase::load()</code>, không phải chương trình tự suy ra từ ID hay thứ tự cột. Phim và phòng có thể đổi thứ tự cho nhau; sau khi đã có cả hai, ghế và suất chiếu cũng có thể đổi thứ tự. Điều bắt buộc là mọi đối tượng được tham chiếu phải có trong kho trước lúc tạo đối tượng tham chiếu đến nó.</p>
+<p><code>validate()</code> kiểm tra cấu trúc và toàn vẹn: tham chiếu đúng kho, phòng đủ ghế, không trùng vị trí ghế, vé đúng phòng của suất chiếu, không bán trùng ghế trong một suất, thời điểm bán trước giờ chiếu… <strong>Không chạy lại mọi quy tắc nghiệp vụ tạo/sửa</strong>, chẳng hạn chỉ cho tạo suất chiếu trong tương lai.</p>
+<table>
+<caption>Nếu không đi theo luồng nạp thành công</caption>
+<thead><tr><th>Tình huống</th><th>Cách xử lý hiện tại</th></tr></thead>
+<tbody>
+<tr><td>Không có file nào</td><td>Nếu không có dấu vết backup, hỏi người dùng có bắt đầu phiên rỗng không. Chỉ tạo file khi lưu sau đó.</td></tr>
+<tr><td>Chỉ có một phần bộ file</td><td>Từ chối nạp, thông báo file thiếu; không tự tạo nốt để che lỗi.</td></tr>
+<tr><td>Còn <code>.cms-save</code></td><td>Chặn nạp vì lần lưu trước chưa hoàn tất; cần kiểm tra và phục hồi bộ dữ liệu.</td></tr>
+<tr><td>Không có file chính nhưng còn backup</td><td>Chặn khởi tạo rỗng để tránh bỏ qua dữ liệu có thể phục hồi.</td></tr>
+<tr><td>Sai tên cột, số, ID trùng, tham chiếu thiếu hoặc kiểm tra toàn vẹn thất bại</td><td>Báo lỗi, hủy kho tạm; kho chính vẫn rỗng, file gốc không bị ghi đè, giao diện chỉnh sửa không mở.</td></tr>
+</tbody></table>
+</section>
+<section id="seat">
+<h2>2. Theo dõi một dòng ghế: văn bản → đối tượng → repository</h2>
+<p>Ví dụ minh họa: phòng có ID <code>2</code> đã được nạp vào kho phòng. File ghế chứa dòng sau; ghế <code>17</code> ở hàng <code>2</code>, vị trí <code>5</code> của phòng đó.</p>
+<pre><code>seat_id|auditorium_id|row_number|seat_number
+17|2|2|5</code></pre>
+<div class="diagram-container" tabindex="0" role="region" aria-label="Một dòng TXT trở thành đối tượng ghế trong kho — cuộn ngang khi màn hình hẹp">
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="txt-lifecycle-seat-title txt-lifecycle-seat-desc">
+<title id="txt-lifecycle-seat-title">Một dòng TXT trở thành đối tượng ghế trong kho</title>
+<desc id="txt-lifecycle-seat-desc">TextFile ghép tên cột với chuỗi giá trị, EntityFile tìm phòng và tạo Seat, Repository chép ghế vào danh sách rồi lập chỉ mục theo ID.</desc>
+<defs><marker id="txt-lifecycle-seat-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker><marker id="txt-lifecycle-seat-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker><marker id="txt-lifecycle-seat-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e5aa8"/></marker></defs>
+<rect width="1280" height="720" fill="#f5f5f5"/>
+<text x="80" y="64" class="body">Đọc theo số: hàng trên từ trái sang phải, xuống hàng dưới rồi đi từ phải sang trái.</text>
+<line class="edge" x1="320" y1="200" x2="368" y2="200" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="608" y1="200" x2="656" y2="200" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="896" y1="200" x2="944" y2="200" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="1064" y1="288" x2="1064" y2="384" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="944" y1="472" x2="896" y2="472" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="656" y1="472" x2="608" y2="472" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<line class="edge" x1="368" y1="472" x2="320" y2="472" marker-end="url(#txt-lifecycle-seat-arrow)"/>
+<g>
+<rect x="80" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="140" class="number">01</text>
+<text x="96" y="168" class="name">Mở file ghế</text>
+<text x="96" y="196" class="body">Đọc từng dòng văn bản.</text>
+<text x="96" y="220" class="body">Bỏ BOM đầu file và CR</text>
+<text x="96" y="244" class="body">cuối dòng nếu có.</text>
+<text x="96" y="268" class="member">readTable → getline</text>
+</g>
+<g>
+<rect x="368" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="140" class="number">02</text>
+<text x="384" y="168" class="name">Đọc dòng tên cột</text>
+<text x="384" y="196" class="body">Tách tên cột bằng dấu |.</text>
+<text x="384" y="220" class="body">Kiểm tra đủ tên cột,</text>
+<text x="384" y="244" class="body">không lạ, không trùng.</text>
+<text x="384" y="268" class="member">splitFields; header</text>
+</g>
+<g>
+<rect x="656" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="672" y="140" class="number">03</text>
+<text x="672" y="168" class="name">Ghép tên với giá trị</text>
+<text x="672" y="196" class="body">Tách từng dòng bằng |.</text>
+<text x="672" y="220" class="body">Kiểm tra UTF-8, số ô.</text>
+<text x="672" y="244" class="body">Tạo bảng chuỗi tạm.</text>
+<text x="672" y="268" class="member">Row; vector&lt;Row&gt;</text>
+</g>
+<g>
+<rect x="944" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="960" y="140" class="number">04</text>
+<text x="960" y="168" class="name">Tìm phòng của ghế</text>
+<text x="960" y="196" class="body">Lấy ID ghế và ID phòng.</text>
+<text x="960" y="220" class="body">Đổi chuỗi ID thành số.</text>
+<text x="960" y="244" class="body">Tra phòng đã nạp trước.</text>
+<text x="960" y="268" class="member">readSeat → rooms.findById</text>
+</g>
+<g>
+<rect x="944" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="960" y="412" class="number">05</text>
+<text x="960" y="440" class="name">Tạo đối tượng ghế</text>
+<text x="960" y="468" class="body">Đổi số hàng, số ghế.</text>
+<text x="960" y="492" class="body">Gọi constructor của Seat.</text>
+<text x="960" y="516" class="body">Ghế giữ con trỏ tới phòng.</text>
+<text x="960" y="540" class="member">Seat(id, *room, row, seat)</text>
+</g>
+<g>
+<rect x="656" y="384" width="240" height="176" rx="6" fill="#faede8" stroke="#bf4520"/>
+<text x="672" y="412" class="number">06</text>
+<text x="672" y="440" class="name">Chép vào danh sách</text>
+<text x="672" y="468" class="body">Kiểm tra ID chưa trùng.</text>
+<text x="672" y="492" class="body">Tạo node chứa bản sao</text>
+<text x="672" y="516" class="body">của đối tượng ghế.</text>
+<text x="672" y="540" class="member">insert → records_.pushBack</text>
+</g>
+<g>
+<rect x="368" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="412" class="number">07</text>
+<text x="384" y="440" class="name">Lập chỉ mục theo ID</text>
+<text x="384" y="468" class="body">Lưu ID → địa chỉ entity</text>
+<text x="384" y="492" class="body">vào bảng băm của kho.</text>
+<text x="384" y="516" class="body">Cập nhật ID lớn nhất.</text>
+<text x="384" y="540" class="member">index_.insert(id, &amp;record)</text>
+</g>
+<g>
+<rect x="80" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="412" class="number">08</text>
+<text x="96" y="440" class="name">Đọc tiếp và dọn tạm</text>
+<text x="96" y="468" class="body">Đánh dấu kho đã thay đổi.</text>
+<text x="96" y="492" class="body">Lặp với dòng kế tiếp.</text>
+<text x="96" y="516" class="body">Xong bảng: bỏ bảng chuỗi.</text>
+<text x="96" y="540" class="member">dirty_ = true; hết scope</text>
+</g>
+<line x1="40" y1="644" x2="1240" y2="644" stroke="#bfc0c0"/>
+<text x="64" y="680" class="body">Lặp các bước 04–08 cho từng Row; bước 01–03 đọc toàn bộ một bảng thành các chuỗi trước.</text>
+</svg></div>
+<table>
+<caption>Đọc các bước trong hình cùng với dữ liệu cụ thể</caption>
+<thead><tr><th>Bước</th><th>Thực sự xảy ra trong code</th></tr></thead>
+<tbody>
+<tr><td>01. Mở văn bản</td><td><code>BOM</code> là dấu nhận diện mã hóa có thể nằm đầu file; <code>CR</code> là ký tự kết dòng thường gặp ở file Windows. Bộ đọc bỏ chúng ở vị trí tương ứng để không lẫn vào tên cột hoặc giá trị.</td></tr>
+<tr><td>02–03. Tên cột và chuỗi</td><td><code>Row</code> là bảng ánh xạ tên cột → chuỗi: <code>row.at("seat_id")</code> trả về <code>"17"</code>, <code>row.at("auditorium_id")</code> trả về <code>"2"</code>. Cả bảng được giữ tạm trong <code>vector&lt;Row&gt;</code>.</td></tr>
+<tr><td>04. Đổi ID và tìm phòng</td><td><code>number()</code> đổi hai chuỗi thành số; <code>rooms.findById(2)</code> trả về con trỏ đến phòng trong kho tạm. Không tìm thấy thì báo lỗi, không tạo ghế với con trỏ rỗng.</td></tr>
+<tr><td>05. Tạo biến ghế</td><td>Sau khi đổi số hàng và vị trí, <code>Seat(17, *room, 2, 5)</code> tạo đối tượng. Constructor gán <code>auditorium_ = &amp;auditorium</code>; ghế không chứa bản sao cả phòng.</td></tr>
+<tr><td>06. Tạo bản sao trong node</td><td><code>const Seat seat = readSeat(...)</code> là biến cục bộ. <code>staged.seats.insert(seat)</code> chép nó vào node do danh sách liên kết cấp phát. Biến cục bộ hết phạm vi không làm mất ghế trong kho.</td></tr>
+<tr><td>07. Lập chỉ mục</td><td><code>index_</code> giữ cặp <code>17 → &amp;record</code>. Đó là địa chỉ ghế vừa chép vào node, không phải địa chỉ biến cục bộ. Nếu thêm chỉ mục lỗi, repository xóa node vừa thêm rồi báo lỗi.</td></tr>
+<tr><td>08. Kết thúc bảng</td><td><code>insert()</code> đánh dấu <code>dirty_ = true</code> cho kho tạm. Khi nạp xong cả database, <code>markSaved()</code> mới xóa cờ này. Bảng chuỗi của từng file được giải phóng sau khi chuyển đổi xong file đó.</td></tr>
+</tbody></table>
+<p class="notice"><strong>Không có cơ chế tự suy ra thuộc tính từ class.</strong> <code>readSeat()</code> viết rõ tên cột, cách đổi kiểu và constructor cần gọi. Có thể đảo thứ tự cột trong TXT nếu dòng tên cột vẫn đúng và đủ; thứ tự khai báo biến trong <code>Seat.h</code> không điều khiển việc đọc file.</p>
+</section>
+<section id="ram">
+<h2>3. Trong phiên: ai giữ đối tượng, ai chỉ giữ địa chỉ?</h2>
+<p>Sau khi nạp thành công, các node thuộc về repository trong <code>CinemaDatabase</code> chính. Service nhận repository qua constructor; giao diện gọi service để kiểm tra nghiệp vụ rồi đọc hoặc thay đổi các đối tượng trong kho. Không đọc lại TXT sau mỗi thao tác.</p>
+<table>
+<caption>Phân biệt dữ liệu được sở hữu và con trỏ được giữ lại</caption>
+<thead><tr><th>Thành phần</th><th>Chứa gì?</th><th>Vai trò</th></tr></thead>
+<tbody>
+<tr><td><code>records_</code> trong kho ghế</td><td>Danh sách node; mỗi node chứa một đối tượng <code>Seat</code>.</td><td>Sở hữu ghế; xóa node sẽ hủy đối tượng ghế đó.</td></tr>
+<tr><td><code>index_</code> trong kho ghế</td><td>ID ghế → con trỏ tới chính ghế trong <code>records_</code>.</td><td>Tìm nhanh theo ID; không sở hữu thêm một bản sao ghế.</td></tr>
+<tr><td><code>Seat::auditorium_</code></td><td>Con trỏ đến phòng trong danh sách của kho phòng.</td><td>Association: truy cập phòng liên quan; ghế không sở hữu hay tự xóa phòng.</td></tr>
+<tr><td><code>dirty_</code> của repository</td><td>Cờ cho biết kho đã thay đổi từ lần đánh dấu đã lưu.</td><td>Không phải dữ liệu TXT. Hàm lưu hiện tại vẫn ghi lại đủ năm bảng, không chỉ kho có cờ này.</td></tr>
+</tbody></table>
+<p><code>replaceWith()</code> chuyển danh sách và chỉ mục giữa hai kho, không cấp phát lại từng entity; vì vậy địa chỉ phòng và ghế không đổi. Dù giờ thuộc kho chính, con trỏ trong ghế vẫn trỏ đúng phòng đã nạp.</p>
+<p>Ví dụ khi bán vé: giao diện gửi yêu cầu → service kiểm tra suất chiếu và ghế → repository thêm vé vào RAM → giao diện cập nhật. <strong>File vé trên đĩa chưa thay đổi</strong> cho đến khi lưu thành công.</p>
+</section>
+<section id="save">
+<h2>4. Lưu và thoát: ghi đủ file mới trước khi thay file chính</h2>
+<p>Ghi lại toàn bộ dữ liệu không có nghĩa là mở file chính rồi xóa nội dung ngay. Code tạo bộ file mới ở thư mục tạm, đóng đủ năm file và sao lưu bộ cũ trước khi thay thế.</p>
+<div class="diagram-container" tabindex="0" role="region" aria-label="Lưu toàn bộ RAM ra TXT rồi đóng cửa sổ — cuộn ngang khi màn hình hẹp">
+<svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="txt-lifecycle-save-title txt-lifecycle-save-desc">
+<title id="txt-lifecycle-save-title">Lưu toàn bộ RAM ra TXT rồi đóng cửa sổ</title>
+<desc id="txt-lifecycle-save-desc">Ứng dụng xác nhận thoát, kiểm tra dữ liệu, ghi và đóng năm file mới, sao lưu file cũ rồi thay file chính và đánh dấu đã lưu.</desc>
+<defs><marker id="txt-lifecycle-save-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker><marker id="txt-lifecycle-save-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker><marker id="txt-lifecycle-save-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e5aa8"/></marker></defs>
+<rect width="1280" height="720" fill="#f5f5f5"/>
+<text x="80" y="64" class="body">Đọc theo số: hàng trên từ trái sang phải, xuống hàng dưới rồi đi từ phải sang trái.</text>
+<line class="edge" x1="320" y1="200" x2="368" y2="200" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="608" y1="200" x2="656" y2="200" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="896" y1="200" x2="944" y2="200" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="1064" y1="288" x2="1064" y2="384" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="944" y1="472" x2="896" y2="472" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="656" y1="472" x2="608" y2="472" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<line class="edge" x1="368" y1="472" x2="320" y2="472" marker-end="url(#txt-lifecycle-save-arrow)"/>
+<g>
+<rect x="80" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="140" class="number">01</text>
+<text x="96" y="168" class="name">Xác nhận lưu và thoát</text>
+<text x="96" y="196" class="body">Cửa sổ chưa đóng ngay.</text>
+<text x="96" y="220" class="body">Nếu lần trước phục hồi lỗi,</text>
+<text x="96" y="244" class="body">thử phục hồi trước khi lưu.</text>
+<text x="96" y="268" class="member">closeEvent; retryRecovery</text>
+</g>
+<g>
+<rect x="368" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="140" class="number">02</text>
+<text x="384" y="168" class="name">Kiểm tra trước khi lưu</text>
+<text x="384" y="196" class="body">Database phải sẵn sàng.</text>
+<text x="384" y="220" class="body">Kiểm tra toàn vẹn và</text>
+<text x="384" y="244" class="body">số file hiện có trên đĩa.</text>
+<text x="384" y="268" class="member">save → validate; fileCount</text>
+</g>
+<g>
+<rect x="656" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="672" y="140" class="number">03</text>
+<text x="672" y="168" class="name">Chuẩn bị chỗ ghi tạm</text>
+<text x="672" y="196" class="body">Tạo vùng cho file mới</text>
+<text x="672" y="220" class="body">và bản sao file cũ.</text>
+<text x="672" y="244" class="body">Chưa ghi đè file chính.</text>
+<text x="672" y="268" class="member">.cms-save/new; /old</text>
+</g>
+<g>
+<rect x="944" y="112" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="960" y="140" class="number">04</text>
+<text x="960" y="168" class="name">Ghi đầy đủ năm file</text>
+<text x="960" y="196" class="body">Ghi tên cột rồi từng entity.</text>
+<text x="960" y="220" class="body">Lấy ID qua con trỏ liên kết.</text>
+<text x="960" y="244" class="body">Đóng từng file, bắt lỗi ghi.</text>
+<text x="960" y="268" class="member">openOutput → write… → close</text>
+</g>
+<g>
+<rect x="944" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="960" y="412" class="number">05</text>
+<text x="960" y="440" class="name">Sao lưu dữ liệu cũ</text>
+<text x="960" y="468" class="body">Nếu đã có bộ file chính,</text>
+<text x="960" y="492" class="body">chép đủ năm file cũ</text>
+<text x="960" y="516" class="body">vào thư mục dự phòng.</text>
+<text x="960" y="540" class="member">copy_file → .cms-save/old</text>
+</g>
+<g>
+<rect x="656" y="384" width="240" height="176" rx="6" fill="#faede8" stroke="#bf4520"/>
+<text x="672" y="412" class="number">06</text>
+<text x="672" y="440" class="name">Thay file chính</text>
+<text x="672" y="468" class="body">Đổi tên từng file mới</text>
+<text x="672" y="492" class="body">thành file chính tương ứng.</text>
+<text x="672" y="516" class="body">Theo dõi số file đã thay.</text>
+<text x="672" y="540" class="member">rename; ++installed</text>
+</g>
+<g>
+<rect x="368" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="384" y="412" class="number">07</text>
+<text x="384" y="440" class="name">Giữ lại bản dự phòng</text>
+<text x="384" y="468" class="body">Đổi tên vùng lưu tạm</text>
+<text x="384" y="492" class="body">thành thư mục backup</text>
+<text x="384" y="516" class="body">với số thứ tự còn trống.</text>
+<text x="384" y="540" class="member">.cms-save → .cms-backup-N</text>
+</g>
+<g>
+<rect x="80" y="384" width="240" height="176" rx="6" fill="#fff" stroke="#bfc0c0"/>
+<text x="96" y="412" class="number">08</text>
+<text x="96" y="440" class="name">Hoàn tất rồi mới đóng</text>
+<text x="96" y="468" class="body">Đánh dấu kho đã lưu.</text>
+<text x="96" y="492" class="body">Chấp nhận đóng cửa sổ.</text>
+<text x="96" y="516" class="body">Kết thúc phiên ứng dụng.</text>
+<text x="96" y="540" class="member">markSaved → event-&gt;accept</text>
+</g>
+<line x1="40" y1="644" x2="1240" y2="644" stroke="#bfc0c0"/>
+<text x="64" y="680" class="body">Đây là luồng lưu thành công. Nếu có lỗi, cửa sổ vẫn mở để giữ dữ liệu trên RAM.</text>
+</svg></div>
+<h3>Con trỏ trong RAM được ghi thành ID, không phải địa chỉ bộ nhớ</h3>
+<p>Với ghế ví dụ, <code>writeSeat()</code> lấy <code>seat.auditoriumId()</code>. Getter này đi qua con trỏ phòng để lấy <code>auditorium_-&gt;id()</code>, rồi ghi lại <code>17|2|2|5</code>. Thứ tự ghi cột do header và writer quy định bằng code, không do thứ tự thuộc tính trong file <code>.h</code>.</p>
+<table>
+<caption>Vị trí các file trong một lần lưu</caption>
+<thead><tr><th>Vị trí</th><th>Ý nghĩa</th></tr></thead>
+<tbody>
+<tr><td>Thư mục dữ liệu chính</td><td>Năm file đang dùng: <code>films.txt</code>, <code>auditoriums.txt</code>, <code>seats.txt</code>, <code>screenings.txt</code>, <code>tickets.txt</code>.</td></tr>
+<tr><td><code>.cms-save/new/</code></td><td>Năm file mới được viết từ RAM. Mỗi file có dòng tên cột và toàn bộ entity của kho tương ứng.</td></tr>
+<tr><td><code>.cms-save/old/</code></td><td>Bản sao năm file chính trước khi thay thế, nếu trước đó đã có bộ dữ liệu. Phiên bắt đầu rỗng không có bộ cũ để sao lưu.</td></tr>
+<tr><td><code>.cms-backup-N/</code></td><td>Sau khi thay thành công, toàn bộ <code>.cms-save</code> được đổi tên thành thư mục backup có số thứ tự còn trống.</td></tr>
+</tbody></table>
+<h3>Nếu lưu lỗi thì chuyện gì xảy ra?</h3>
+<table>
+<thead><tr><th>Thời điểm lỗi</th><th>File trên đĩa</th><th>Ứng dụng</th></tr></thead>
+<tbody>
+<tr><td>Trước khi thay file chính</td><td>Bộ chính chưa bị thay. Nếu đã tạo vùng tạm thì giữ lại để xử lý lần sau.</td><td>Không đóng cửa sổ; giữ dữ liệu RAM và báo lỗi.</td></tr>
+<tr><td>Đã thay một số file</td><td>Thử khôi phục các file đã thay từ bản sao cũ. Nếu bắt đầu phiên rỗng, xóa những file mới vừa cài vào.</td><td>Không đánh dấu đã lưu. Giữ RAM, giữ vùng tạm, cho thử lại sau khi xử lý nguyên nhân.</td></tr>
+<tr><td>Khôi phục cũng thất bại</td><td>Bộ chính có thể chưa đồng nhất; giữ <code>.cms-save</code> để phục hồi.</td><td>Đánh dấu cần phục hồi. Lần chọn lưu và thoát tiếp theo phải qua <code>retryRecovery()</code> trước.</td></tr>
+<tr><td>Bị buộc dừng giữa lần lưu</td><td>Nếu còn <code>.cms-save</code>, lần khởi động sau chặn nạp để yêu cầu kiểm tra.</td><td>Thay đổi chưa lưu trên RAM có thể mất. Không đảm bảo chống mọi sự cố như hệ quản trị cơ sở dữ liệu.</td></tr>
+</tbody></table>
+<p class="notice">Việc thay năm file diễn ra lần lượt, <strong>không phải một giao dịch nguyên tử</strong>. Sơ đồ mô tả cơ chế bảo vệ hiện có, không khẳng định an toàn tuyệt đối khi mất điện hoặc hỗ trợ nhiều tiến trình cùng ghi dữ liệu.</p>
+</section>
+<footer>
+<p>Đối chiếu source ngày 27/11/2026:
+<a href="../../../src/main.cpp">Khởi động</a> ·
+<a href="../../../src/database/CinemaDatabase.cpp">Nạp, kiểm tra và lưu database</a> ·
+<a href="../../../src/fileio/TextFile.cpp">Đọc bảng chuỗi</a> ·
+<a href="../../../src/fileio/EntityFile.cpp">Chuyển đổi từng loại entity</a> ·
+<a href="../../../src/repositories/Repository.h">Lưu entity trong repository</a> ·
+<a href="../../../src/entities/Seat.cpp">Liên kết ghế với phòng</a> ·
+<a href="../../../src/gui/CinemaWindow.cpp">Xác nhận và xử lý đóng cửa sổ</a>.</p>
+<p><a href="README.md">Mô tả trang</a> · <a href="../../design/txt-format.md">Đặc tả định dạng TXT</a> · <a href="../README.md">Tất cả sơ đồ</a></p>
+<p>Diagram Design · luồng xử lý tách thành ba hình 1280 × 720, cỡ chữ trình chiếu 16px; phần giải thích luôn hiển thị. Google Fonts, có font hệ thống dự phòng. Trên màn hình hẹp, cuộn ngang trong từng hình.</p>
+</footer>
+</main></body>
+</html>
+

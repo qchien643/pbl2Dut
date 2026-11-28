@@ -11,6 +11,7 @@
 #include "services/ScreeningService.h"
 #include "services/TicketService.h"
 #include "helper/DateTimeHelper.h"
+#include "helper/SeatMap.h"
 
 #include <cassert>
 #include <chrono>
@@ -143,6 +144,61 @@ void testCatalog() { // FR-FILM-*, FR-ROOM-*, SAT-01, SAT-13.
     assert(!f.films.isDirty() && !f.rooms.isDirty() && !f.seats.isDirty());
     f.catalog.updateFilm(1, "Allowed rename", 90);
     assert(f.catalog.film(1).title() == "Allowed rename");
+}
+
+void testCatalogNameUniqueness() {
+    Fixture f;
+    const EntityId otherFilm = f.catalog.addFilm("Another", 90);
+    const Seat* originalSeat = f.seats.findById(13);
+    f.markSaved();
+    for (const char* title : {"Film", " Film "}) {
+        expectThrow([&] { f.catalog.addFilm(title, 90); });
+        expectThrow([&] { f.catalog.updateFilm(otherFilm, title, 90); });
+    }
+    for (const char* name : {"Room", " Room "}) {
+        expectThrow([&] { f.catalog.addRoom(name, 1, 1); });
+        expectThrow([&] { f.catalog.updateRoom(2, name, 2, 2); });
+    }
+    assert(f.films.size() == 2 && f.films.nextId() == 3);
+    assert(f.catalog.film(otherFilm).title() == "Another");
+    assert(f.rooms.size() == 2 && f.rooms.nextId() == 3);
+    assert(f.catalog.room(2).name() == "Other room" && f.catalog.room(2).capacity() == 2);
+    assert(f.seats.size() == 14 && f.seats.nextId() == 15);
+    assert(f.seats.findById(13) == originalSeat);
+    assert(!f.films.isDirty() && !f.rooms.isDirty() && !f.seats.isDirty());
+
+    // Updating the same record does not count its own name as a duplicate.
+    f.catalog.updateFilm(1, " Film ", 120);
+    f.catalog.updateRoom(2, " Other room ", 1, 2);
+    assert(f.catalog.film(1).title() == "Film");
+    assert(f.catalog.room(2).name() == "Other room");
+    assert(f.catalog.addFilm("film", 90) == 3);
+    assert(f.catalog.addRoom("room", 1, 1) == 3);
+    f.catalog.updateFilm(otherFilm, "Another renamed", 90);
+    f.catalog.updateRoom(3, "New room name", 1, 1);
+
+    // Name checks must not weaken existing guards or rewrite ticket history.
+    const EntityId showId = f.schedule.add(1, 1, "2026-11-01 18:00", 80000);
+    const EntityId ticketId = f.sales.sell(showId, 1, true);
+    const Film* film = f.films.findById(1);
+    const Screening* show = f.screenings.findById(showId);
+    f.catalog.updateFilm(1, "Scheduled rename", 120);
+    assert(f.films.findById(1) == film && &show->film() == film);
+    assert(f.sales.find(ticketId).sale.film.title() == "Scheduled rename");
+    f.markSaved();
+    expectThrow([&] { f.catalog.updateFilm(1, "Another renamed", 120); });
+    expectThrow([&] { f.catalog.updateFilm(1, "Unique film", 100); });
+    expectThrow([&] { f.catalog.updateRoom(1, "Unique room", 3, 4); });
+    expectThrow([&] { f.schedule.update(showId, 1, 1, "2026-11-02 18:00", 90000); });
+    expectThrow([&] { f.catalog.eraseFilm(1); });
+    expectThrow([&] { f.catalog.eraseRoom(1); });
+    expectThrow([&] { f.schedule.erase(showId); });
+    assert(f.catalog.film(1).title() == "Scheduled rename");
+    assert(f.catalog.film(1).durationMinutes() == 120 && f.catalog.room(1).name() == "Room");
+    assert(f.sales.find(ticketId).ticket.unitPrice() == 80000);
+    assert(f.sales.revenue("2026-10-19").amount == 80000);
+    assert(!f.films.isDirty() && !f.rooms.isDirty() && !f.seats.isDirty());
+    assert(!f.screenings.isDirty() && !f.tickets.isDirty());
 }
 
 void testDeletionPolicy() {
@@ -528,6 +584,29 @@ void testAllocationRollback() { // FR-ROOM-07/08, FR-SALE-09, NFR-03/11.
     }
 }
 
+void testSeatMapHelper() {
+    const Auditorium room(1, "Room", 2, 2);
+    const Seat seat(1, room, 2, 1);
+    LinkedList<const Seat*> seats;
+    seats.pushBack(&seat);
+    // The helper permits holes; a complete room is a service rule.
+    const auto map = makeSeatMap(2, 2, seats);
+    assert(map->at(1, 0).seatId == 1 && !map->at(1, 0).sold);
+    assert(map->at(0, 0).seatId == 0 && !map->at(0, 0).sold);
+    assert(&seatMapCell(*map, seat) == &map->at(1, 0));
+    expectThrow([&] { makeSeatMap(0, 2, seats); });
+    expectThrow([&] { makeSeatMap(-1, 2, seats); });
+    expectThrow([&] { makeSeatMap(1, 2, seats); });
+    expectThrow<std::length_error>([&] {
+        makeSeatMap(std::numeric_limits<std::int64_t>::max(), 2, seats);
+    });
+    seats.pushBack(&seat);
+    expectThrow([&] { makeSeatMap(2, 2, seats); });
+    LinkedList<const Seat*> invalid;
+    invalid.pushBack(nullptr);
+    expectThrow([&] { makeSeatMap(2, 2, invalid); });
+}
+
 void testInvalidMapsAndReconfirmation() {
     Fixture f;
     const auto show = f.schedule.add(1, 1, "2026-11-01 18:00", 80000);
@@ -540,7 +619,14 @@ void testInvalidMapsAndReconfirmation() {
 
     f.seats.erase(2);
     expectThrow([&] { f.catalog.seatMap(1); });
+    expectThrow([&] { f.sales.seatMap(show); });
     f.seats.insert(Seat(2, f.catalog.room(1), 1, 2));
+    f.seats.erase(3);
+    f.seats.insert(Seat(3, f.catalog.room(1), 1, 2));
+    // A full count is insufficient if two records occupy the same cell.
+    expectThrow([&] { f.catalog.seatMap(1); });
+    expectThrow([&] { f.sales.seatMap(show); });
+    f.seats.update(3, Seat(3, f.catalog.room(1), 1, 3));
     f.seats.insert(Seat(15, f.catalog.room(1), 1, 2));
     expectThrow([&] { f.sales.seatMap(show); });
     f.seats.erase(15);
@@ -617,6 +703,7 @@ void testPerformanceBaseline() { // NFR-02.
 
 int main() {
     testCatalog();
+    testCatalogNameUniqueness();
     testDeletionPolicy();
     testScheduling();
     testLookupValidation();
@@ -625,6 +712,7 @@ int main() {
     testCalendarAndOverflow();
     testSales();
     testAllocationRollback();
+    testSeatMapHelper();
     testInvalidMapsAndReconfirmation();
     testPerformanceBaseline();
     std::cout << "Service checks passed\n";

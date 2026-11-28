@@ -5,8 +5,9 @@
 #include "entities/Screening.h"
 #include "entities/Seat.h"
 #include "repositories/IRepository.h"
+#include "repositories/IFilmRepository.h"
 #include "repositories/IRoomStorage.h"
-#include "services/SeatMap.h"
+#include "helper/SeatMap.h"
 
 #include <cstdint>
 #include <memory>
@@ -15,7 +16,8 @@
 class CatalogService
 {
 public:
-    CatalogService(IRepository<Film>& films, IRepository<Auditorium>& rooms,
+    CatalogService(IFilmRepository& films,
+                   IRepository<Auditorium>& rooms,
                    IRepository<Seat>& seats, const IRepository<Screening>& screenings,
                    IRoomStorage& roomStorage);
 
@@ -37,13 +39,18 @@ public:
     void rooms(LinkedList<Auditorium>& result) const;
 
     std::unique_ptr<SeatMap> seatMap(EntityId roomId) const;
+    // Shared room-layout rule; TicketService adds screening-specific sold status.
+    static std::unique_ptr<SeatMap> makeRoomSeatMap(const Auditorium& room,
+                                                  const IRepository<Seat>& seats);
 
 private:
+    void requireUniqueFilmTitle(const Film& candidate) const;
+    void requireUniqueRoomName(const Auditorium& candidate) const;
     bool filmReferenced(EntityId id) const;
     void requireRoomUnused(EntityId id) const;
     void prepareSeats(LinkedList<Seat>& staged, const Auditorium& replacement) const;
 
-    IRepository<Film>& films_;
+    IFilmRepository& films_;
     IRepository<Auditorium>& rooms_;
     IRepository<Seat>& seats_;
     const IRepository<Screening>& screenings_;

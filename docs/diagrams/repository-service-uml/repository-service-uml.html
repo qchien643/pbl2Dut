@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBL2 · Repository, service và DI/DIP</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; }
+:root { --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif; }
+body { background: #f5f5f5; color: #2d3142; font: 14px/1.6 var(--sans); padding: 32px 24px; }
+main { max-width: 1280px; min-width: 0; margin: auto; }
+h1 { font: 400 28px/1.2 var(--serif); margin: 8px 0 12px; }
+.eyebrow { color: #4f5d75; font: 500 10px var(--mono); letter-spacing: .14em; }
+.intro, footer { color: #4f5d75; }
+.diagram-container { width: 100%; overflow-x: auto; }
+svg { width: 100%; min-width: 1280px; display: block; }
+.name { font: 600 12px var(--sans); fill: #2d3142; }
+.body { font: 12px var(--sans); fill: #4f5d75; }
+.member { font: 9px var(--mono); fill: #2d3142; }
+.label { font: 8px var(--mono); fill: #4f5d75; }
+.key { font: 10px var(--sans); fill: #4f5d75; }
+.edge { fill: none; stroke: #4f5d75; stroke-width: 1.2; }
+.notes { border-top: 1px solid #bfc0c0; padding-top: 16px; }
+.notes p + p { margin-top: 8px; }
+code { font: .9em var(--mono); }
+a { color: #2e5aa8; text-underline-offset: 3px; }
+footer { margin-top: 20px; font-size: 12px; }
+table { border-collapse: collapse; margin-top: 12px; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid #bfc0c0; }
+@media print { body { padding: 0; } .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+</style>
+</head>
+<body><main>
+<p class="eyebrow">PBL2 / UML CLASS / DOC-WIDE / STATIC</p>
+<h1>Repository, service và DI/DIP</h1>
+<p class="intro">Service phụ thuộc IRepository; Repository triển khai hợp đồng và các kho cụ thể kế thừa lại.</p>
+<div class="diagram-container"><svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="repository-service-uml-title repository-service-uml-desc">
+<title id="repository-service-uml-title">Repository, service và DI/DIP</title>
+<desc id="repository-service-uml-desc">Service phụ thuộc IRepository; Repository triển khai hợp đồng và các kho cụ thể kế thừa lại.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e5aa8"/></marker><marker id="open" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#4f5d75"/></marker><marker id="triangle" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#f5f5f5" stroke="#4f5d75"/></marker><marker id="diamond" markerWidth="14" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M1 5 L7 1 L13 5 L7 9 Z" fill="#4f5d75" stroke="#4f5d75"/></marker><marker id="hollow-diamond" markerWidth="14" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M1 5 L7 1 L13 5 L7 9 Z" fill="#f5f5f5" stroke="#4f5d75"/></marker></defs>
+<rect width="1280" height="720" fill="#f5f5f5"/>
+<path d="M384 140 H480" class="edge" marker-end="url(#open)" stroke-dasharray="4,3"/>
+<path d="M640 320 V208" class="edge" marker-end="url(#triangle)" stroke-dasharray="5,4"/>
+<path d="M640 560 V528" class="edge" marker-end="url(#triangle)" />
+<path d="M800 388 H896" class="edge" marker-start="url(#diamond)"/>
+<path d="M800 456 H840 Q848 456 848 464 V528 Q848 536 856 536 H896" class="edge" marker-start="url(#diamond)"/>
+<rect x="400" y="116" width="64" height="16" fill="#f5f5f5"/><text x="432" y="127" class="label" text-anchor="middle">USES</text>
+<g><rect x="64" y="40" width="320" height="208" rx="6" fill="#fff" stroke="#2d3142"/><text x="224" y="64" class="name" text-anchor="middle">TicketService</text><path d="M64 76 H384 M64 172 H384" stroke="#bfc0c0"/><text x="80" y="100" class="member" >- tickets_: IRepository&lt;Ticket&gt;&amp;</text><text x="80" y="120" class="member" >- screenings_: const IRepository&lt;Screening&gt;&amp;</text><text x="80" y="140" class="member" >- seats_: const IRepository&lt;Seat&gt;&amp;</text><text x="80" y="160" class="member" >- clock_: date_time::Clock</text><text x="80" y="196" class="member" >+ TicketService(…)</text><text x="80" y="216" class="member" >+ sell(…): EntityId</text><text x="80" y="236" class="member" >…</text></g>
+<g><rect x="480" y="40" width="320" height="168" rx="6" fill="#fff" stroke="#2d3142"/><text x="640" y="56" class="label" text-anchor="middle">«interface»</text><text x="640" y="80" class="name" text-anchor="middle">IRepository&lt;T&gt;</text><path d="M480 92 H800" stroke="#bfc0c0"/><text x="496" y="116" class="member" >+ nextId() const: EntityId</text><text x="496" y="136" class="member" >+ findById(id) const: const T*</text><text x="496" y="156" class="member" >+ insert(value): bool</text><text x="496" y="176" class="member" >+ update(id, value): bool</text><text x="496" y="196" class="member" >…</text></g>
+<g><rect x="480" y="320" width="320" height="208" rx="6" fill="#f4e7e2" stroke="#bf4520"/><text x="640" y="344" class="name" text-anchor="middle">Repository&lt;T&gt;</text><path d="M480 356 H800 M480 452 H800" stroke="#bfc0c0"/><text x="496" y="380" class="member" >- records_: LinkedList&lt;T&gt;</text><text x="496" y="400" class="member" >- index_: HashTable&lt;EntityId, T*&gt;</text><text x="496" y="420" class="member" >- highestId_: EntityId</text><text x="496" y="440" class="member" >- dirty_: bool</text><text x="496" y="476" class="member" >+ insert(value): bool</text><text x="496" y="496" class="member" >+ replaceWith(replacement): void</text><text x="496" y="516" class="member" >…</text></g>
+<g><rect x="480" y="560" width="320" height="72" rx="6" fill="#fff" stroke="#2d3142"/><text x="640" y="584" class="name" text-anchor="middle">TicketRepository</text><path d="M480 596 H800" stroke="#bfc0c0"/><text x="496" y="620" class="member" >- relinkSeats(seats): void</text></g>
+<g><rect x="896" y="340" width="320" height="112" rx="6" fill="#fff" stroke="#2d3142"/><text x="1056" y="364" class="name" text-anchor="middle">LinkedList&lt;T&gt;</text><path d="M896 376 H1216" stroke="#bfc0c0"/><text x="912" y="400" class="member" >+ pushBack(value): T&amp;</text><text x="912" y="420" class="member" >+ erase(value): bool</text><text x="912" y="440" class="member" >…</text></g>
+<g><rect x="896" y="480" width="320" height="112" rx="6" fill="#fff" stroke="#2d3142"/><text x="1056" y="504" class="name" text-anchor="middle">HashTable&lt;EntityId, T*&gt;</text><path d="M896 516 H1216" stroke="#bfc0c0"/><text x="912" y="540" class="member" >+ insert(key, value): bool</text><text x="912" y="560" class="member" >+ find(key): T**</text><text x="912" y="580" class="member" >…</text></g>
+<text x="64" y="380" class="name" >Dependency Inversion</text>
+<text x="64" y="408" class="body" >Service biết hợp đồng, không biết cách lưu.</text>
+<text x="64" y="440" class="name" >Constructor Injection</text>
+<text x="64" y="468" class="body" >main.cpp truyền kho cụ thể vào service.</text>
+<text x="64" y="528" class="body">T = Ticket cho đường phụ thuộc kho vé.</text>
+<text x="64" y="552" class="body">Hai kho đọc còn lại cũng dùng cùng template.</text>
+<line x1="40" y1="660" x2="1240" y2="660" stroke="#bfc0c0"/><path d="M64 692 H104" class="edge" marker-end="url(#open)" /><text x="116" y="696" class="key" >Association</text><path d="M264 692 H304" class="edge" marker-end="url(#triangle)" /><text x="316" y="696" class="key" >Inheritance</text><path d="M464 692 H504" class="edge" marker-end="url(#triangle)" stroke-dasharray="5,4"/><text x="516" y="696" class="key" >Realization</text><path d="M664 692 H704" class="edge" marker-start="url(#diamond)"/><text x="716" y="696" class="key" >Composition</text><path d="M864 692 H904" class="edge" marker-start="url(#hollow-diamond)"/><text x="916" y="696" class="key" >Aggregation</text><path d="M1064 692 H1104" class="edge" marker-end="url(#open)" stroke-dasharray="4,3"/><text x="1116" y="696" class="key" >Dependency</text>
+</svg></div>
+<section class="notes" aria-label="Giải thích và giới hạn"><p><strong>Cách đọc:</strong> đường đứt, đầu tam giác = triển khai interface; đường liền, đầu tam giác = kế thừa; hình thoi đặc = thành phần do Repository sở hữu. Dependency từ TicketService minh họa riêng kho vé.</p><table><thead><tr><th>Service</th><th>Dependency được truyền qua constructor</th></tr></thead><tbody><tr><td>CatalogService</td><td>IRepository&lt;Film&gt;, IRepository&lt;Auditorium&gt;, IRepository&lt;Seat&gt;, const IRepository&lt;Screening&gt;, IRoomStorage.</td></tr><tr><td>ScreeningService</td><td>const IRepository&lt;Film&gt;, const IRepository&lt;Auditorium&gt;, IRepository&lt;Screening&gt;, const IRepository&lt;Ticket&gt;, Clock.</td></tr><tr><td>TicketService</td><td>const IRepository&lt;Seat&gt;, const IRepository&lt;Screening&gt;, IRepository&lt;Ticket&gt;, Clock.</td></tr></tbody></table><p>RoomStorage triển khai IRoomStorage; chỉ add/update phòng cùng bộ ghế như một thao tác RAM, không ghi TXT. FilmRepository, AuditoriumRepository, SeatRepository và ScreeningRepository cũng kế thừa Repository với T tương ứng.</p><p><strong>Rút gọn:</strong> chỉ vẽ TicketService và TicketRepository làm ví dụ; bỏ constructor/destructor, một số hàm và kiểu tham số để vừa hình. Tất cả sáu hàm interface, override và kiểu const đầy đủ nằm trong header. Không vẽ dependency giữa hai cấu trúc dữ liệu: HashTable giữ T* tới entity trong LinkedList, không sở hữu entity.</p></section>
+<footer>Đối chiếu source ngày 27/11/2026: <a href="../../../src/repositories/IRepository.h">IRepository.h</a> · <a href="../../../src/repositories/Repository.h">Repository.h</a> · <a href="../../../src/services/TicketService.h">TicketService.h</a> · <a href="../../../src/repositories/IRoomStorage.h">IRoomStorage.h</a> · <a href="../../../tests/DependencyInjectionTest.cpp">DependencyInjectionTest.cpp</a>.<br><a href="README.md">Mô tả sơ đồ</a> · <a href="../README.md">Mục lục sơ đồ</a> · Diagram Design, phong cách mặc định đã duyệt; Google Fonts, có font hệ thống dự phòng.</footer>
+</main></body>
+</html>
+

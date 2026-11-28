@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBL2 · ERD: năm bảng dữ liệu</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; }
+:root { --sans: "Geist", system-ui, sans-serif; --mono: "Geist Mono", ui-monospace, monospace; --serif: "Instrument Serif", Georgia, serif; }
+body { background: #f5f5f5; color: #2d3142; font: 14px/1.6 var(--sans); padding: 32px 24px; }
+main { max-width: 1280px; min-width: 0; margin: auto; }
+h1 { font: 400 28px/1.2 var(--serif); margin: 8px 0 12px; }
+.eyebrow { color: #4f5d75; font: 500 10px var(--mono); letter-spacing: .14em; }
+.intro, footer { color: #4f5d75; }
+.diagram-container { width: 100%; overflow-x: auto; }
+svg { width: 100%; min-width: 1280px; display: block; }
+.name { font: 600 12px var(--sans); fill: #2d3142; }
+.body { font: 12px var(--sans); fill: #4f5d75; }
+.member { font: 9px var(--mono); fill: #2d3142; }
+.label { font: 8px var(--mono); fill: #4f5d75; }
+.key { font: 10px var(--sans); fill: #4f5d75; }
+.edge { fill: none; stroke: #4f5d75; stroke-width: 1.2; }
+.notes { border-top: 1px solid #bfc0c0; padding-top: 16px; }
+.notes p + p { margin-top: 8px; }
+code { font: .9em var(--mono); }
+a { color: #2e5aa8; text-underline-offset: 3px; }
+footer { margin-top: 20px; font-size: 12px; }
+table { border-collapse: collapse; margin-top: 12px; width: 100%; }
+th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid #bfc0c0; }
+@media print { body { padding: 0; } .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+</style>
+</head>
+<body><main>
+<p class="eyebrow">PBL2 / ER / DATA MODEL / DOC-WIDE / STATIC</p>
+<h1>ERD: năm bảng dữ liệu</h1>
+<p class="intro">Năm bảng liên kết qua khóa ngoại bắt buộc, với quan hệ một–nhiều tại mỗi cặp cha–con.</p>
+<div class="diagram-container"><svg viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="data-erd-title data-erd-desc">
+<title id="data-erd-title">ERD: năm bảng dữ liệu</title>
+<desc id="data-erd-desc">Năm bảng liên kết qua khóa ngoại bắt buộc, với quan hệ một–nhiều tại mỗi cặp cha–con.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#4f5d75"/></marker><marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#bf4520"/></marker><marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#2e5aa8"/></marker><marker id="open" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#4f5d75"/></marker><marker id="triangle" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto"><path d="M1 1 L11 6 L1 11 Z" fill="#f5f5f5" stroke="#4f5d75"/></marker><marker id="diamond" markerWidth="14" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M1 5 L7 1 L13 5 L7 9 Z" fill="#4f5d75" stroke="#4f5d75"/></marker><marker id="hollow-diamond" markerWidth="14" markerHeight="10" refX="1" refY="5" orient="auto"><path d="M1 5 L7 1 L13 5 L7 9 Z" fill="#f5f5f5" stroke="#4f5d75"/></marker></defs>
+<rect width="1280" height="720" fill="#f5f5f5"/>
+<path d="M172 336 V152" class="edge" />
+<path d="M276 336 V288 Q276 280 284 280 H856 Q864 280 864 272 V128 Q864 120 872 120 H896" class="edge" />
+<path d="M480 408 H384" class="edge" />
+<path d="M800 440 H896" class="edge" />
+<path d="M1056 336 V172" class="edge" />
+<rect x="180" y="160" width="16" height="16" fill="#f5f5f5"/><text x="188" y="171" class="label" text-anchor="middle">1</text>
+<rect x="180" y="308" width="32" height="16" fill="#f5f5f5"/><text x="196" y="319" class="label" text-anchor="middle">0..*</text>
+<rect x="284" y="308" width="32" height="16" fill="#f5f5f5"/><text x="300" y="319" class="label" text-anchor="middle">0..*</text>
+<rect x="872" y="96" width="16" height="16" fill="#f5f5f5"/><text x="880" y="107" class="label" text-anchor="middle">1</text>
+<rect x="392" y="384" width="16" height="16" fill="#f5f5f5"/><text x="400" y="395" class="label" text-anchor="middle">1</text>
+<rect x="440" y="384" width="32" height="16" fill="#f5f5f5"/><text x="456" y="395" class="label" text-anchor="middle">0..*</text>
+<rect x="808" y="416" width="32" height="16" fill="#f5f5f5"/><text x="824" y="427" class="label" text-anchor="middle">0..*</text>
+<rect x="872" y="416" width="16" height="16" fill="#f5f5f5"/><text x="880" y="427" class="label" text-anchor="middle">1</text>
+<rect x="1064" y="180" width="16" height="16" fill="#f5f5f5"/><text x="1072" y="191" class="label" text-anchor="middle">1</text>
+<rect x="1064" y="308" width="32" height="16" fill="#f5f5f5"/><text x="1080" y="319" class="label" text-anchor="middle">0..*</text>
+<g><rect x="64" y="40" width="320" height="112" rx="6" fill="#fff" stroke="#2d3142"/><text x="80" y="56" class="label" >ENTITY</text><text x="224" y="72" class="name" text-anchor="middle">Film</text><path d="M64 80 H384" stroke="#bfc0c0"/><text x="80" y="104" class="member" ># film_id</text><text x="80" y="124" class="member" >title</text><text x="80" y="144" class="member" >duration_minutes</text></g>
+<g><rect x="896" y="40" width="320" height="132" rx="6" fill="#fff" stroke="#2d3142"/><text x="912" y="56" class="label" >ENTITY</text><text x="1056" y="72" class="name" text-anchor="middle">Auditorium</text><path d="M896 80 H1216" stroke="#bfc0c0"/><text x="912" y="104" class="member" ># auditorium_id</text><text x="912" y="124" class="member" >name</text><text x="912" y="144" class="member" >row_count</text><text x="912" y="164" class="member" >seats_per_row</text></g>
+<g><rect x="64" y="336" width="320" height="152" rx="6" fill="#f4e7e2" stroke="#bf4520"/><text x="80" y="352" class="label" >ENTITY</text><text x="224" y="368" class="name" text-anchor="middle">Screening</text><path d="M64 376 H384" stroke="#bfc0c0"/><text x="80" y="400" class="member" ># screening_id</text><text x="80" y="420" class="member" >→ film_id</text><text x="80" y="440" class="member" >→ auditorium_id</text><text x="80" y="460" class="member" >start_time</text><text x="80" y="480" class="member" >ticket_price</text></g>
+<g><rect x="480" y="336" width="320" height="152" rx="6" fill="#fff" stroke="#2d3142"/><text x="496" y="352" class="label" >ENTITY</text><text x="640" y="368" class="name" text-anchor="middle">Ticket</text><path d="M480 376 H800" stroke="#bfc0c0"/><text x="496" y="400" class="member" ># ticket_id</text><text x="496" y="420" class="member" >→ screening_id</text><text x="496" y="440" class="member" >→ seat_id</text><text x="496" y="460" class="member" >sold_at</text><text x="496" y="480" class="member" >unit_price</text></g>
+<g><rect x="896" y="336" width="320" height="132" rx="6" fill="#fff" stroke="#2d3142"/><text x="912" y="352" class="label" >ENTITY</text><text x="1056" y="368" class="name" text-anchor="middle">Seat</text><path d="M896 376 H1216" stroke="#bfc0c0"/><text x="912" y="400" class="member" ># seat_id</text><text x="912" y="420" class="member" >→ auditorium_id</text><text x="912" y="440" class="member" >row_number</text><text x="912" y="460" class="member" >seat_number</text></g>
+<text x="64" y="568" class="body" >Mỗi khóa ngoại là bắt buộc; phía cha có thể chưa có bản ghi con.</text>
+<text x="64" y="600" class="body" >Không lưu riêng: capacity, endTime, trạng thái đã bán theo suất và doanh thu.</text>
+<line x1="40" y1="660" x2="1240" y2="660" stroke="#bfc0c0"/><text x="64" y="692" class="key" ># = PK · → = FK · 1 / 0..* = lực lượng quan hệ; đây là mô hình logic, không phải schema SQL.</text>
+</svg></div>
+<section class="notes" aria-label="Giải thích và giới hạn"><p><strong>Hai tổ hợp duy nhất:</strong> Seat(auditorium_id, row_number, seat_number) và Ticket(screening_id, seat_id). Ghế trên vé phải thuộc phòng của suất; mỗi phòng có đủ số ghế theo kích thước.</p><p><strong>TXT khác RAM:</strong> file lưu ID khóa ngoại; entity trên RAM giữ con trỏ tới đối tượng được tìm theo ID khi nạp. Không ghi địa chỉ bộ nhớ vào file.</p><p><strong>Phạm vi:</strong> đủ năm bảng, mọi cột và năm quan hệ. Miền dữ liệu, phụ thuộc hàm, 3NF và ràng buộc nằm trong thiết kế dữ liệu; chính sách xóa nằm trong Business Rules. TXT không tự thực thi FK/UNIQUE/transaction như DBMS.</p></section>
+<footer>Đối chiếu source ngày 27/11/2026: <a href="../../design/data-design.md">Thiết kế dữ liệu</a> · <a href="../../../src/fileio/EntityFile.cpp">EntityFile.cpp</a> · <a href="../../../src/database/CinemaDatabase.cpp">CinemaDatabase.cpp</a>.<br><a href="README.md">Mô tả sơ đồ</a> · <a href="../README.md">Mục lục sơ đồ</a> · Diagram Design, phong cách mặc định đã duyệt; Google Fonts, có font hệ thống dự phòng.</footer>
+</main></body>
+</html>
+

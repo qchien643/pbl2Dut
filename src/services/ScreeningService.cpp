@@ -4,7 +4,7 @@
 
 #include <stdexcept>
 
-ScreeningService::ScreeningService(const IRepository<Film>& films,
+ScreeningService::ScreeningService(const IFilmRepository& films,
                                    const IRepository<Auditorium>& rooms,
                                    IRepository<Screening>& screenings,
                                    const IRepository<Ticket>& tickets, date_time::Clock clock)
